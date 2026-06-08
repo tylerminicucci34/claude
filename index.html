@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>GymTrack Pro</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════
+       ONBOARDING
+  ═══════════════════════════════════════ -->
+  <div id="onboarding" class="screen">
+
+    <!-- Step 1: Welcome -->
+    <div id="ob-step-1" class="onboard-slide">
+      <div class="ob-logo">🏋️</div>
+      <h1 class="ob-title">GymTrack Pro</h1>
+      <p class="ob-sub">Track your workouts, watch your body change, and crush your fitness goals — all in one place.</p>
+      <button id="ob-start" class="btn btn-primary">Get Started →</button>
+    </div>
+
+    <!-- Step 2: Name -->
+    <div id="ob-step-2" class="onboard-slide">
+      <div class="ob-logo" style="font-size:48px;margin-bottom:12px">👋</div>
+      <h2 class="ob-title" style="font-size:28px">What's your name?</h2>
+      <p class="ob-sub">We'll personalise your experience</p>
+      <p class="ob-label">Your name</p>
+      <input id="ob-name" class="ob-input" type="text" placeholder="e.g. Tyler" autocomplete="given-name" maxlength="30">
+      <button id="ob-name-next" class="btn btn-primary" disabled>Continue →</button>
+    </div>
+
+    <!-- Step 3: Goal -->
+    <div id="ob-step-3" class="onboard-slide">
+      <h2 class="ob-title" style="font-size:26px;margin-bottom:8px">What's your goal?</h2>
+      <p class="ob-sub" style="margin-bottom:24px">We'll build the perfect plan for you</p>
+      <div class="goal-grid">
+        <div class="goal-card" data-goal="muscle">
+          <div class="g-icon">💪</div>
+          <div class="g-name">Build Muscle</div>
+          <div class="g-desc">Hypertrophy & size</div>
+        </div>
+        <div class="goal-card" data-goal="strength">
+          <div class="g-icon">🏋️</div>
+          <div class="g-name">Get Stronger</div>
+          <div class="g-desc">Max strength & PRs</div>
+        </div>
+        <div class="goal-card" data-goal="fat">
+          <div class="g-icon">🔥</div>
+          <div class="g-name">Lose Fat</div>
+          <div class="g-desc">Cut & lean out</div>
+        </div>
+        <div class="goal-card" data-goal="endurance">
+          <div class="g-icon">🏃</div>
+          <div class="g-name">Endurance</div>
+          <div class="g-desc">Cardio & stamina</div>
+        </div>
+        <div class="goal-card" data-goal="general" style="grid-column: 1 / -1">
+          <div class="g-icon">⚡</div>
+          <div class="g-name">General Fitness</div>
+          <div class="g-desc">Balanced overall health</div>
+        </div>
+      </div>
+      <button id="ob-goal-next" class="btn btn-primary" disabled>Continue →</button>
+    </div>
+
+    <!-- Step 4: Fitness Level -->
+    <div id="ob-step-4" class="onboard-slide">
+      <h2 class="ob-title" style="font-size:26px;margin-bottom:8px">Experience level?</h2>
+      <p class="ob-sub" style="margin-bottom:24px">This helps us set the right intensity</p>
+      <div class="level-grid">
+        <div class="level-card" data-level="beginner">
+          <div class="l-icon">🌱</div>
+          <div>
+            <div class="l-name">Beginner</div>
+            <div class="l-desc">Less than 1 year training consistently</div>
+          </div>
+        </div>
+        <div class="level-card" data-level="intermediate">
+          <div class="l-icon">⚡</div>
+          <div>
+            <div class="l-name">Intermediate</div>
+            <div class="l-desc">1–3 years, comfortable with the basics</div>
+          </div>
+        </div>
+        <div class="level-card" data-level="advanced">
+          <div class="l-icon">🔥</div>
+          <div>
+            <div class="l-name">Advanced</div>
+            <div class="l-desc">3+ years, know your way around any lift</div>
+          </div>
+        </div>
+      </div>
+      <button id="ob-level-next" class="btn btn-primary" disabled>Continue →</button>
+    </div>
+
+    <!-- Step 5: Equipment -->
+    <div id="ob-step-5" class="onboard-slide">
+      <h2 class="ob-title" style="font-size:26px;margin-bottom:8px">What do you have to work out with?</h2>
+      <p class="ob-sub" style="margin-bottom:24px">We'll adapt exercises to your setup</p>
+      <div class="level-grid">
+        <div class="equip-card level-card" data-equipment="full">
+          <div class="l-icon">🏢</div>
+          <div>
+            <div class="l-name">Full Gym</div>
+            <div class="l-desc">Barbells, cables, machines, dumbbells — everything</div>
+          </div>
+        </div>
+        <div class="equip-card level-card" data-equipment="home">
+          <div class="l-icon">🏠</div>
+          <div>
+            <div class="l-name">Home Gym</div>
+            <div class="l-desc">Barbell, rack, dumbbells — no cable machines</div>
+          </div>
+        </div>
+        <div class="equip-card level-card" data-equipment="dumbbells">
+          <div class="l-icon">🥊</div>
+          <div>
+            <div class="l-name">Dumbbells Only</div>
+            <div class="l-desc">Just a set of dumbbells (or adjustable)</div>
+          </div>
+        </div>
+        <div class="equip-card level-card" data-equipment="bodyweight">
+          <div class="l-icon">🤸</div>
+          <div>
+            <div class="l-name">Bodyweight Only</div>
+            <div class="l-desc">No equipment — calisthenics & bands</div>
+          </div>
+        </div>
+      </div>
+      <button id="ob-equip-next" class="btn btn-primary" disabled>Build My Plan →</button>
+    </div>
+
+    <!-- Step 6: Ready -->
+    <div id="ob-step-6" class="onboard-slide">
+      <div class="ready-emoji">🚀</div>
+      <h2 class="ob-title" style="font-size:26px;margin-bottom:8px">Your plan is ready!</h2>
+      <p class="ob-sub" style="margin-bottom:24px">Here's what we've built for you</p>
+      <div class="ready-plan">
+        <h3 id="ready-plan-name">Plan Name</h3>
+        <p id="ready-plan-desc">Description</p>
+        <div class="rp-meta">
+          <span class="rp-badge" id="ready-plan-schedule"></span>
+          <span class="rp-badge" id="ready-plan-goal"></span>
+          <span class="rp-badge" id="ready-plan-equip"></span>
+          <span class="rp-badge" id="ready-plan-level"></span>
+        </div>
+      </div>
+      <button id="ob-finish" class="btn btn-primary">Let's Go! 💪</button>
+    </div>
+
+  </div><!-- /onboarding -->
+
+
+  <!-- ═══════════════════════════════════════
+       MAIN APP
+  ═══════════════════════════════════════ -->
+  <div id="main-app" class="screen">
+
+    <!-- Header -->
+    <header class="app-header">
+      <h1>GymTrack</h1>
+      <div class="streak-badge">🔥 <span id="streak-count">0 days</span></div>
+    </header>
+
+    <!-- Tab Content -->
+    <main class="app-content">
+
+      <!-- ── Dashboard ── -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="dash-greeting">
+          <h2 id="dash-greeting">Good morning, Athlete!</h2>
+          <p>Keep pushing — every rep counts.</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="sc-label">This Week</div>
+            <div class="sc-value" id="stat-week-workouts">0</div>
+            <div class="sc-sub">workouts</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">All Time</div>
+            <div class="sc-value" id="stat-total-workouts">0</div>
+            <div class="sc-sub">workouts</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Streak</div>
+            <div class="sc-value" id="stat-streak">0</div>
+            <div class="sc-sub">days</div>
+          </div>
+          <div class="stat-card">
+            <div class="sc-label">Avg Intensity</div>
+            <div class="sc-value" id="stat-avg-rpe">—</div>
+            <div class="sc-sub">RPE this week</div>
+          </div>
+        </div>
+
+        <p class="section-title">Today's Workout</p>
+        <div class="today-card" id="today-card">
+          <div class="today-card-header">
+            <h3 id="today-day-name">Loading…</h3>
+            <div class="day-badge">TODAY</div>
+          </div>
+          <div class="today-card-body">
+            <p class="today-focus" id="today-focus"></p>
+            <div class="exercise-preview" id="today-exercise-preview"></div>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('workout')">View Full Plan →</button>
+          </div>
+        </div>
+
+        <p class="section-title">This Week</p>
+        <div class="week-progress" style="margin-bottom:24px">
+          <div class="week-days" id="week-days"></div>
+        </div>
+
+        <p class="section-title">Recent Workouts</p>
+        <div class="recent-workouts" id="recent-workouts-list"></div>
+      </section>
+
+      <!-- ── Workout Plan ── -->
+      <section id="tab-workout" class="tab-content">
+        <div class="plan-header">
+          <div class="ph-icon" id="plan-icon">💪</div>
+          <div class="ph-info">
+            <h3 id="plan-name">Loading plan…</h3>
+            <p id="plan-desc"></p>
+            <span class="ph-schedule" id="plan-schedule"></span>
+          </div>
+        </div>
+
+        <p class="section-title">Select Day</p>
+        <div class="day-tabs" id="plan-day-tabs"></div>
+
+        <p class="section-title" id="plan-day-focus"></p>
+        <div class="exercise-list-container" id="exercise-list-container"></div>
+
+        <div class="start-workout-btn">
+          <button id="start-workout-btn" class="btn btn-primary">▶ Start Workout</button>
+        </div>
+      </section>
+
+      <!-- ── Progress Photos ── -->
+      <section id="tab-photos" class="tab-content">
+        <div class="photo-tab-actions">
+          <button id="btn-take-photo" class="btn btn-primary btn-sm">📷 Take Photo</button>
+          <button id="btn-upload-photo" class="btn btn-ghost btn-sm">⬆ Upload</button>
+          <button id="btn-compare" class="btn btn-ghost btn-sm" disabled>⟺ Compare</button>
+        </div>
+        <input type="file" id="photo-file-input" accept="image/*" class="hidden" capture="environment">
+
+        <div id="no-photos" class="no-photos">
+          <div class="np-icon">📸</div>
+          <p>No progress photos yet.</p>
+          <p style="margin-top:8px;font-size:13px">Take a photo weekly to track your body transformation!</p>
+        </div>
+
+        <div class="photo-grid" id="photo-grid"></div>
+      </section>
+
+      <!-- ── Goals ── -->
+      <section id="tab-goals" class="tab-content">
+        <div class="goal-overview">
+          <div class="go-icon" id="goal-icon">💪</div>
+          <h3 id="goal-label">Build Muscle</h3>
+          <p id="goal-target-desc">Increase muscle size & definition</p>
+        </div>
+
+        <p class="section-title">Targets</p>
+        <div class="goal-metrics">
+          <div class="gm-card">
+            <label>Target Weight</label>
+            <input id="target-weight" type="number" inputmode="decimal" placeholder="180">
+            <div class="gm-unit">pounds (lbs)</div>
+          </div>
+          <div class="gm-card">
+            <label>Target Body Fat</label>
+            <input id="target-bf" type="number" inputmode="decimal" placeholder="12">
+            <div class="gm-unit">percent (%)</div>
+          </div>
+        </div>
+        <button id="save-goals-btn" class="btn btn-primary" style="margin-bottom:24px">Save Targets</button>
+
+        <p class="section-title">Log Measurements</p>
+        <div class="add-measurement-form">
+          <h4>Add Today's Measurements</h4>
+          <div class="measure-inputs">
+            <div class="measure-field">
+              <label>Weight (lbs)</label>
+              <input id="m-weight" type="number" inputmode="decimal" placeholder="175">
+            </div>
+            <div class="measure-field">
+              <label>Body Fat %</label>
+              <input id="m-bf" type="number" inputmode="decimal" placeholder="15">
+            </div>
+            <div class="measure-field">
+              <label>Chest (in)</label>
+              <input id="m-chest" type="number" inputmode="decimal" placeholder="42">
+            </div>
+            <div class="measure-field">
+              <label>Waist (in)</label>
+              <input id="m-waist" type="number" inputmode="decimal" placeholder="32">
+            </div>
+            <div class="measure-field">
+              <label>Arms (in)</label>
+              <input id="m-arms" type="number" inputmode="decimal" placeholder="15">
+            </div>
+            <div class="measure-field">
+              <label>Legs (in)</label>
+              <input id="m-legs" type="number" inputmode="decimal" placeholder="24">
+            </div>
+          </div>
+          <button id="add-measurement-btn" class="btn btn-primary btn-sm">+ Log Measurement</button>
+        </div>
+
+        <p class="section-title">Progress Chart</p>
+        <div class="chart-container">
+          <div class="chart-tabs">
+            <button class="chart-tab active" data-metric="weight">Weight</button>
+            <button class="chart-tab" data-metric="bf">Body Fat</button>
+            <button class="chart-tab" data-metric="chest">Chest</button>
+            <button class="chart-tab" data-metric="waist">Waist</button>
+            <button class="chart-tab" data-metric="arms">Arms</button>
+          </div>
+          <canvas id="progress-chart"></canvas>
+        </div>
+
+        <p class="section-title">History</p>
+        <div class="measurement-history" id="measurement-history"></div>
+
+        <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--border)">
+          <button id="reset-app-btn" class="btn btn-ghost" style="color:var(--red);border-color:var(--red)">Reset All Data</button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <button class="nav-btn active" data-tab="dashboard">
+        <span class="nav-icon">🏠</span>
+        Dashboard
+      </button>
+      <button class="nav-btn" data-tab="workout">
+        <span class="nav-icon">💪</span>
+        Workout
+      </button>
+      <button class="nav-btn" data-tab="photos">
+        <span class="nav-icon">📸</span>
+        Progress
+      </button>
+      <button class="nav-btn" data-tab="goals">
+        <span class="nav-icon">🎯</span>
+        Goals
+      </button>
+    </nav>
+
+  </div><!-- /main-app -->
+
+
+  <!-- ═══════════════════════════════════════
+       CAMERA MODAL
+  ═══════════════════════════════════════ -->
+  <div id="camera-modal" class="camera-modal hidden">
+    <div class="camera-preview-wrap">
+      <video id="camera-video" autoplay playsinline muted></video>
+      <canvas id="photo-canvas" class="hidden"></canvas>
+      <div class="camera-overlay">
+        <div class="camera-top">
+          <button class="close-camera-btn" id="close-camera-btn">✕</button>
+          <div style="color:rgba(255,255,255,0.7);font-size:13px">Progress Photo</div>
+          <button class="flip-btn" id="flip-btn">🔄</button>
+        </div>
+        <div class="camera-guide">
+          <div style="color:rgba(255,255,255,0.4);font-size:13px;text-align:center">Stand back &<br>show your full body</div>
+        </div>
+        <div class="camera-bottom">
+          <button class="shutter-btn" id="shutter-btn"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       COMPARE MODAL
+  ═══════════════════════════════════════ -->
+  <div id="compare-modal" class="compare-modal hidden">
+    <div class="compare-header">
+      <h3>Side-by-Side Comparison</h3>
+      <button id="close-compare">✕</button>
+    </div>
+    <div class="compare-grid">
+      <div class="compare-slot" id="compare-slot-0">
+        <div class="slot-placeholder">
+          <div style="font-size:40px">📷</div>
+          <p style="font-size:12px;color:var(--text3);margin-top:8px">Tap to pick Before</p>
+        </div>
+      </div>
+      <div class="compare-slot" id="compare-slot-1">
+        <div class="slot-placeholder">
+          <div style="font-size:40px">📷</div>
+          <p style="font-size:12px;color:var(--text3);margin-top:8px">Tap to pick After</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Picker (for compare) -->
+  <div id="photo-picker" class="photo-picker hidden">
+    <div class="pp-sheet">
+      <h4>Select a photo</h4>
+      <div class="pp-grid" id="pp-grid"></div>
+      <button id="close-picker" class="btn btn-ghost btn-sm">Cancel</button>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       ACTIVE WORKOUT OVERLAY
+  ═══════════════════════════════════════ -->
+  <div id="workout-overlay" class="hidden">
+    <div id="wo-main">
+
+      <div class="wo-header">
+        <h3 id="wo-workout-name">Push Day A</h3>
+        <button class="wo-close" id="wo-close">✕</button>
+      </div>
+
+      <!-- Timer -->
+      <div class="wo-timer-section">
+        <div class="wo-timer-clock" id="wo-clock">00:00</div>
+        <div class="wo-timer-label">Workout Duration</div>
+      </div>
+
+      <!-- Intensity Meter -->
+      <div class="wo-intensity">
+        <h4>Intensity</h4>
+        <div class="intensity-gauge-wrap">
+          <canvas id="intensity-canvas" width="220" height="130"></canvas>
+          <div class="intensity-rpe-label" id="rpe-value">RPE 7/10</div>
+          <div class="intensity-desc" id="rpe-desc">Pushing your limits</div>
+          <input type="range" class="intensity-slider" id="rpe-slider" min="1" max="10" value="7">
+        </div>
+      </div>
+
+      <!-- Exercise Progress Bar -->
+      <div class="wo-progress">
+        <div class="wo-prog-label">
+          <span id="wo-prog-label-text">1 / 7 exercises</span>
+          <span id="wo-prog-pct"></span>
+        </div>
+        <div class="wo-prog-bar">
+          <div class="wo-prog-fill" id="wo-prog-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Current Exercise -->
+      <div class="wo-exercise">
+        <div class="wo-ex-header">
+          <div class="wo-ex-number" id="wo-ex-number">Exercise 1 of 7</div>
+          <div class="wo-ex-name" id="wo-ex-name">Barbell Bench Press</div>
+          <div class="wo-ex-note" id="wo-ex-note">Control the eccentric</div>
+        </div>
+        <div class="wo-ex-body">
+          <div class="sets-tracker" id="sets-tracker"></div>
+        </div>
+      </div>
+
+      <!-- Nav Controls -->
+      <div class="wo-controls">
+        <div class="wo-nav">
+          <button class="btn btn-ghost btn-sm" id="wo-prev-ex">← Prev</button>
+          <button class="btn btn-primary btn-sm" id="wo-next-ex">Next →</button>
+        </div>
+        <button class="btn btn-ghost" id="wo-finish-btn" style="color:var(--green);border-color:var(--green)">
+          ✓ Finish Workout
+        </button>
+      </div>
+
+    </div><!-- /wo-main -->
+
+    <!-- Workout Complete Summary -->
+    <div class="wo-summary" id="wo-summary">
+      <div class="ws-trophy">🏆</div>
+      <div class="ws-title">Workout Complete!</div>
+      <div class="ws-sub">Incredible session — you crushed it.</div>
+      <div class="ws-stats">
+        <div class="ws-stat">
+          <div class="ws-val" id="ws-time">—</div>
+          <div class="ws-lbl">Duration</div>
+        </div>
+        <div class="ws-stat">
+          <div class="ws-val" id="ws-sets">—</div>
+          <div class="ws-lbl">Sets Done</div>
+        </div>
+        <div class="ws-stat">
+          <div class="ws-val" id="ws-rpe">—</div>
+          <div class="ws-lbl">Avg RPE</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /workout-overlay -->
+
+  <!-- ═══════════════════════════════════════
+       REST TIMER OVERLAY
+  ═══════════════════════════════════════ -->
+  <div id="rest-timer-overlay" class="rest-timer-overlay hidden">
+    <div class="rt-label">Rest Timer</div>
+    <div class="rt-clock" id="rt-clock">1:30</div>
+    <div class="rt-bar-wrap">
+      <div class="rt-bar" id="rt-bar" style="width:100%"></div>
+    </div>
+    <div class="rt-next">Up next: <strong id="rt-next-info">Set 2</strong></div>
+    <button class="rt-skip" id="rt-skip">Skip Rest →</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div><!-- /app -->
+
+<script src="workouts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
