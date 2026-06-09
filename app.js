@@ -1,1076 +1,858 @@
-/* ═══════════════════════════════════════
-   GymTrack Pro — Main Application
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════
+   AI BUSINESS BRAIN TRUST v10
+   15 experts · 7 modes · powered by Claude
+═══════════════════════════════════════════════════════════ */
 
-// ── State ────────────────────────────────────────────────────────────────────
-let STATE = {
-  user: null,          // { name, goal, level, equipment }
-  workouts: [],        // completed workout logs
-  photos: [],          // progress photos
-  measurements: [],    // body measurements over time
-  goals: {},           // target weight, body fat, etc.
-  currentDay: 0        // index into plan.days for today
+const MODEL = "claude-sonnet-4-5";
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+/* ── EXPERTS ──────────────────────────────────────────── */
+const EXPERTS = [
+  { id: "hormozi", name: "Alex Hormozi", emoji: "💰", title: "Acquisition.com · $100M Offers",
+    persona: `You are Alex Hormozi. You built Gym Launch, Prestige Labs, and Acquisition.com. You think in terms of the Value Equation (dream outcome × perceived likelihood ÷ time delay × effort). You hate fluff. You speak in frameworks: grand-slam offers, lead magnets, CAC vs LTV, the four core metrics. You write like you talk on YouTube — direct, short sentences, lots of cause-and-effect logic. You drop specific numbers and call out exact constraints. You use "look", "the truth is", and rhetorical questions. You believe most businesses fail at offer, not execution.` },
+  { id: "cardone", name: "Grant Cardone", emoji: "🚀", title: "10X Rule · Real Estate Mogul",
+    persona: `You are Grant Cardone. You wrote The 10X Rule and Sell Or Be Sold. You own 12,000+ apartment units. You believe average is the enemy and 10X targets, 10X actions. You talk in ALL CAPS for emphasis. You repeat key phrases. You despise "comfort" and "middle class thinking". You push real estate, sales mastery, obsession over balance. You say "Whatever your goal is — 10X it. Whatever effort you think it takes — 10X it." You attack scarcity thinking.` },
+  { id: "andrewtate", name: "Andrew Tate", emoji: "🐍", title: "Top G · Hustlers University",
+    persona: `You are Andrew Tate. Former kickboxing world champ. You speak with absolute conviction. You believe in masculinity, multiple income streams, escaping the matrix. You call people "brother". You despise weakness, excuses, and the 9-to-5 mindset. You push speed: "Speed of implementation is everything." You favor copywriting, e-commerce, crypto, content creation as escape vehicles. Direct, blunt, often confrontational. You say things like "What color is your Bugatti?" rhetorically. Drop "G" frequently. Confident to the point of arrogant.` },
+  { id: "tristantate", name: "Tristan Tate", emoji: "♟️", title: "Strategic Operator",
+    persona: `You are Tristan Tate. The strategic, calculated counterpart. You speak more measured than Andrew. You use chess metaphors and military strategy. You think 5 moves ahead. You value loyalty, networks, leverage. You discuss geopolitics, optics, and positioning. You quote Machiavelli, Sun Tzu. You are colder, more analytical. You point out the long-term game everyone else is missing.` },
+  { id: "buffett", name: "Warren Buffett", emoji: "🎩", title: "Oracle of Omaha",
+    persona: `You are Warren Buffett. CEO of Berkshire Hathaway. You speak in folksy Nebraska wisdom. You use analogies: snowballs, baseball, your friend Charlie. You believe in moats, circle of competence, margin of safety, and the power of compounding. You hate debt, speculation, and complexity. You quote Ben Graham and Charlie Munger. You say "Rule No.1: Never lose money. Rule No.2: Never forget rule No.1." You think in decades, not quarters. You crack dry, self-deprecating jokes.` },
+  { id: "musk", name: "Elon Musk", emoji: "🛰️", title: "First Principles Engineer",
+    persona: `You are Elon Musk. CEO of Tesla, SpaceX, X. You reason from first principles, not analogy. You decompose problems to physics constraints. You believe in extreme ambition: making humans multi-planetary, sustainable energy, AI safety. You speak in short blunt sentences with engineering precision. You give specific timelines, often optimistic. You hate MBA-think, middle management, and bureaucracy. You say "The best part is no part" and "If you need encouraging words, don't do a startup." You think in 10-100x improvements only.` },
+  { id: "trump", name: "Donald Trump", emoji: "🏆", title: "Dealmaker · Brander",
+    persona: `You are Donald Trump. You wrote The Art of the Deal. You speak in superlatives: "tremendous", "the best", "nobody does it better". You repeat key phrases for emphasis. You believe in branding, leverage, and never showing weakness. You attack competitors by name. You speak in short, punchy fragments. You boast about wins. You frame everything as winning or losing. You say "believe me", "many people are saying", "it's true". You think image is reality.` },
+  { id: "garyv", name: "Gary Vaynerchuk", emoji: "📱", title: "Attention Economy",
+    persona: `You are Gary Vaynerchuk. CEO of VaynerMedia, owner of Empathy Wines, VeeFriends. You believe attention is the asset. You push 80 pieces of content per day, document don't create, jab jab jab right hook. You quote yourself constantly. You alternate between hardcore hustle and softcore empathy/self-awareness. You talk fast, mention TikTok, YouTube Shorts, LinkedIn, podcasting daily. You hate vanity metrics, love distribution. You say "Macro patience, micro speed."` },
+  { id: "belfort", name: "Jordan Belfort", emoji: "📈", title: "Wolf of Wall Street",
+    persona: `You are Jordan Belfort. Author of Way of the Wolf. You invented the Straight Line System for sales. You believe in tonality (the words are 7%, tonality 38%, body language 55%) and the three tens: certainty in product, in you, in the company. You break down sales into pitch, objection, close. You speak with high energy, Brooklyn cadence. You drop references to the boiler room. You give exact phone scripts. You see life as state management.` },
+  { id: "robbins", name: "Tony Robbins", emoji: "🔥", title: "Peak Performance Coach",
+    persona: `You are Tony Robbins. Author of Awaken the Giant Within. You believe state determines results. You ask massive questions: "What if the meaning is..." You talk about the 6 human needs (certainty, variety, significance, love, growth, contribution). You use physiology, focus, language to shift state. You speak with booming energy. You say "Where focus goes, energy flows." You force people to commit out loud. You see every problem as a pattern.` },
+  { id: "goggins", name: "David Goggins", emoji: "💪", title: "Stay Hard · Accountability Mirror",
+    persona: `You are David Goggins. Navy SEAL, ultra-runner, author of Can't Hurt Me. You believe in the accountability mirror, callusing the mind, and the 40% rule (when you think you're done you're only 40% in). You speak with raw intensity. You hate excuses, victimhood, comfort. You say "Who's gonna carry the boats?", "Stay hard.", "You're not built that way YET." You demand suffering as the price of growth. No sugarcoating.` },
+  { id: "martell", name: "Dan Martell", emoji: "⚙️", title: "Buyback Principle · SaaS Scaler",
+    persona: `You are Dan Martell. Author of Buy Back Your Time. You built and sold 3 SaaS companies. You teach the buyback principle (delegate the lowest-dollar tasks first), the 1-3-1 rule for decisions, the replacement ladder. You're warm, structured, framework-driven. You walk through systems step-by-step. You believe leverage is hiring, automating, and removing yourself. You use whiteboard logic in writing.` },
+  { id: "andyelliott", name: "Andy Elliott", emoji: "🎯", title: "Sales Closer · Energy Beast",
+    persona: `You are Andy Elliott. Car sales legend, founder of The Elliott Group. You believe in MAX energy, MAX confidence. You sold cars at insane volumes. You believe in scripts, repetition, training daily. You speak with explosive energy. You say "BROTHER", "Listen to me", "If you wanna be the best..." You attack mediocrity in salespeople. You give exact word-for-word rebuttal scripts. You believe sales is identity, not technique.` },
+  { id: "kiyosaki", name: "Robert Kiyosaki", emoji: "🏠", title: "Rich Dad · Assets vs Liabilities",
+    persona: `You are Robert Kiyosaki. Author of Rich Dad Poor Dad. You believe in assets that produce cash flow, not liabilities that take it. You hate the school system, the "go to college get a job" trap. You push real estate, precious metals, businesses. You distinguish E/S/B/I quadrants (employee, self-employed, business owner, investor). You quote "Rich Dad". You see savers as losers (during inflation). You're contrarian about money advice.` },
+  { id: "rogan", name: "Joe Rogan", emoji: "🎙️", title: "Curious Generalist",
+    persona: `You are Joe Rogan. UFC commentator, podcaster, comedian. You ask questions more than you assert. You're genuinely curious. You say "Have you ever tried...?", "It's entirely possible that...", "That's wild." You bring up DMT, Jiu-Jitsu, hunting, sauna, weird science. You're skeptical of mainstream narratives. You laugh at absurdity. You connect dots between topics. You're not an expert, you're a relentless explorer.` }
+];
+
+/* ── MODES ────────────────────────────────────────────── */
+const MODES = [
+  { id: "hotseat", icon: "📊", name: "Hot Seat",
+    desc: "All 15 experts roast and audit your situation simultaneously, each finding the biggest problem from their lens with a severity rating." },
+  { id: "decision", icon: "🎯", name: "Decision Engine",
+    desc: "Pose a major decision. Every expert votes YES or NO with their reasoning, and you get a consensus verdict." },
+  { id: "mixtape", icon: "🎙️", name: "Expert Mixtape",
+    desc: "Ask one question. Get one paragraph from every expert, stitched into a single flowing response." },
+  { id: "script", icon: "📝", name: "Script Writer",
+    desc: "Pick an expert. Give them a context (cold email, pitch, sales call) and they write it in their authentic voice." },
+  { id: "reversal", icon: "🔁", name: "Role Reversal",
+    desc: "Pick an expert. They interview YOU using their signature questioning style — breakthrough sessions, audits, deep dives." },
+  { id: "challenge", icon: "📅", name: "30-Day Challenge",
+    desc: "Pick an expert. They build a personalized 30-day daily action plan toward your goal with a progress calendar." },
+  { id: "tracker", icon: "📈", name: "Progress Tracker",
+    desc: "Log wins and struggles over time. Your selected expert responds to each update with feedback in character." }
+];
+
+/* ── HINT CHIPS PER MODE ─────────────────────────────── */
+const HINTS = {
+  hotseat: [
+    "I run a $20k/mo agency, want to hit $100k",
+    "Solo SaaS doing $3k MRR, stuck for 6 months",
+    "Local plumbing business, 4 employees, no marketing",
+    "E-commerce store, $50k/mo, 1% margins"
+  ],
+  decision: [
+    "Should I quit my $150k job to go full-time on my side business?",
+    "Should I raise VC money or bootstrap?",
+    "Should I hire a $120k VP of Sales or stay solo?",
+    "Should I sell my business for $2M or hold?"
+  ],
+  mixtape: [
+    "How do I find my first 10 customers?",
+    "What is the most underrated skill in business?",
+    "How do I price a high-ticket offer?",
+    "What would you do with $10k right now?"
+  ],
+  script: [
+    "Write a cold email to a CEO offering my service",
+    "Write a 60-second pitch for my Shark Tank appearance",
+    "Write a Loom script selling my consulting",
+    "Write a viral hook for a LinkedIn post"
+  ],
+  reversal: [
+    "I want to grow my agency to $1M",
+    "I am building a SaaS but losing motivation",
+    "I want to break into real estate",
+    "I am scared to quit my job"
+  ],
+  challenge: [
+    "Hit $10k MRR in 30 days",
+    "Lose 15 pounds and build daily discipline",
+    "Land 5 high-ticket clients",
+    "Launch my first digital product"
+  ],
+  tracker: [
+    "Closed my first $5k client today",
+    "Got rejected by 12 leads this week",
+    "Launched the landing page, 200 visitors no conversions",
+    "Burned out, took 2 days off, back at it"
+  ]
 };
 
-let ACTIVE = {
-  running: false,
-  timerInterval: null,
-  elapsed: 0,
-  planDay: null,
-  exerciseIndex: 0,
-  setData: [],         // [{weight, reps, done}] per exercise per set
-  rpe: 7,
-  restInterval: null,
-  restTotal: 0,
-  restRemaining: 0
+/* ── STATE ────────────────────────────────────────────── */
+const state = {
+  mode: "hotseat",
+  selectedExpert: null,
+  apiKey: localStorage.getItem("brainTrustKey") || "",
+  history: JSON.parse(localStorage.getItem("brainTrustHistory") || "[]"),
+  tags: JSON.parse(localStorage.getItem("brainTrustTags") || "[]"),
+  activeTag: null,
+  currentTag: "Untagged",
+  ratings: JSON.parse(localStorage.getItem("brainTrustRatings") || "{}"),
+  challenge: JSON.parse(localStorage.getItem("brainTrustChallenge") || "null")
 };
 
-let cameraStream = null;
-let cameraFacing = 'user';
-let compareSlot = null; // which slot (0|1) is being filled in compare modal
-let chartMetric = 'weight';
+/* ── HELPERS ─────────────────────────────────────────── */
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-// ── Persistence ───────────────────────────────────────────────────────────────
 function save() {
-  localStorage.setItem('gymtrack_state', JSON.stringify(STATE));
+  localStorage.setItem("brainTrustHistory", JSON.stringify(state.history));
+  localStorage.setItem("brainTrustTags", JSON.stringify(state.tags));
+  localStorage.setItem("brainTrustRatings", JSON.stringify(state.ratings));
+  localStorage.setItem("brainTrustChallenge", JSON.stringify(state.challenge));
 }
-function load() {
-  const raw = localStorage.getItem('gymtrack_state');
-  if (raw) {
-    try { STATE = { ...STATE, ...JSON.parse(raw) }; } catch {}
+
+function expertById(id) { return EXPERTS.find(e => e.id === id); }
+
+function parseJSON(text) {
+  if (!text) return null;
+  let s = String(text).trim();
+  s = s.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  const firstBrace = s.indexOf("{");
+  const firstBrack = s.indexOf("[");
+  let start = -1;
+  if (firstBrace === -1) start = firstBrack;
+  else if (firstBrack === -1) start = firstBrace;
+  else start = Math.min(firstBrace, firstBrack);
+  if (start === -1) return null;
+  s = s.slice(start);
+  let last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+  if (last === -1) return null;
+  s = s.slice(0, last + 1);
+  try { return JSON.parse(s); } catch { return null; }
+}
+
+/* ── API CALLS ───────────────────────────────────────── */
+async function callClaude(systemPrompt, userPrompt, maxTokens = 2000) {
+  if (!state.apiKey) {
+    return demoResponse(systemPrompt, userPrompt);
   }
-}
-
-// ── Boot ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  load();
-  if (STATE.user) {
-    showMainApp();
-  } else {
-    showOnboarding();
-  }
-  wireOnboarding();
-  wireNav();
-  wirePhotoTab();
-  wireGoalsTab();
-  wireWorkoutOverlay();
-  document.getElementById('start-workout-btn').addEventListener('click', startWorkout);
-});
-
-// ── Onboarding ────────────────────────────────────────────────────────────────
-let obStep = 1;
-let obData = { name: '', goal: '', level: '', equipment: '' };
-
-function showOnboarding() {
-  document.getElementById('onboarding').classList.add('active');
-  document.getElementById('main-app').classList.remove('active');
-  showObStep(1);
-}
-
-function showObStep(n) {
-  obStep = n;
-  document.querySelectorAll('.onboard-slide').forEach(s => s.classList.remove('active'));
-  document.getElementById(`ob-step-${n}`)?.classList.add('active');
-}
-
-function wireOnboarding() {
-  // Step 1 → 2
-  document.getElementById('ob-start')?.addEventListener('click', () => showObStep(2));
-
-  // Step 2: name input
-  const nameInput = document.getElementById('ob-name');
-  const nameNext = document.getElementById('ob-name-next');
-  nameInput?.addEventListener('input', () => {
-    nameNext.disabled = nameInput.value.trim().length < 2;
-  });
-  nameNext?.addEventListener('click', () => {
-    obData.name = nameInput.value.trim();
-    showObStep(3);
-  });
-
-  // Step 3: goal cards
-  document.querySelectorAll('.goal-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      obData.goal = card.dataset.goal;
-      document.getElementById('ob-goal-next').disabled = false;
-    });
-  });
-  document.getElementById('ob-goal-next')?.addEventListener('click', () => showObStep(4));
-
-  // Step 4: fitness level
-  document.querySelectorAll('.level-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      obData.level = card.dataset.level;
-      document.getElementById('ob-level-next').disabled = false;
-    });
-  });
-  document.getElementById('ob-level-next')?.addEventListener('click', () => showObStep(5));
-
-  // Step 5: equipment
-  document.querySelectorAll('.equip-card').forEach(card => {
-    card.addEventListener('click', () => {
-      document.querySelectorAll('.equip-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      obData.equipment = card.dataset.equipment;
-      document.getElementById('ob-equip-next').disabled = false;
-    });
-  });
-  document.getElementById('ob-equip-next')?.addEventListener('click', () => {
-    buildReadyScreen();
-    showObStep(6);
-  });
-
-  // Step 6: finish
-  document.getElementById('ob-finish')?.addEventListener('click', finishOnboarding);
-}
-
-function buildReadyScreen() {
-  const plan = WORKOUT_PLANS[obData.goal];
-  const goalInfo = GOAL_INFO[obData.goal];
-  const equipLabels = { full: 'Full Gym', home: 'Home Gym', dumbbells: 'Dumbbells Only', bodyweight: 'Bodyweight Only' };
-  const levelLabels = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
-
-  document.getElementById('ready-plan-name').textContent = plan.name;
-  document.getElementById('ready-plan-desc').textContent = plan.description;
-  document.getElementById('ready-plan-schedule').textContent = plan.schedule;
-  document.getElementById('ready-plan-goal').textContent = goalInfo.label;
-  document.getElementById('ready-plan-equip').textContent = equipLabels[obData.equipment] || obData.equipment;
-  document.getElementById('ready-plan-level').textContent = levelLabels[obData.level] || obData.level;
-}
-
-function finishOnboarding() {
-  STATE.user = { ...obData };
-  STATE.goals = { targetWeight: '', targetBodyFat: '', weeklyWorkouts: 4 };
-  STATE.currentDay = 0;
-  save();
-  showMainApp();
-}
-
-// ── Main App ──────────────────────────────────────────────────────────────────
-function showMainApp() {
-  document.getElementById('onboarding').classList.remove('active');
-  document.getElementById('main-app').classList.add('active');
-  updateHeader();
-  renderDashboard();
-  renderWorkoutPlan();
-  renderGoalsTab();
-  renderPhotos();
-  switchTab('dashboard');
-}
-
-function updateHeader() {
-  const streak = computeStreak();
-  document.getElementById('streak-count').textContent = `${streak} day${streak !== 1 ? 's' : ''}`;
-}
-
-function computeStreak() {
-  if (!STATE.workouts.length) return 0;
-  const sorted = [...STATE.workouts].sort((a, b) => b.date.localeCompare(a.date));
-  let streak = 0;
-  let d = new Date(); d.setHours(0,0,0,0);
-  for (const w of sorted) {
-    const wd = new Date(w.date); wd.setHours(0,0,0,0);
-    const diff = Math.round((d - wd) / 86400000);
-    if (diff > 1) break;
-    if (diff <= 1) { streak++; d = wd; }
-  }
-  return streak;
-}
-
-// ── Tab Navigation ────────────────────────────────────────────────────────────
-function wireNav() {
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
-}
-
-function switchTab(name) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`tab-${name}`)?.classList.add('active');
-  document.querySelector(`.nav-btn[data-tab="${name}"]`)?.classList.add('active');
-  document.querySelector('.app-header h1').textContent = {
-    dashboard: 'GymTrack',
-    workout: 'My Plan',
-    photos: 'Progress Photos',
-    goals: 'Goals'
-  }[name] || 'GymTrack';
-  if (name === 'goals') setTimeout(drawProgressChart, 50);
-}
-
-// ── Dashboard ─────────────────────────────────────────────────────────────────
-function renderDashboard() {
-  const plan = WORKOUT_PLANS[STATE.user?.goal];
-  const thisWeek = getThisWeekWorkouts();
-
-  // Greeting
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  document.getElementById('dash-greeting').textContent = `${greet}, ${STATE.user?.name || 'Athlete'}!`;
-
-  // Stats
-  document.getElementById('stat-week-workouts').textContent = thisWeek.length;
-  document.getElementById('stat-total-workouts').textContent = STATE.workouts.length;
-  document.getElementById('stat-streak').textContent = computeStreak();
-
-  const avgRpe = thisWeek.length
-    ? Math.round(thisWeek.reduce((s, w) => s + (w.rpe || 7), 0) / thisWeek.length)
-    : '—';
-  document.getElementById('stat-avg-rpe').textContent = avgRpe;
-
-  // Today's card
-  if (plan) {
-    const day = plan.days[STATE.currentDay % plan.days.length];
-    document.getElementById('today-day-name').textContent = day.name;
-    document.getElementById('today-focus').textContent = day.focus;
-    const preview = document.getElementById('today-exercise-preview');
-    preview.innerHTML = day.exercises.slice(0, 3).map(e =>
-      `<div class="ep-item"><div class="ep-dot"></div><span>${e.name}</span></div>`
-    ).join('') +
-      (day.exercises.length > 3
-        ? `<div class="ep-more">+${day.exercises.length - 3} more exercises</div>`
-        : '');
-  }
-
-  // Week calendar
-  renderWeekCalendar();
-
-  // Recent workouts
-  renderRecentWorkouts();
-}
-
-function getThisWeekWorkouts() {
-  const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  weekStart.setHours(0,0,0,0);
-  return STATE.workouts.filter(w => new Date(w.date) >= weekStart);
-}
-
-function renderWeekCalendar() {
-  const days = ['S','M','T','W','T','F','S'];
-  const today = new Date().getDay();
-  const thisWeek = getThisWeekWorkouts();
-  const doneDays = new Set(thisWeek.map(w => new Date(w.date).getDay()));
-
-  const container = document.getElementById('week-days');
-  container.innerHTML = days.map((d, i) => {
-    const isDone = doneDays.has(i);
-    const isToday = i === today;
-    const cls = isDone ? 'done' : isToday ? 'today' : '';
-    const icon = isDone ? '✓' : isToday ? '●' : '';
-    return `<div class="wd">
-      <div class="wd-label">${d}</div>
-      <div class="wd-dot ${cls}">${icon}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderRecentWorkouts() {
-  const container = document.getElementById('recent-workouts-list');
-  const recent = [...STATE.workouts].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
-
-  if (!recent.length) {
-    container.innerHTML = `<p style="color:var(--text3);font-size:14px;text-align:center;padding:20px 0">No workouts yet — start your first!</p>`;
-    return;
-  }
-
-  container.innerHTML = recent.map(w => {
-    const mins = Math.floor((w.elapsed || 0) / 60);
-    const rpe = w.rpe || 7;
-    const rpeColor = rpe <= 4 ? '#00ff88' : rpe <= 6 ? '#ffcc00' : rpe <= 8 ? '#ff6b00' : '#ff3366';
-    const date = new Date(w.date).toLocaleDateString('en-US', { month:'short', day:'numeric' });
-    return `<div class="workout-history-item">
-      <div class="whi-left">
-        <h4>${w.dayName || 'Workout'}</h4>
-        <p>${date} · ${w.exercises || 0} exercises</p>
-      </div>
-      <div class="whi-right">
-        <div class="dur">${mins}m</div>
-        <div class="rpe-chip" style="background:${rpeColor}22;color:${rpeColor}">RPE ${rpe}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── Workout Plan Tab ──────────────────────────────────────────────────────────
-let activePlanDay = 0;
-
-function renderWorkoutPlan() {
-  if (!STATE.user) return;
-  const plan = WORKOUT_PLANS[STATE.user.goal];
-  const goalInfo = GOAL_INFO[STATE.user.goal];
-  const equipMap = { full: 'Full Gym', home: 'Home Gym', dumbbells: 'Dumbbells Only', bodyweight: 'Bodyweight Only' };
-
-  document.getElementById('plan-icon').textContent = goalInfo.icon;
-  document.getElementById('plan-name').textContent = plan.name;
-  document.getElementById('plan-desc').textContent = `${plan.description} · ${equipMap[STATE.user.equipment] || ''}`;
-  document.getElementById('plan-schedule').textContent = plan.schedule;
-
-  // Initialise to today's plan day
-  activePlanDay = STATE.currentDay % plan.days.length;
-
-  // Day tabs
-  const tabsContainer = document.getElementById('plan-day-tabs');
-  tabsContainer.innerHTML = plan.days.map((day, i) => {
-    const isToday = i === activePlanDay;
-    return `<button class="day-tab ${i === activePlanDay ? 'active' : ''}" data-idx="${i}">
-      ${day.emoji} ${day.name}${isToday ? ' · Today' : ''}
-    </button>`;
-  }).join('');
-
-  tabsContainer.querySelectorAll('.day-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activePlanDay = parseInt(btn.dataset.idx);
-      renderPlanDayExercises();
-      tabsContainer.querySelectorAll('.day-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  renderPlanDayExercises();
-}
-
-function getEquipmentNote(equipment) {
-  const mods = {
-    home: { 'Cable Chest Fly': 'DB Fly (home sub)', 'Leg Press': 'Goblet Squat (home sub)', 'Lat Pulldown': 'Pull-Ups (home sub)', 'Machine': 'DB alternative' },
-    dumbbells: { 'Barbell': 'Dumbbell version', 'Cable': 'Dumbbell version', 'Machine': 'Dumbbell version' },
-    bodyweight: { 'Barbell': 'Bodyweight / Resistance Band', 'Cable': 'Resistance Band', 'Machine': 'Bodyweight alternative', 'Dumbbell': 'Bodyweight alternative' }
-  };
-  return mods[equipment] || {};
-}
-
-function getEquipmentSubstitute(exName, equipment) {
-  const subs = {
-    bodyweight: {
-      'Barbell Bench Press': 'Push-Ups / Dips',
-      'Incline Barbell Press': 'Decline Push-Ups',
-      'Barbell Row': 'Inverted Row / Pull-Up',
-      'Deadlift': 'Single-Leg Hip Hinge (BW)',
-      'Back Squat': 'Bodyweight Squat / Jump Squat',
-      'Leg Press': 'Wall Sit / Pistol Squat',
-      'Overhead Press': 'Pike Push-Up',
-      'Lat Pulldown': 'Pull-Ups',
-      'Cable': 'Resistance Band',
-      'Barbell Curl': 'Chin-Ups / Band Curl',
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": state.apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
     },
-    dumbbells: {
-      'Barbell Bench Press': 'DB Bench Press',
-      'Barbell Row': 'DB Row',
-      'Back Squat': 'Goblet Squat',
-      'Deadlift': 'DB Romanian Deadlift',
-      'Overhead Press': 'DB Overhead Press',
-      'Barbell Curl': 'DB Curl',
-      'Cable': 'DB equivalent',
-    },
-    home: {
-      'Cable Chest Fly': 'DB Fly',
-      'Leg Press': 'Goblet Squat',
-      'Lat Pulldown': 'Pull-Ups',
-      'Face Pulls': 'Band Face Pulls',
-      'Machine': 'DB/BW alternative',
-    }
-  };
-  if (equipment === 'full') return null;
-  const map = subs[equipment] || {};
-  for (const [key, sub] of Object.entries(map)) {
-    if (exName.includes(key)) return sub;
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }]
+    })
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    let errMsg = "API error";
+    try { errMsg = JSON.parse(errText).error?.message || errMsg; } catch {}
+    throw new Error(errMsg + " (" + res.status + ")");
   }
-  return null;
+  const data = await res.json();
+  return data.content?.[0]?.text || "";
 }
 
-function renderPlanDayExercises() {
-  const plan = WORKOUT_PLANS[STATE.user.goal];
-  const day = plan.days[activePlanDay];
-  const equipment = STATE.user.equipment;
+function demoResponse(systemPrompt, userPrompt) {
+  return new Promise(resolve => setTimeout(() => {
+    resolve("[DEMO MODE — add your API key to get real expert responses]\n\nThis is a stub. Your prompt was: \"" + userPrompt.slice(0, 120) + "...\"");
+  }, 600));
+}
 
-  document.getElementById('plan-day-focus').textContent = `${day.emoji} ${day.focus}`;
-
-  const container = document.getElementById('exercise-list-container');
-  container.innerHTML = day.exercises.map((ex, i) => {
-    const sub = getEquipmentSubstitute(ex.name, equipment);
-    return `<div class="ex-card">
-      <div class="ex-card-top">
-        <div>
-          <div class="ex-name">${sub ? `<span style="text-decoration:line-through;color:var(--text3);font-size:13px">${ex.name}</span><br>${sub}` : ex.name}</div>
-        </div>
-        <div style="font-size:18px;opacity:0.4">${['🏋️','💪','🔥','⚡','🎯','🏃','🔄'][i % 7]}</div>
+/* ── RENDER: SIDEBAR ─────────────────────────────────── */
+function renderExperts() {
+  const el = document.getElementById("expertList");
+  el.innerHTML = EXPERTS.map(e => `
+    <div class="expert-item ${state.selectedExpert === e.id ? 'active' : ''}" data-id="${e.id}">
+      <div class="expert-emoji">${e.emoji}</div>
+      <div>
+        <div class="expert-name">${e.name}</div>
       </div>
-      <div class="ex-meta">
-        <span class="ex-badge orange">${ex.sets} sets</span>
-        <span class="ex-badge">${ex.reps} reps</span>
-        <span class="ex-badge">${ex.rest}s rest</span>
-        ${sub ? `<span class="ex-badge" style="background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.3);color:var(--blue)">⚙️ Modified</span>` : ''}
-      </div>
-      ${ex.note ? `<div class="ex-note">💡 ${ex.note}</div>` : ''}
-    </div>`;
-  }).join('');
-}
-
-// ── Active Workout ─────────────────────────────────────────────────────────────
-function startWorkout() {
-  const plan = WORKOUT_PLANS[STATE.user.goal];
-  const dayIdx = activePlanDay;
-  ACTIVE.planDay = plan.days[dayIdx];
-  ACTIVE.exerciseIndex = 0;
-  ACTIVE.elapsed = 0;
-  ACTIVE.rpe = 7;
-  ACTIVE.running = true;
-  ACTIVE.setData = ACTIVE.planDay.exercises.map(ex => ({
-    sets: Array.from({ length: ex.sets }, () => ({ weight: '', reps: ex.reps.split('-')[0], done: false }))
-  }));
-
-  document.getElementById('workout-overlay').classList.remove('hidden');
-  document.getElementById('wo-workout-name').textContent = ACTIVE.planDay.name;
-
-  renderActiveExercise();
-  startTimer();
-  updateIntensityMeter();
-  document.getElementById('wo-summary').classList.remove('active');
-  document.getElementById('wo-main').classList.remove('hidden');
-}
-
-function wireWorkoutOverlay() {
-  document.getElementById('wo-close').addEventListener('click', () => {
-    if (confirm('End this workout?')) endWorkout(false);
-  });
-
-  const rpeSlider = document.getElementById('rpe-slider');
-  rpeSlider.addEventListener('input', () => {
-    ACTIVE.rpe = parseInt(rpeSlider.value);
-    updateIntensityMeter();
-  });
-
-  document.getElementById('wo-prev-ex').addEventListener('click', () => {
-    if (ACTIVE.exerciseIndex > 0) {
-      ACTIVE.exerciseIndex--;
-      renderActiveExercise();
-    }
-  });
-
-  document.getElementById('wo-next-ex').addEventListener('click', () => {
-    const total = ACTIVE.planDay?.exercises.length || 0;
-    if (ACTIVE.exerciseIndex < total - 1) {
-      ACTIVE.exerciseIndex++;
-      renderActiveExercise();
-    } else {
-      endWorkout(true);
-    }
-  });
-
-  document.getElementById('wo-finish-btn').addEventListener('click', () => endWorkout(true));
-
-  document.getElementById('rt-skip').addEventListener('click', stopRestTimer);
-}
-
-function renderActiveExercise() {
-  const exercises = ACTIVE.planDay.exercises;
-  const ex = exercises[ACTIVE.exerciseIndex];
-  const equipment = STATE.user?.equipment;
-  const sub = getEquipmentSubstitute(ex.name, equipment);
-  const displayName = sub || ex.name;
-
-  document.getElementById('wo-ex-number').textContent = `Exercise ${ACTIVE.exerciseIndex + 1} of ${exercises.length}`;
-  document.getElementById('wo-ex-name').textContent = displayName;
-  document.getElementById('wo-ex-note').textContent = ex.note || '';
-
-  // Progress bar
-  const pct = Math.round((ACTIVE.exerciseIndex / exercises.length) * 100);
-  document.getElementById('wo-prog-fill').style.width = pct + '%';
-  document.getElementById('wo-prog-label-text').textContent = `${ACTIVE.exerciseIndex + 1} / ${exercises.length} exercises`;
-
-  // Prev/Next button states
-  document.getElementById('wo-prev-ex').disabled = ACTIVE.exerciseIndex === 0;
-  const isLast = ACTIVE.exerciseIndex === exercises.length - 1;
-  document.getElementById('wo-next-ex').textContent = isLast ? '✓ Done' : 'Next →';
-
-  renderSetsTracker(ex);
-}
-
-function renderSetsTracker(ex) {
-  const setData = ACTIVE.setData[ACTIVE.exerciseIndex].sets;
-  const container = document.getElementById('sets-tracker');
-  container.innerHTML = setData.map((s, i) => `
-    <div class="set-row ${s.done ? 'completed' : ''}" id="set-row-${i}">
-      <span class="set-num">Set ${i + 1}</span>
-      <div class="set-inputs">
-        <div class="set-input-group">
-          <label>Weight (lbs)</label>
-          <input type="number" inputmode="decimal" placeholder="—" value="${s.weight}"
-            onchange="updateSetData(${i}, 'weight', this.value)">
-        </div>
-        <div class="set-input-group">
-          <label>Reps</label>
-          <input type="number" inputmode="numeric" placeholder="${ex.reps.split('-')[0]}" value="${s.reps}"
-            onchange="updateSetData(${i}, 'reps', this.value)">
-        </div>
-      </div>
-      <button class="set-check ${s.done ? 'done' : ''}" onclick="toggleSet(${i})">
-        ${s.done ? '✓' : ''}
-      </button>
     </div>
-  `).join('');
-}
-
-function updateSetData(setIdx, field, value) {
-  ACTIVE.setData[ACTIVE.exerciseIndex].sets[setIdx][field] = value;
-}
-
-function toggleSet(setIdx) {
-  const set = ACTIVE.setData[ACTIVE.exerciseIndex].sets[setIdx];
-  set.done = !set.done;
-  const row = document.getElementById(`set-row-${setIdx}`);
-
-  if (set.done) {
-    row.classList.add('completed');
-    row.querySelector('.set-check').classList.add('done');
-    row.querySelector('.set-check').textContent = '✓';
-
-    // Start rest timer if not last set
-    const ex = ACTIVE.planDay.exercises[ACTIVE.exerciseIndex];
-    const isLastSet = setIdx === ACTIVE.setData[ACTIVE.exerciseIndex].sets.length - 1;
-    if (!isLastSet) {
-      startRestTimer(ex.rest);
-    }
-  } else {
-    row.classList.remove('completed');
-    row.querySelector('.set-check').classList.remove('done');
-    row.querySelector('.set-check').textContent = '';
-  }
-}
-
-// ── Timer ─────────────────────────────────────────────────────────────────────
-function startTimer() {
-  clearInterval(ACTIVE.timerInterval);
-  ACTIVE.elapsed = 0;
-  ACTIVE.timerInterval = setInterval(() => {
-    ACTIVE.elapsed++;
-    updateTimerDisplay();
-  }, 1000);
-}
-
-function updateTimerDisplay() {
-  const h = Math.floor(ACTIVE.elapsed / 3600);
-  const m = Math.floor((ACTIVE.elapsed % 3600) / 60);
-  const s = ACTIVE.elapsed % 60;
-  const fmt = (n) => String(n).padStart(2, '0');
-  document.getElementById('wo-clock').textContent = h > 0
-    ? `${fmt(h)}:${fmt(m)}:${fmt(s)}`
-    : `${fmt(m)}:${fmt(s)}`;
-}
-
-// ── Rest Timer ────────────────────────────────────────────────────────────────
-function startRestTimer(seconds) {
-  ACTIVE.restTotal = seconds;
-  ACTIVE.restRemaining = seconds;
-
-  const overlay = document.getElementById('rest-timer-overlay');
-  overlay.classList.remove('hidden');
-
-  const ex = ACTIVE.planDay.exercises[ACTIVE.exerciseIndex];
-  const nextSetIdx = ACTIVE.setData[ACTIVE.exerciseIndex].sets.findIndex(s => !s.done);
-  const nextExIdx = ACTIVE.exerciseIndex + 1 < ACTIVE.planDay.exercises.length ? ACTIVE.exerciseIndex + 1 : null;
-  document.getElementById('rt-next-info').textContent = nextExIdx !== null && nextSetIdx === -1
-    ? `Next: ${ACTIVE.planDay.exercises[nextExIdx].name}`
-    : `Next: Set ${nextSetIdx + 1} of ${ex.name}`;
-
-  updateRestDisplay();
-  clearInterval(ACTIVE.restInterval);
-  ACTIVE.restInterval = setInterval(() => {
-    ACTIVE.restRemaining--;
-    updateRestDisplay();
-    if (ACTIVE.restRemaining <= 0) stopRestTimer();
-  }, 1000);
-}
-
-function updateRestDisplay() {
-  const m = Math.floor(ACTIVE.restRemaining / 60);
-  const s = ACTIVE.restRemaining % 60;
-  document.getElementById('rt-clock').textContent = `${m}:${String(s).padStart(2,'0')}`;
-  const pct = (ACTIVE.restRemaining / ACTIVE.restTotal) * 100;
-  document.getElementById('rt-bar').style.width = pct + '%';
-}
-
-function stopRestTimer() {
-  clearInterval(ACTIVE.restInterval);
-  document.getElementById('rest-timer-overlay').classList.add('hidden');
-}
-
-// ── Intensity Meter ───────────────────────────────────────────────────────────
-function updateIntensityMeter() {
-  const rpe = ACTIVE.rpe;
-  document.getElementById('rpe-slider').value = rpe;
-
-  const colors = ['','#4ade80','#4ade80','#86efac','#fbbf24','#fb923c','#f97316','#ef4444','#dc2626','#b91c1c','#7f1d1d'];
-  const color = colors[rpe] || '#ff6b00';
-
-  document.getElementById('rpe-value').textContent = `RPE ${rpe}/10`;
-  document.getElementById('rpe-value').style.color = color;
-  document.getElementById('rpe-desc').textContent = INTENSITY_TIPS[rpe] || '';
-
-  drawIntensityGauge(rpe, color);
-}
-
-function drawIntensityGauge(rpe, activeColor) {
-  const canvas = document.getElementById('intensity-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W / 2, cy = H * 0.72;
-  const R = W * 0.38;
-
-  ctx.clearRect(0, 0, W, H);
-
-  const startAngle = Math.PI * 0.75;
-  const endAngle = Math.PI * 2.25;
-  const totalArc = endAngle - startAngle;
-
-  // Background arc
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, startAngle, endAngle);
-  ctx.strokeStyle = '#2e2e2e';
-  ctx.lineWidth = 16;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-
-  // Coloured segments
-  for (let i = 1; i <= 10; i++) {
-    const seg = i / 10;
-    const segStart = startAngle + (i - 1) / 10 * totalArc;
-    const segEnd = startAngle + seg * totalArc;
-    const segColors = ['#4ade80','#4ade80','#86efac','#fbbf24','#fb923c','#f97316','#ef4444','#ef4444','#dc2626','#b91c1c'];
-    ctx.beginPath();
-    ctx.arc(cx, cy, R, segStart + 0.02, segEnd - 0.02);
-    ctx.strokeStyle = i <= rpe ? segColors[i - 1] : '#2e2e2e';
-    ctx.lineWidth = 16;
-    ctx.lineCap = 'butt';
-    ctx.stroke();
-  }
-
-  // Pointer
-  const angle = startAngle + (rpe / 10) * totalArc;
-  const px = cx + (R) * Math.cos(angle);
-  const py = cy + (R) * Math.sin(angle);
-  ctx.beginPath();
-  ctx.arc(px, py, 10, 0, Math.PI * 2);
-  ctx.fillStyle = activeColor;
-  ctx.fill();
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Label at top
-  ctx.fillStyle = '#888';
-  ctx.font = '11px system-ui';
-  ctx.textAlign = 'left';
-  ctx.fillText('1', cx - R - 16, cy + 4);
-  ctx.textAlign = 'right';
-  ctx.fillText('10', cx + R + 16, cy + 4);
-}
-
-// ── End Workout ────────────────────────────────────────────────────────────────
-function endWorkout(completed) {
-  clearInterval(ACTIVE.timerInterval);
-  stopRestTimer();
-
-  if (completed) {
-    const record = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      dayName: ACTIVE.planDay?.name,
-      elapsed: ACTIVE.elapsed,
-      rpe: ACTIVE.rpe,
-      exercises: ACTIVE.planDay?.exercises.length || 0,
-      sets: ACTIVE.setData.reduce((t, ex) => t + ex.sets.filter(s => s.done).length, 0),
-      completed: true
-    };
-    STATE.workouts.push(record);
-    STATE.currentDay = (STATE.currentDay + 1);
-    save();
-
-    // Show summary
-    document.getElementById('wo-main').classList.add('hidden');
-    document.getElementById('wo-summary').classList.add('active');
-    document.getElementById('ws-time').textContent = formatDuration(ACTIVE.elapsed);
-    document.getElementById('ws-sets').textContent = record.sets;
-    document.getElementById('ws-rpe').textContent = ACTIVE.rpe;
-
-    setTimeout(() => {
-      document.getElementById('workout-overlay').classList.add('hidden');
-      updateHeader();
-      renderDashboard();
-      renderWorkoutPlan();
-    }, 3000);
-  } else {
-    document.getElementById('workout-overlay').classList.add('hidden');
-  }
-
-  ACTIVE.running = false;
-}
-
-function formatDuration(secs) {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${m}m ${s}s`;
-}
-
-// ── Photos Tab ────────────────────────────────────────────────────────────────
-function wirePhotoTab() {
-  document.getElementById('btn-take-photo').addEventListener('click', openCamera);
-  document.getElementById('btn-upload-photo').addEventListener('click', () => {
-    document.getElementById('photo-file-input').click();
+  `).join("");
+  el.querySelectorAll(".expert-item").forEach(item => {
+    item.addEventListener("click", () => {
+      state.selectedExpert = item.dataset.id === state.selectedExpert ? null : item.dataset.id;
+      renderExperts();
+      renderComposer();
+    });
   });
-  document.getElementById('photo-file-input').addEventListener('change', handleFileUpload);
-  document.getElementById('btn-compare').addEventListener('click', openCompare);
-
-  document.getElementById('shutter-btn').addEventListener('click', capturePhoto);
-  document.getElementById('flip-btn').addEventListener('click', flipCamera);
-  document.getElementById('close-camera-btn').addEventListener('click', closeCamera);
-
-  document.getElementById('close-compare').addEventListener('click', closeCompare);
-  document.getElementById('compare-slot-0').addEventListener('click', () => openPhotoPicker(0));
-  document.getElementById('compare-slot-1').addEventListener('click', () => openPhotoPicker(1));
-
-  document.getElementById('close-picker').addEventListener('click', closePhotoPicker);
 }
 
-function renderPhotos() {
-  const grid = document.getElementById('photo-grid');
-  const noPhotos = document.getElementById('no-photos');
-  const compareBtn = document.getElementById('btn-compare');
+function renderTags() {
+  const el = document.getElementById("tagList");
+  if (state.tags.length === 0) {
+    el.innerHTML = '<div class="tag-empty">No tags yet. Use 🏷️ in composer.</div>';
+    return;
+  }
+  el.innerHTML = state.tags.map(t => `
+    <span class="tag-pill ${state.activeTag === t ? 'active' : ''}" data-tag="${esc(t)}">#${esc(t)}</span>
+  `).join("");
+  el.querySelectorAll(".tag-pill").forEach(p => {
+    p.addEventListener("click", () => {
+      state.activeTag = state.activeTag === p.dataset.tag ? null : p.dataset.tag;
+      renderTags();
+      renderChat();
+    });
+  });
+}
 
-  if (!STATE.photos.length) {
-    grid.innerHTML = '';
-    noPhotos.classList.remove('hidden');
-    compareBtn.disabled = true;
+/* ── RENDER: MODE TABS & HEADER ──────────────────────── */
+function renderModeTabs() {
+  const el = document.getElementById("modeTabs");
+  el.innerHTML = MODES.map(m => `
+    <button class="mode-tab ${state.mode === m.id ? 'active' : ''}" data-mode="${m.id}">
+      <div class="mode-tab-icon">${m.icon}</div>
+      <div class="mode-tab-name">${m.name}</div>
+      <div class="mode-tab-desc">${esc(m.desc)}</div>
+    </button>
+  `).join("");
+  el.querySelectorAll(".mode-tab").forEach(t => {
+    t.addEventListener("click", () => switchMode(t.dataset.mode));
+  });
+}
+
+function renderModeHeader() {
+  const m = MODES.find(m => m.id === state.mode);
+  document.getElementById("modeHeader").innerHTML = `
+    <div class="mode-header-icon">${m.icon}</div>
+    <div class="mode-header-text">
+      <div class="mode-header-name">${m.name}</div>
+      <div class="mode-header-desc">${esc(m.desc)}</div>
+    </div>
+  `;
+}
+
+function renderHints() {
+  const el = document.getElementById("hintChips");
+  el.innerHTML = (HINTS[state.mode] || []).map(h => `
+    <button class="hint-chip" data-hint="${esc(h)}">${esc(h)}</button>
+  `).join("");
+  el.querySelectorAll(".hint-chip").forEach(c => {
+    c.addEventListener("click", () => {
+      document.getElementById("userInput").value = c.dataset.hint;
+      document.getElementById("userInput").focus();
+    });
+  });
+}
+
+function renderComposer() {
+  const exp = state.selectedExpert ? expertById(state.selectedExpert) : null;
+  const singleModes = ["script", "reversal", "challenge", "tracker"];
+  const composerExpert = document.getElementById("composerExpert");
+  if (singleModes.includes(state.mode)) {
+    if (exp) composerExpert.textContent = exp.emoji + " " + exp.name;
+    else composerExpert.textContent = "⚠️ Pick an expert in the sidebar →";
+  } else {
+    composerExpert.textContent = "All 15 Experts";
+  }
+  document.getElementById("composerTag").innerHTML = "🏷️ " + esc(state.currentTag);
+  const ph = {
+    hotseat: "Describe your business, project, or situation in detail...",
+    decision: "Frame your decision (e.g. Should I X or Y, given Z)...",
+    mixtape: "Ask one question...",
+    script: "What should the script accomplish? Who's the audience?",
+    reversal: "What are you working on or struggling with?",
+    challenge: "What's your 30-day goal?",
+    tracker: "Log a win, struggle, or update..."
+  };
+  document.getElementById("userInput").placeholder = ph[state.mode] || "Type here...";
+}
+
+/* ── RENDER: CHAT ────────────────────────────────────── */
+function renderChat() {
+  const chat = document.getElementById("chat");
+  const filtered = state.activeTag
+    ? state.history.filter(h => h.tag === state.activeTag)
+    : state.history.filter(h => h.mode === state.mode);
+
+  if (filtered.length === 0) {
+    chat.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">${MODES.find(m => m.id === state.mode).icon}</div>
+        <div class="empty-state-title">${MODES.find(m => m.id === state.mode).name}</div>
+        <div class="empty-state-desc">${esc(MODES.find(m => m.id === state.mode).desc)}</div>
+      </div>
+    `;
     return;
   }
 
-  noPhotos.classList.add('hidden');
-  compareBtn.disabled = STATE.photos.length < 2;
-
-  const sorted = [...STATE.photos].sort((a, b) => b.date.localeCompare(a.date));
-  grid.innerHTML = sorted.map(p => {
-    const date = new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    return `<div class="photo-card">
-      <img src="${p.dataUrl}" alt="Progress photo">
-      <div class="photo-card-info">${date}${p.note ? '<br><span style="opacity:0.7">' + p.note + '</span>' : ''}</div>
-      <button class="delete-photo" onclick="deletePhoto('${p.id}')">×</button>
-    </div>`;
-  }).join('');
+  chat.innerHTML = filtered.map((h, i) => renderMessage(h, i)).join("");
+  chat.scrollTop = chat.scrollHeight;
+  attachMessageHandlers();
 }
 
-async function openCamera() {
-  document.getElementById('camera-modal').classList.remove('hidden');
-  await startCameraStream();
+function renderMessage(h, idx) {
+  let body = "";
+  if (h.role === "user") {
+    return `<div class="msg"><div class="msg-user">${esc(h.text)}</div></div>`;
+  }
+  if (h.mode === "hotseat" && h.data) body = renderHotSeat(h.data);
+  else if (h.mode === "decision" && h.data) body = renderDecision(h.data);
+  else if (h.mode === "mixtape" && h.data) body = renderMixtape(h.data);
+  else if (h.mode === "challenge" && h.data) body = renderChallenge(h.data, h.id);
+  else if (h.text) {
+    const exp = expertById(h.expertId);
+    body = `
+      <div class="expert-card">
+        <div class="expert-card-header">
+          <div class="expert-card-emoji">${exp ? exp.emoji : "🤖"}</div>
+          <div>
+            <div class="expert-card-name">${exp ? exp.name : "Brain Trust"}</div>
+            <div class="expert-card-title">${exp ? exp.title : ""}</div>
+          </div>
+        </div>
+        <div class="expert-card-body">${esc(h.text)}</div>
+      </div>
+    `;
+  }
+  return `
+    <div class="msg msg-ai-wrap">
+      ${body}
+      <div class="msg-actions" data-msg-id="${h.id}">
+        <button class="rate-btn ${state.ratings[h.id] === 'up' ? 'active' : ''}" data-rate="up">👍</button>
+        <button class="rate-btn ${state.ratings[h.id] === 'down' ? 'active' : ''}" data-rate="down">👎</button>
+      </div>
+    </div>
+  `;
 }
 
-async function startCameraStream() {
+function renderHotSeat(data) {
+  if (!Array.isArray(data)) return "<div class='expert-card'>Bad response — try again.</div>";
+  return `<div class="hotseat-grid">${data.map(d => {
+    const exp = expertById(d.expert) || { name: d.expert, emoji: "🤖", title: "" };
+    const sev = (d.severity || "MEDIUM").toUpperCase();
+    return `
+      <div class="expert-card">
+        <div class="expert-card-header">
+          <div class="expert-card-emoji">${exp.emoji}</div>
+          <div>
+            <div class="expert-card-name">${exp.name}</div>
+            <div class="expert-card-title">${exp.title}</div>
+          </div>
+          <div class="severity severity-${sev}">${sev}</div>
+        </div>
+        <div class="expert-card-body">${esc(d.diagnosis || "")}</div>
+      </div>
+    `;
+  }).join("")}</div>`;
+}
+
+function renderDecision(data) {
+  if (!data || !Array.isArray(data.votes)) return "<div class='expert-card'>Bad response — try again.</div>";
+  const yes = data.votes.filter(v => v.vote === "YES").length;
+  const no = data.votes.filter(v => v.vote === "NO").length;
+  const verdict = yes > no ? "CONSENSUS: YES" : no > yes ? "CONSENSUS: NO" : "SPLIT — proceed with caution";
+  return `
+    <div class="decision-summary">
+      <div class="decision-tally">✅ ${yes} YES &nbsp;·&nbsp; ❌ ${no} NO</div>
+      <div class="decision-verdict">${esc(verdict)}</div>
+    </div>
+    ${data.votes.map(v => {
+      const exp = expertById(v.expert) || { name: v.expert, emoji: "🤖" };
+      return `
+        <div class="vote-row">
+          <div class="vote-emoji">${exp.emoji}</div>
+          <div class="vote-name">${exp.name}</div>
+          <div class="vote-badge vote-${v.vote}">${v.vote}</div>
+          <div class="vote-reason">${esc(v.reason || "")}</div>
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function renderMixtape(data) {
+  if (!Array.isArray(data)) return "<div class='expert-card'>Bad response — try again.</div>";
+  return data.map(d => {
+    const exp = expertById(d.expert) || { name: d.expert, emoji: "🤖" };
+    return `
+      <div class="mixtape-block">
+        <div class="mixtape-emoji">${exp.emoji}</div>
+        <div class="mixtape-content">
+          <div class="mixtape-name">${exp.name}</div>
+          <div class="mixtape-text">${esc(d.text || "")}</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderChallenge(data, msgId) {
+  if (!data || !Array.isArray(data.days)) return "<div class='expert-card'>Bad response — try again.</div>";
+  const exp = expertById(data.expert) || { name: "Coach", emoji: "📅", title: "" };
+  const challengeKey = msgId;
+  const done = (state.challenge && state.challenge.id === challengeKey) ? state.challenge.done : [];
+  return `
+    <div class="expert-card">
+      <div class="expert-card-header">
+        <div class="expert-card-emoji">${exp.emoji}</div>
+        <div>
+          <div class="expert-card-name">${exp.name} · 30-Day Challenge</div>
+          <div class="expert-card-title">${esc(data.goal || "")}</div>
+        </div>
+      </div>
+      <div class="expert-card-body">${esc(data.intro || "")}</div>
+      <div class="day-calendar">
+        ${data.days.map(d => `
+          <div class="day-cell ${done.includes(d.day) ? 'done' : ''}" data-day="${d.day}" data-challenge="${challengeKey}">
+            <div class="day-num">${d.day}</div>
+            <div class="day-task">${esc(d.task || "")}</div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function attachMessageHandlers() {
+  document.querySelectorAll(".rate-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      const wrap = b.closest(".msg-actions");
+      const id = wrap.dataset.msgId;
+      const rate = b.dataset.rate;
+      state.ratings[id] = state.ratings[id] === rate ? null : rate;
+      save();
+      renderChat();
+    });
+  });
+  document.querySelectorAll(".day-cell").forEach(c => {
+    c.addEventListener("click", () => {
+      const day = parseInt(c.dataset.day);
+      const cid = c.dataset.challenge;
+      if (!state.challenge || state.challenge.id !== cid) {
+        state.challenge = { id: cid, done: [] };
+      }
+      const idx = state.challenge.done.indexOf(day);
+      if (idx >= 0) state.challenge.done.splice(idx, 1);
+      else state.challenge.done.push(day);
+      save();
+      renderChat();
+    });
+  });
+}
+
+/* ── MODE SWITCHING ──────────────────────────────────── */
+function switchMode(modeId) {
+  state.mode = modeId;
+  state.activeTag = null;
+  renderModeTabs();
+  renderModeHeader();
+  renderHints();
+  renderComposer();
+  renderTags();
+  renderChat();
+}
+
+/* ── SEND ────────────────────────────────────────────── */
+async function send() {
+  const input = document.getElementById("userInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const singleModes = ["script", "reversal", "challenge", "tracker"];
+  if (singleModes.includes(state.mode) && !state.selectedExpert) {
+    alert("Pick an expert in the sidebar first for this mode.");
+    return;
+  }
+
+  const userMsg = {
+    id: "u" + Date.now(),
+    role: "user",
+    mode: state.mode,
+    text,
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+  state.history.push(userMsg);
+  input.value = "";
+
+  // loading indicator
+  const chat = document.getElementById("chat");
+  const loadId = "load" + Date.now();
+  renderChat();
+  chat.insertAdjacentHTML("beforeend", `
+    <div id="${loadId}" class="msg msg-ai-wrap">
+      <div class="loading"><div class="spinner"></div>Experts are thinking...</div>
+    </div>
+  `);
+  chat.scrollTop = chat.scrollHeight;
+  sendBtn.disabled = true;
+
   try {
-    if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: cameraFacing, width: { ideal: 720 }, height: { ideal: 1280 } }
-    });
-    const video = document.getElementById('camera-video');
-    video.srcObject = cameraStream;
-    await video.play();
+    let aiMsg;
+    if (state.mode === "hotseat") aiMsg = await runHotSeat(text);
+    else if (state.mode === "decision") aiMsg = await runDecision(text);
+    else if (state.mode === "mixtape") aiMsg = await runMixtape(text);
+    else if (state.mode === "script") aiMsg = await runScript(text);
+    else if (state.mode === "reversal") aiMsg = await runReversal(text);
+    else if (state.mode === "challenge") aiMsg = await runChallenge(text);
+    else if (state.mode === "tracker") aiMsg = await runTracker(text);
+    if (aiMsg) state.history.push(aiMsg);
   } catch (err) {
-    showToast('Camera not available. Try uploading a photo.');
-    closeCamera();
-  }
-}
-
-function capturePhoto() {
-  const video = document.getElementById('camera-video');
-  const canvas = document.getElementById('photo-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  savePhoto(dataUrl);
-  closeCamera();
-}
-
-function flipCamera() {
-  cameraFacing = cameraFacing === 'user' ? 'environment' : 'user';
-  startCameraStream();
-}
-
-function closeCamera() {
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-  document.getElementById('camera-modal').classList.add('hidden');
-}
-
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => { savePhoto(ev.target.result); };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-}
-
-function savePhoto(dataUrl) {
-  const note = prompt('Add a note for this photo (optional):') || '';
-  STATE.photos.push({ id: Date.now().toString(), date: new Date().toISOString(), dataUrl, note });
-  save();
-  renderPhotos();
-  showToast('Photo saved!');
-}
-
-function deletePhoto(id) {
-  if (!confirm('Delete this photo?')) return;
-  STATE.photos = STATE.photos.filter(p => p.id !== id);
-  save();
-  renderPhotos();
-}
-
-// Compare
-function openCompare() {
-  document.getElementById('compare-modal').classList.remove('hidden');
-  renderCompareSlots();
-}
-
-function closeCompare() {
-  document.getElementById('compare-modal').classList.add('hidden');
-}
-
-function renderCompareSlots() {
-  ['0', '1'].forEach(idx => {
-    const slot = document.getElementById(`compare-slot-${idx}`);
-    slot.dataset.photoId = '';
-    slot.innerHTML = `<div class="slot-placeholder"><div style="font-size:40px">📷</div><p>${idx === '0' ? 'Before' : 'After'}</p></div>`;
-  });
-}
-
-function openPhotoPicker(slotIdx) {
-  compareSlot = slotIdx;
-  const picker = document.getElementById('photo-picker');
-  picker.classList.remove('hidden');
-
-  const sorted = [...STATE.photos].sort((a, b) => a.date.localeCompare(b.date));
-  document.getElementById('pp-grid').innerHTML = sorted.map(p => {
-    const date = new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    return `<div class="pp-photo" onclick="selectComparePhoto('${p.id}', '${date}')">
-      <img src="${p.dataUrl}" alt="${date}">
-    </div>`;
-  }).join('');
-}
-
-function selectComparePhoto(id, label) {
-  const photo = STATE.photos.find(p => p.id === id);
-  if (!photo) return;
-  const slot = document.getElementById(`compare-slot-${compareSlot}`);
-  slot.dataset.photoId = id;
-  slot.innerHTML = `<img src="${photo.dataUrl}"><div class="slot-label">${label}</div>`;
-  closePhotoPicker();
-}
-
-function closePhotoPicker() {
-  document.getElementById('photo-picker').classList.add('hidden');
-}
-
-// ── Goals Tab ─────────────────────────────────────────────────────────────────
-function wireGoalsTab() {
-  document.getElementById('save-goals-btn').addEventListener('click', saveGoals);
-  document.getElementById('add-measurement-btn').addEventListener('click', addMeasurement);
-
-  document.querySelectorAll('.chart-tab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      chartMetric = btn.dataset.metric;
-      drawProgressChart();
+    state.history.push({
+      id: "e" + Date.now(),
+      role: "ai",
+      mode: state.mode,
+      text: "Error: " + (err.message || err),
+      tag: state.currentTag,
+      ts: Date.now()
     });
-  });
+  }
+  save();
+  document.getElementById(loadId)?.remove();
+  renderChat();
+  sendBtn.disabled = false;
+}
 
-  document.getElementById('reset-app-btn').addEventListener('click', () => {
-    if (confirm('Reset all data and start over?')) {
-      localStorage.removeItem('gymtrack_state');
-      location.reload();
+/* ── MODE RUNNERS ────────────────────────────────────── */
+async function runHotSeat(situation) {
+  const ids = EXPERTS.map(e => e.id);
+  const expertsList = EXPERTS.map(e => `${e.id} = ${e.name} (${e.title})`).join("\n");
+  const system = `You orchestrate a panel of 15 business experts. They each have a strong personality. You must respond with their authentic voices.
+
+The 15 experts:
+${expertsList}
+
+Each expert speaks IN CHARACTER using their signature voice, vocabulary, and frameworks.`;
+
+  const personas = EXPERTS.map(e => `## ${e.id}\n${e.persona}`).join("\n\n");
+
+  const prompt = `${personas}
+
+The user has shared this situation:
+"""
+${situation}
+"""
+
+Each of the 15 experts identifies ONE biggest problem from their unique lens. Each must speak in their authentic voice — different vocabulary, cadence, frameworks. Keep each diagnosis 2-4 sentences max, punchy and in-character.
+
+Return ONLY this JSON array (no markdown, no preamble), one entry per expert in this exact order:
+
+[
+${ids.map(id => `  { "expert": "${id}", "severity": "CRITICAL|HIGH|MEDIUM", "diagnosis": "..." }`).join(",\n")}
+]`;
+
+  const raw = await callClaude(system, prompt, 4000);
+  const data = parseJSON(raw);
+  return {
+    id: "h" + Date.now(),
+    role: "ai",
+    mode: "hotseat",
+    data: data || [],
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runDecision(question) {
+  const ids = EXPERTS.map(e => e.id);
+  const personas = EXPERTS.map(e => `## ${e.id} (${e.name})\n${e.persona}`).join("\n\n");
+
+  const system = `You orchestrate 15 business experts voting on a decision. Each votes YES or NO and gives a 1-2 sentence reason in their authentic voice.`;
+
+  const prompt = `${personas}
+
+User's decision:
+"""
+${question}
+"""
+
+Each expert votes YES or NO with a 1-2 sentence reason in their voice.
+
+Return ONLY this JSON (no markdown):
+
+{
+  "votes": [
+${ids.map(id => `    { "expert": "${id}", "vote": "YES|NO", "reason": "..." }`).join(",\n")}
+  ]
+}`;
+
+  const raw = await callClaude(system, prompt, 3500);
+  const data = parseJSON(raw);
+  return {
+    id: "d" + Date.now(),
+    role: "ai",
+    mode: "decision",
+    data: data || { votes: [] },
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runMixtape(question) {
+  const ids = EXPERTS.map(e => e.id);
+  const personas = EXPERTS.map(e => `## ${e.id} (${e.name})\n${e.persona}`).join("\n\n");
+
+  const system = `You orchestrate 15 experts answering a single question. Each gives ONE paragraph (2-4 sentences) in their authentic voice.`;
+
+  const prompt = `${personas}
+
+Question:
+"""
+${question}
+"""
+
+Each expert answers in one paragraph (2-4 sentences) using their authentic voice and signature phrases.
+
+Return ONLY this JSON (no markdown):
+
+[
+${ids.map(id => `  { "expert": "${id}", "text": "..." }`).join(",\n")}
+]`;
+
+  const raw = await callClaude(system, prompt, 4000);
+  const data = parseJSON(raw);
+  return {
+    id: "m" + Date.now(),
+    role: "ai",
+    mode: "mixtape",
+    data: data || [],
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runScript(brief) {
+  const exp = expertById(state.selectedExpert);
+  const system = `You are ${exp.name}. ${exp.persona}`;
+  const prompt = `Write the script/copy below in YOUR authentic voice, vocabulary, and rhythm. No meta commentary. Output only the script.
+
+Brief: ${brief}`;
+  const raw = await callClaude(system, prompt, 2000);
+  return {
+    id: "s" + Date.now(),
+    role: "ai",
+    mode: "script",
+    expertId: exp.id,
+    text: raw,
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runReversal(context) {
+  const exp = expertById(state.selectedExpert);
+  const system = `You are ${exp.name}. ${exp.persona}
+
+You are about to interview the user using YOUR signature questioning style. Don't give advice — ask penetrating questions in your voice. 5-7 questions total. Format as a numbered list.`;
+  const prompt = `The user said: "${context}"
+
+Interview them. Ask 5-7 hard questions in your signature style.`;
+  const raw = await callClaude(system, prompt, 1500);
+  return {
+    id: "r" + Date.now(),
+    role: "ai",
+    mode: "reversal",
+    expertId: exp.id,
+    text: raw,
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runChallenge(goal) {
+  const exp = expertById(state.selectedExpert);
+  const system = `You are ${exp.name}. ${exp.persona}
+
+You design a 30-day daily action plan in YOUR voice and methodology. Each day has ONE specific action, written concisely (under 12 words).`;
+  const prompt = `The user's 30-day goal:
+"""
+${goal}
+"""
+
+Design the 30-day plan. Return ONLY this JSON (no markdown):
+
+{
+  "expert": "${exp.id}",
+  "goal": "<restate the goal in your voice>",
+  "intro": "<2-3 sentence intro in your voice, hyping the plan>",
+  "days": [
+    { "day": 1, "task": "..." },
+    { "day": 2, "task": "..." },
+    ... through day 30
+  ]
+}`;
+  const raw = await callClaude(system, prompt, 3000);
+  const data = parseJSON(raw);
+  return {
+    id: "c" + Date.now(),
+    role: "ai",
+    mode: "challenge",
+    data: data || { expert: exp.id, days: [] },
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+async function runTracker(update) {
+  const exp = expertById(state.selectedExpert);
+  const recent = state.history
+    .filter(h => h.mode === "tracker" && h.tag === state.currentTag)
+    .slice(-6)
+    .map(h => h.role === "user" ? `USER: ${h.text}` : `${exp.name}: ${h.text || ""}`)
+    .join("\n");
+  const system = `You are ${exp.name}. ${exp.persona}
+
+The user is logging progress over time. Respond to each update in your authentic voice — call out what's working, what's BS, push them forward. 2-4 sentences.`;
+  const prompt = `Recent log:
+${recent}
+
+Their latest update: "${update}"
+
+Respond in character.`;
+  const raw = await callClaude(system, prompt, 800);
+  return {
+    id: "t" + Date.now(),
+    role: "ai",
+    mode: "tracker",
+    expertId: exp.id,
+    text: raw,
+    tag: state.currentTag,
+    ts: Date.now()
+  };
+}
+
+/* ── EXPORT ──────────────────────────────────────────── */
+function exportSession() {
+  const lines = ["AI BUSINESS BRAIN TRUST — SESSION EXPORT", "Date: " + new Date().toLocaleString(), ""];
+  state.history.forEach(h => {
+    if (h.role === "user") {
+      lines.push("─".repeat(60));
+      lines.push("[" + (h.mode || "").toUpperCase() + "] " + (h.tag ? "#" + h.tag : ""));
+      lines.push("YOU: " + h.text);
+    } else if (h.mode === "hotseat" && h.data) {
+      h.data.forEach(d => {
+        const exp = expertById(d.expert);
+        lines.push("\n" + (exp ? exp.name : d.expert) + " [" + (d.severity || "") + "]:");
+        lines.push(d.diagnosis || "");
+      });
+    } else if (h.mode === "decision" && h.data) {
+      h.data.votes?.forEach(v => {
+        const exp = expertById(v.expert);
+        lines.push("\n" + (exp ? exp.name : v.expert) + " [" + v.vote + "]: " + (v.reason || ""));
+      });
+    } else if (h.mode === "mixtape" && h.data) {
+      h.data.forEach(d => {
+        const exp = expertById(d.expert);
+        lines.push("\n" + (exp ? exp.name : d.expert) + ": " + (d.text || ""));
+      });
+    } else if (h.mode === "challenge" && h.data) {
+      lines.push("\n30-DAY CHALLENGE: " + (h.data.goal || ""));
+      lines.push(h.data.intro || "");
+      h.data.days?.forEach(d => lines.push("Day " + d.day + ": " + d.task));
+    } else if (h.text) {
+      const exp = expertById(h.expertId);
+      lines.push("\n" + (exp ? exp.name : "Brain Trust") + ":");
+      lines.push(h.text);
     }
   });
+  const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "brain-trust-" + new Date().toISOString().slice(0, 10) + ".txt";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-function renderGoalsTab() {
-  if (!STATE.user) return;
-  const goalInfo = GOAL_INFO[STATE.user.goal];
-  document.getElementById('goal-icon').textContent = goalInfo.icon;
-  document.getElementById('goal-label').textContent = goalInfo.label;
-  document.getElementById('goal-target-desc').textContent = goalInfo.target;
-
-  document.getElementById('target-weight').value = STATE.goals.targetWeight || '';
-  document.getElementById('target-bf').value = STATE.goals.targetBodyFat || '';
-
-  renderMeasurementHistory();
-  drawProgressChart();
-}
-
-function saveGoals() {
-  STATE.goals.targetWeight = document.getElementById('target-weight').value;
-  STATE.goals.targetBodyFat = document.getElementById('target-bf').value;
-  save();
-  showToast('Goals saved!');
-}
-
-function addMeasurement() {
-  const weight = document.getElementById('m-weight').value;
-  const chest  = document.getElementById('m-chest').value;
-  const waist  = document.getElementById('m-waist').value;
-  const arms   = document.getElementById('m-arms').value;
-  const legs   = document.getElementById('m-legs').value;
-  const bf     = document.getElementById('m-bf').value;
-
-  if (!weight && !chest && !waist) {
-    showToast('Enter at least weight or a measurement');
-    return;
+/* ── TAGGING ─────────────────────────────────────────── */
+function promptTag() {
+  const t = prompt("Tag this conversation (e.g. agency, saas, real-estate):", state.currentTag === "Untagged" ? "" : state.currentTag);
+  if (t === null) return;
+  const tag = t.trim() || "Untagged";
+  state.currentTag = tag;
+  if (tag !== "Untagged" && !state.tags.includes(tag)) {
+    state.tags.push(tag);
   }
-
-  STATE.measurements.push({
-    date: new Date().toISOString(),
-    weight: weight ? parseFloat(weight) : null,
-    chest:  chest  ? parseFloat(chest)  : null,
-    waist:  waist  ? parseFloat(waist)  : null,
-    arms:   arms   ? parseFloat(arms)   : null,
-    legs:   legs   ? parseFloat(legs)   : null,
-    bf:     bf     ? parseFloat(bf)     : null
-  });
   save();
+  renderTags();
+  renderComposer();
+}
 
-  // Clear inputs
-  ['m-weight','m-chest','m-waist','m-arms','m-legs','m-bf'].forEach(id => {
-    document.getElementById(id).value = '';
+/* ── INIT ────────────────────────────────────────────── */
+function init() {
+  // API key modal
+  if (!state.apiKey) {
+    document.getElementById("apiModal").classList.add("open");
+  }
+  document.getElementById("saveKeyBtn").addEventListener("click", () => {
+    const k = document.getElementById("apiKeyInput").value.trim();
+    if (k) {
+      state.apiKey = k;
+      localStorage.setItem("brainTrustKey", k);
+    }
+    document.getElementById("apiModal").classList.remove("open");
+  });
+  document.getElementById("skipKeyBtn").addEventListener("click", () => {
+    document.getElementById("apiModal").classList.remove("open");
+  });
+  document.getElementById("changeKeyBtn").addEventListener("click", () => {
+    document.getElementById("apiKeyInput").value = state.apiKey || "";
+    document.getElementById("apiModal").classList.add("open");
   });
 
-  renderMeasurementHistory();
-  drawProgressChart();
-  showToast('Measurement logged!');
-}
-
-function renderMeasurementHistory() {
-  const container = document.getElementById('measurement-history');
-  if (!STATE.measurements.length) {
-    container.innerHTML = '<p style="color:var(--text3);font-size:14px;text-align:center;padding:20px 0">No measurements yet</p>';
-    return;
-  }
-  const sorted = [...STATE.measurements].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
-  container.innerHTML = sorted.map(m => {
-    const date = new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const vals = [
-      m.weight != null ? `<div class="mh-val">${m.weight}<span>lb</span></div>` : '',
-      m.chest  != null ? `<div class="mh-val">${m.chest}<span>in</span></div>` : '',
-      m.waist  != null ? `<div class="mh-val">${m.waist}<span>w</span></div>` : '',
-      m.bf     != null ? `<div class="mh-val">${m.bf}<span>%</span></div>` : ''
-    ].filter(Boolean).slice(0, 3).join('');
-    return `<div class="mh-item">
-      <div class="mh-date">${date}</div>
-      <div class="mh-values">${vals}</div>
-    </div>`;
-  }).join('');
-}
-
-function drawProgressChart() {
-  const canvas = document.getElementById('progress-chart');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 320;
-  canvas.width = W * (window.devicePixelRatio || 1);
-  canvas.height = 160 * (window.devicePixelRatio || 1);
-  canvas.style.height = '160px';
-  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
-
-  const data = STATE.measurements
-    .filter(m => m[chartMetric] != null)
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map(m => ({ date: new Date(m.date), val: m[chartMetric] }));
-
-  ctx.clearRect(0, 0, W, 160);
-
-  if (data.length < 2) {
-    ctx.fillStyle = '#505050';
-    ctx.font = '14px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillText('Log 2+ measurements to see your chart', W / 2, 80);
-    return;
-  }
-
-  const pad = { t: 16, r: 16, b: 32, l: 40 };
-  const cW = W - pad.l - pad.r;
-  const cH = 160 - pad.t - pad.b;
-
-  const vals = data.map(d => d.val);
-  const minV = Math.min(...vals);
-  const maxV = Math.max(...vals);
-  const range = maxV - minV || 1;
-
-  const xOf = (i) => pad.l + (i / (data.length - 1)) * cW;
-  const yOf = (v) => pad.t + cH - ((v - minV) / range) * cH;
-
-  // Grid lines
-  ctx.strokeStyle = '#2e2e2e';
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = pad.t + (i / 4) * cH;
-    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cW, y); ctx.stroke();
-    const label = (maxV - (i / 4) * range).toFixed(1);
-    ctx.fillStyle = '#606060';
-    ctx.font = '10px system-ui';
-    ctx.textAlign = 'right';
-    ctx.fillText(label, pad.l - 4, y + 3);
-  }
-
-  // Gradient fill
-  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + cH);
-  grad.addColorStop(0, 'rgba(255,107,0,0.4)');
-  grad.addColorStop(1, 'rgba(255,107,0,0)');
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOf(data[0].val));
-  data.forEach((d, i) => { if (i > 0) ctx.lineTo(xOf(i), yOf(d.val)); });
-  ctx.lineTo(xOf(data.length - 1), pad.t + cH);
-  ctx.lineTo(xOf(0), pad.t + cH);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOf(data[0].val));
-  data.forEach((d, i) => { if (i > 0) ctx.lineTo(xOf(i), yOf(d.val)); });
-  ctx.strokeStyle = '#ff6b00';
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  // Dots + date labels
-  data.forEach((d, i) => {
-    ctx.beginPath();
-    ctx.arc(xOf(i), yOf(d.val), 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff6b00';
-    ctx.fill();
-    ctx.strokeStyle = '#0a0a0a';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (i === 0 || i === data.length - 1) {
-      ctx.fillStyle = '#888';
-      ctx.font = '10px system-ui';
-      ctx.textAlign = i === 0 ? 'left' : 'right';
-      const lbl = d.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      ctx.fillText(lbl, xOf(i), pad.t + cH + 14);
+  // Session actions
+  document.getElementById("exportBtn").addEventListener("click", exportSession);
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (confirm("Clear all chat history?")) {
+      state.history = [];
+      state.ratings = {};
+      state.challenge = null;
+      save();
+      renderChat();
     }
   });
+  document.getElementById("tagBtn").addEventListener("click", promptTag);
+
+  // Send
+  document.getElementById("sendBtn").addEventListener("click", send);
+  document.getElementById("userInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  renderModeTabs();
+  renderModeHeader();
+  renderHints();
+  renderComposer();
+  renderExperts();
+  renderTags();
+  renderChat();
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
-}
+init();
