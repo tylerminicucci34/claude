@@ -5,10 +5,19 @@ python-dotenv>=1.0.0
 mss>=9.0.1
 Pillow>=10.0.0
 
-# STT
+# STT (optional — only needed for voice input)
 openai>=1.40.0
 sounddevice>=0.4.6
 numpy>=1.26.0
 
 # TTS (local, offline, free)
 piper-tts>=1.2.0
+
+# Wake word
+openwakeword>=0.6.0
+
+# Status bar
+rich>=13.0.0
+
+# Tools (optional — used by play_media)
+yt-dlp>=2024.1.0

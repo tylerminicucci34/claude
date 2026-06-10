@@ -51,6 +51,18 @@ class Config:
     capture_screen: bool = os.getenv("JARVIS_CAPTURE_SCREEN", "true").lower() == "true"
     screen_max_dim: int = int(os.getenv("JARVIS_SCREEN_MAX_DIM", "1568"))
 
+    # Wake word
+    wake_enabled: bool = os.getenv("JARVIS_WAKE_ENABLED", "true").lower() == "true"
+    wake_phrase: str = os.getenv("JARVIS_WAKE_PHRASE", "hey_jarvis")
+    wake_threshold: float = float(os.getenv("JARVIS_WAKE_THRESHOLD", "0.5"))
+
+    # Tools
+    tools_enabled: bool = os.getenv("JARVIS_TOOLS_ENABLED", "true").lower() == "true"
+    confirm_shell: bool = os.getenv("JARVIS_CONFIRM_SHELL", "false").lower() == "true"
+
+    # Status bar
+    status_bar: bool = os.getenv("JARVIS_STATUS_BAR", "true").lower() == "true"
+
     # Memory
     memory_file: Path = MEMORY_DIR / "memory.json"
     transcript_log: Path = LOGS_DIR / "transcript.jsonl"
