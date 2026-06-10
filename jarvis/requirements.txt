@@ -1,0 +1,14 @@
+anthropic>=0.40.0
+python-dotenv>=1.0.0
+
+# Screen capture (vision)
+mss>=9.0.1
+Pillow>=10.0.0
+
+# STT
+openai>=1.40.0
+sounddevice>=0.4.6
+numpy>=1.26.0
+
+# TTS
+elevenlabs>=1.0.0

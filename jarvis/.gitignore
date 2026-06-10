@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+memory/memory.json
+logs/
+.DS_Store
