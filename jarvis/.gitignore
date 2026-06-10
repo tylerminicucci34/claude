@@ -6,3 +6,4 @@ venv/
 memory/memory.json
 logs/
 .DS_Store
+voices/

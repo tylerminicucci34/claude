@@ -10,5 +10,5 @@ openai>=1.40.0
 sounddevice>=0.4.6
 numpy>=1.26.0
 
-# TTS
-elevenlabs>=1.0.0
+# TTS (local, offline, free)
+piper-tts>=1.2.0

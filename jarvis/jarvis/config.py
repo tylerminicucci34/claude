@@ -32,10 +32,11 @@ class Config:
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
     whisper_model: str = os.getenv("WHISPER_MODEL", "whisper-1")
 
-    # ElevenLabs / TTS
-    elevenlabs_api_key: str = os.getenv("ELEVENLABS_API_KEY", "")
-    elevenlabs_voice_id: str = os.getenv("ELEVENLABS_VOICE_ID", "")
-    elevenlabs_model: str = os.getenv("ELEVENLABS_MODEL", "eleven_turbo_v2_5")
+    # Piper / TTS
+    piper_voice_model: str = os.getenv(
+        "PIPER_VOICE_MODEL",
+        str(ROOT / "voices" / "en_GB-alan-medium.onnx"),
+    )
 
     # User
     user_name: str = os.getenv("JARVIS_USER_NAME", "Sir")

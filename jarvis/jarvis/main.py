@@ -61,9 +61,7 @@ def main() -> int:
             print(f"[jarvis] voice input disabled: {e}")
         try:
             speaker = tts_mod.Speaker(
-                api_key=config.elevenlabs_api_key,
-                voice_id=config.elevenlabs_voice_id,
-                model=config.elevenlabs_model,
+                voice_model_path=Path(config.piper_voice_model),
             )
         except tts_mod.TTSUnavailable as e:
             print(f"[jarvis] voice output disabled: {e}")
