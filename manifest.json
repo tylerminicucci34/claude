@@ -1,0 +1,39 @@
+{
+  "name": "GymTrack Pro",
+  "short_name": "GymTrack",
+  "description": "Track your gym progress, workouts, and body transformation",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "sports"],
+  "shortcuts": [
+    {
+      "name": "Start Workout",
+      "short_name": "Workout",
+      "description": "Jump straight to today's workout",
+      "url": "./index.html#workout"
+    },
+    {
+      "name": "Take Progress Photo",
+      "short_name": "Photo",
+      "description": "Take a body progress photo",
+      "url": "./index.html#photos"
+    }
+  ]
+}
