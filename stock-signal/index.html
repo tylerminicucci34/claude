@@ -75,6 +75,23 @@
     button:hover { background: rgba(255,107,0,0.28); }
     button.ghost { border-color: #33334a; background: transparent; color: #aaa; }
 
+    /* Lookup */
+    .lookup-row { display: flex; gap: 10px; }
+    .lookup-row input {
+      flex: 1; font-family: inherit; font-size: 16px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #f0f0f0; background: #12121b;
+      border: 1px solid #33334a; border-radius: 12px; padding: 11px 14px;
+    }
+    .lookup-row input:focus { outline: none; border-color: #ff8c33; }
+    .lk-card { margin-top: 16px; background: #12121b; border: 1px solid #26263a; border-radius: 14px; padding: 18px; }
+    .lk-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .lk-head .sym { font-size: 26px; font-weight: 900; color: #ffd700; }
+    .lk-head .comp { font-size: 20px; font-weight: 800; }
+    .lk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 560px) { .lk-grid { grid-template-columns: repeat(2, 1fr); } }
+    .lk-cell { background: #0e0e16; border-radius: 10px; padding: 10px; text-align: center; }
+    .lk-cell .v { font-size: 18px; font-weight: 800; }
+    .lk-cell .l { font-size: 11px; color: #888; margin-top: 3px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -120,9 +137,20 @@
     <div id="regimeDesc" class="regime-desc"></div>
   </div>
 
+  <!-- LOOKUP -->
+  <div class="panel">
+    <h2>🔎 Look up any stock <span class="tag">type a ticker</span></h2>
+    <div class="lookup-row">
+      <input id="lookupInput" type="text" placeholder="e.g. AAPL, SPY, GME…" maxlength="6" autocomplete="off" spellcheck="false">
+      <button onclick="doLookup()">Look up</button>
+    </div>
+    <div id="lookupResult"></div>
+  </div>
+
   <!-- SIGNALS -->
   <div class="panel">
-    <h2>🔥 Live Signals <span class="tag">composite ≥ 60</span></h2>
+    <h2>🔥 Whole-market scan <span class="tag">composite ≥ 60</span></h2>
+    <div id="scanSummary" class="regime-desc" style="margin-bottom:14px"></div>
     <div class="scrollx">
       <table id="sigTable">
         <thead>
@@ -213,15 +241,53 @@ const REGIME_DESC = {
 /* ----------------------------------------------------------------------------
    Sample data generator (stands in for the StockTwits/Finnhub firehose).
 ---------------------------------------------------------------------------- */
-const TICKERS = ['NVDA','GME','PLTR','AMC','SOFI','RIOT','TSLA','BBAI','MARA','AFRM','LCID','HOOD'];
-let rngSeed = 1234;
-function rng() { rngSeed = (rngSeed * 1103515245 + 12345) & 0x7fffffff; return rngSeed / 0x7fffffff; }
-const pick = (a) => a[Math.floor(rng() * a.length)];
+// Whole-market universe: a broad cross-section of large caps, popular
+// retail/meme names, and major ETFs. The scan covers all of these; the lookup
+// box accepts ANY symbol (in or out of this list).
+const TICKERS = [
+  'AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','AVGO','AMD','NFLX',
+  'INTC','MU','QCOM','TXN','ADBE','CRM','ORCL','CSCO','IBM','PYPL',
+  'JPM','BAC','WFC','GS','MS','C','V','MA','AXP','SCHW',
+  'BRK.B','UNH','JNJ','LLY','PFE','MRK','ABBV','TMO','CVS','MRNA',
+  'XOM','CVX','COP','SLB','OXY','HAL','KMI','DVN','MPC','PSX',
+  'WMT','COST','TGT','HD','LOW','NKE','SBUX','MCD','KO','PEP',
+  'DIS','CMCSA','T','VZ','TMUS','PG','CL','KMB','GIS','MDLZ',
+  'BA','CAT','GE','HON','LMT','DE','MMM','UPS','FDX','RTX',
+  'GME','AMC','BBBY','PLTR','SOFI','HOOD','RIVN','LCID','NIO','F',
+  'GM','RIOT','MARA','COIN','MSTR','BBAI','AFRM','UPST','DKNG','RBLX',
+  'SNAP','PINS','UBER','LYFT','ABNB','SHOP','SQ','ROKU','ZM','DOCU',
+  'SPY','QQQ','DIA','IWM','VTI','VOO','ARKK','XLK','XLF','XLE',
+  'XLV','SOXL','TQQQ','SQQQ','GLD','SLV','USO','TLT','VXX','SMCI'
+];
 
-// buildSignal: synthesize one ticker's 1h/24h activity and score it
+let scanEpoch = 1;  // bumped on each re-scan to simulate fresh data over time
+
+// hashStr: stable 32-bit hash of a string (FNV-1a) -> deterministic per ticker
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+// mulberry32: small deterministic PRNG seeded by an integer
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// buildSignal: synthesize one ticker's 1h/24h activity and score it. Seeded by
+// the ticker symbol + scanEpoch, so the same symbol is stable within a scan
+// (lookup matches the table) and refreshes on re-scan.
 function buildSignal(ticker) {
+  const rng = mulberry32(hashStr(ticker) ^ Math.imul(scanEpoch, 2654435761));
   const m24h = 20 + Math.floor(rng() * 120);
-  const burst = rng();
+  // Most names are quiet (no unusual velocity); a minority show a real spike,
+  // so qualifying signals stay rare like the real detector intends.
+  const spike = rng() < 0.15;
+  const burst = spike ? (0.4 + rng() * 0.6) : (rng() * 0.18);
   const m1h = Math.max(1, Math.floor((m24h / 24) * (1 + burst * 7)));
   const accts = Array.from({ length: m1h }, () => ({
     followers: Math.floor(rng() * rng() * 9000),      // skew toward small accounts
@@ -270,11 +336,20 @@ function renderRegime() {
   vixVal.textContent = parseFloat(vix.value).toFixed(0);
 }
 
+const MAX_ROWS = 30;  // cap the table; summary reports the full counts
+
 function renderSignals() {
   const r = currentRegime();
-  const rows = signals
-    .filter(s => showAll || s.qualifies)
-    .sort((a, b) => b.comp - a.comp);
+  const qualifying = signals.filter(s => s.qualifies);
+  const pool = (showAll ? signals.slice() : qualifying.slice()).sort((a, b) => b.comp - a.comp);
+  const rows = pool.slice(0, MAX_ROWS);
+
+  document.getElementById('scanSummary').innerHTML =
+    'Scanned <b>' + signals.length + '</b> symbols · <b class="hot">' + qualifying.length +
+    '</b> qualifying (composite ≥ 60) · showing ' + rows.length +
+    (pool.length > rows.length ? ' of ' + pool.length : '') +
+    (showAll ? ' (all symbols)' : '');
+
   const body = document.getElementById('sigBody');
   if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="muted">No qualifying signals this scan.</td></tr>'; return; }
   body.innerHTML = rows.map(s => {
@@ -306,17 +381,68 @@ function renderRegimeStats() {
 }
 
 function rescan() {
+  scanEpoch++;                         // fresh "data" for the whole market
   signals = TICKERS.map(buildSignal);
+  if (lastLookup) doLookup(lastLookup); // refresh the open lookup too
   renderSignals();
 }
 function toggleAll() { showAll = !showAll; renderSignals(); }
 
-function renderAll() { renderRegime(); renderSignals(); renderRegimeStats(); }
+/* ----------------------------------------------------------------------------
+   Look up any stock on demand.
+---------------------------------------------------------------------------- */
+let lastLookup = null;
+
+// doLookup: score a single symbol (any, in or out of the universe) and render
+// its full breakdown, conditioned on the current market regime.
+function doLookup(forced) {
+  const box = document.getElementById('lookupResult');
+  const raw = (forced || document.getElementById('lookupInput').value)
+    .trim().toUpperCase().replace(/[^A-Z.]/g, '');
+  if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
+  lastLookup = raw;
+
+  const s = buildSignal(raw);
+  const r = currentRegime();
+  const bh = baseHit(s.comp), ra = regimeAdj(s.comp, r);
+  const [call, cls] = callFor(ra);
+  const inUniverse = TICKERS.includes(raw);
+
+  box.innerHTML = `
+    <div class="lk-card">
+      <div class="lk-head">
+        <span class="sym">$${raw}</span>
+        <span class="comp">composite ${s.comp.toFixed(1)}</span>
+        <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adj)</span>
+        <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list symbol'}</span>
+      </div>
+      <div class="lk-grid">
+        <div class="lk-cell"><div class="v">${s.vel.toFixed(0)}</div><div class="l">Velocity</div></div>
+        <div class="lk-cell"><div class="v">${s.obs.toFixed(0)}</div><div class="l">Obscurity</div></div>
+        <div class="lk-cell"><div class="v">${s.sen.toFixed(0)}</div><div class="l">Sentiment</div></div>
+        <div class="lk-cell"><div class="v">${s.m1h}/${s.m24h}</div><div class="l">Mentions 1h/24h</div></div>
+        <div class="lk-cell"><div class="v">${Math.round(bh * 100)}%</div><div class="l">Base hit-rate</div></div>
+        <div class="lk-cell"><div class="v">${Math.round(ra * 100)}%</div><div class="l">In ${REGIME_LABEL[r]}</div></div>
+        <div class="lk-cell"><div class="v">${Math.round(REGIME_WINRATE[r] * 100)}%</div><div class="l">Regime win rate</div></div>
+        <div class="lk-cell"><div class="v">${s.comp.toFixed(0)}</div><div class="l">Composite</div></div>
+      </div>
+    </div>`;
+}
+
+function renderAll() {
+  renderRegime();
+  renderSignals();
+  renderRegimeStats();
+  if (lastLookup) doLookup(lastLookup);  // keep lookup in sync with the regime
+}
 
 spy.addEventListener('input', renderAll);
 vix.addEventListener('input', renderAll);
+document.getElementById('lookupInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doLookup();
+});
 
-rescan();
+signals = TICKERS.map(buildSignal);  // initial scan at epoch 1 (no bump)
 renderAll();
 </script>
 </body>
