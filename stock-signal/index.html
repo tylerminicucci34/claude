@@ -119,6 +119,26 @@
       border-radius: 50%; color: #2ecc71; font-size: 13px;
     }
     .chip button:hover { background: rgba(46,204,113,0.25); }
+    /* API key bar + live status */
+    .keybar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+    .keybar input {
+      flex: 1; min-width: 180px; font-family: inherit; font-size: 13px; color: #f0f0f0; background: #12121b;
+      border: 1px solid #33334a; border-radius: 12px; padding: 9px 12px;
+    }
+    .keybar input:focus { outline: none; border-color: #2ecc71; }
+    .keybar button { border-color: #33334a; background: transparent; color: #aaa; padding: 9px 16px; }
+    .livestat { font-size: 12px; font-weight: 700; }
+    .livetag { font-size: 11px; font-weight: 800; color: #2ecc71; background: rgba(46,204,113,0.15); border: 1px solid rgba(46,204,113,0.4); padding: 2px 8px; border-radius: 8px; }
+    /* live day-range bar */
+    .range { position: relative; height: 6px; background: #0e0e16; border-radius: 4px; margin: 2px 0 6px; }
+    .range-fill { position: absolute; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: #ffd700; transform: translateX(-50%); }
+    .range-lab { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 14px; }
+    /* news list */
+    .news-list { margin-top: 6px; border-top: 1px solid #20202e; }
+    .news { display: block; padding: 9px 2px; border-bottom: 1px solid #20202e; text-decoration: none; color: inherit; }
+    .news:hover { background: #0e0e16; }
+    .news-h { display: block; font-size: 13px; font-weight: 600; color: #e8e8e8; }
+    .news-m { display: block; font-size: 11px; color: #888; margin-top: 2px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -138,10 +158,10 @@
   </div>
 
   <div class="note">
-    Demo mode — runs on <b>simulated sample data</b> in your browser. The live detector
-    (<code>stock-signal-detector/</code>, Python) pulls real StockTwits/Finnhub data and yfinance prices;
-    that requires a network-allowlisted API key and can't run on a static page. The scoring &amp;
-    market-conditioning logic below mirror the real engine.
+    Add a free <b>Finnhub API key</b> below to pull <b>live prices &amp; news</b> in the lookup (fetched
+    directly from your browser; key stored only on your device, never uploaded). Signal <i>scores</i> and
+    the whole-market scan stay simulated — there's no free real-time social-velocity feed, and a full live
+    scan would exceed the free rate limit. The scoring logic mirrors the Python engine.
   </div>
 
   <!-- MARKET STATUS -->
@@ -166,7 +186,12 @@
 
   <!-- LOOKUP -->
   <div class="panel">
-    <h2>🔎 Look up any stock <span class="tag">type a ticker</span></h2>
+    <h2>🔎 Look up any stock <span class="tag">live price &amp; news</span></h2>
+    <div class="keybar">
+      <input id="apiKey" type="password" placeholder="Finnhub API key (optional) — enables live price &amp; news" autocomplete="off" spellcheck="false">
+      <button onclick="saveKey()">Save key</button>
+      <span id="liveStatus" class="livestat"></span>
+    </div>
     <div class="lookup-row">
       <input id="lookupInput" type="text" placeholder="e.g. AAPL, SPY, GME…" maxlength="6" autocomplete="off" spellcheck="false">
       <button onclick="doLookup()">Look up</button>
@@ -505,36 +530,114 @@ function toggleAll() { showAll = !showAll; renderSignals(); }
 ---------------------------------------------------------------------------- */
 let lastLookup = null;
 
-// doLookup: score a single symbol (any, in or out of the universe) and render
-// its full breakdown, conditioned on the current market regime.
-function doLookup(forced) {
-  const box = document.getElementById('lookupResult');
-  const raw = (forced || document.getElementById('lookupInput').value)
-    .trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
-  if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
-  lastLookup = raw;
+/* --- Live data (Finnhub, called straight from the browser via CORS) -------- */
+const KEY_LS = 'signalScoutFinnhubKey';
+// getKey/saveKey: the user's Finnhub key lives only in their browser
+function getKey() { try { return localStorage.getItem(KEY_LS) || ''; } catch (e) { return ''; } }
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  try { k ? localStorage.setItem(KEY_LS, k) : localStorage.removeItem(KEY_LS); } catch (e) {}
+  setLive(k ? 'saved' : 'off');
+  if (lastLookup) doLookup(lastLookup);
+}
+// setLive: update the little status badge by the key input
+function setLive(state, msg) {
+  const el = document.getElementById('liveStatus');
+  if (!el) return;
+  const map = {
+    off:   ['◌ Demo mode (no key)', '#888'],
+    saved: ['✓ key saved — live enabled', '#2ecc71'],
+    load:  ['… fetching live data', '#f1c40f'],
+    on:    ['● LIVE data', '#2ecc71'],
+    err:   ['⚠ live failed (' + (msg || '') + ') — showing demo', '#e74c3c'],
+  };
+  const [t, c] = map[state] || map.off;
+  el.textContent = t; el.style.color = c;
+}
+// fetchQuote / fetchNews: Finnhub free-tier endpoints
+async function fetchQuote(ticker, key) {
+  const u = 'https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent(ticker) + '&token=' + encodeURIComponent(key);
+  const r = await fetch(u);
+  if (r.status === 401) throw new Error('bad key');
+  if (r.status === 429) throw new Error('rate limit');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const q = await r.json();
+  if (!q || (q.c === 0 && q.pc === 0)) throw new Error('unknown symbol');
+  return q; // { c, d, dp, h, l, o, pc }
+}
+async function fetchNews(ticker, key) {
+  const fmt = (d) => d.toISOString().slice(0, 10);
+  const to = new Date(), from = new Date(Date.now() - 7 * 864e5);
+  const u = 'https://finnhub.io/api/v1/company-news?symbol=' + encodeURIComponent(ticker) +
+            '&from=' + fmt(from) + '&to=' + fmt(to) + '&token=' + encodeURIComponent(key);
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('news HTTP ' + r.status);
+  const a = await r.json();
+  return Array.isArray(a) ? a : [];
+}
 
-  const s = buildSignal(raw);
-  const r = currentRegime();
+/* --- helpers --- */
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? escapeHtml(u) : '#'; }
+function relTime(unixSec) {
+  const s = Math.floor(Date.now() / 1000) - unixSec;
+  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+// priceBlock: live quote (real price + day range) or simulated sparkline
+function priceBlock(raw, live) {
+  if (live && live.quote) {
+    const q = live.quote, up = (q.d || 0) >= 0;
+    const pos = q.h > q.l ? Math.min(100, Math.max(0, (q.c - q.l) / (q.h - q.l) * 100)) : 50;
+    return `
+      <div class="lk-price">
+        <span class="px">$${q.c.toFixed(2)}</span>
+        <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(q.d).toFixed(2)} (${Math.abs(q.dp).toFixed(2)}%)</span>
+        <span class="livetag">LIVE</span>
+      </div>
+      <div class="range"><div class="range-fill" style="left:${pos.toFixed(1)}%"></div></div>
+      <div class="range-lab"><span>L $${q.l.toFixed(2)}</span><span>O $${q.o.toFixed(2)} · prev $${q.pc.toFixed(2)}</span><span>H $${q.h.toFixed(2)}</span></div>`;
+  }
+  const px = priceSeries(raw), up = px.changePct >= 0;
+  return `
+    <div class="lk-price">
+      ${sparkSVG(px.series, up)}
+      <span class="px">$${px.price.toFixed(2)}</span>
+      <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(px.changePct).toFixed(1)}% <span class="muted" style="font-weight:600">~30d (sim)</span></span>
+    </div>`;
+}
+// newsBlock: live headlines, a loading note, or nothing
+function newsBlock(live) {
+  if (!live) return '';
+  if (live.loading) return '<div class="muted" style="font-size:12px;margin-top:8px">Fetching live news…</div>';
+  if (!live.news || !live.news.length) return live.quote ? '<div class="muted" style="font-size:12px;margin-top:8px">No recent news.</div>' : '';
+  return '<div class="news-list">' + live.news.slice(0, 6).map(a =>
+    `<a class="news" href="${safeUrl(a.url)}" target="_blank" rel="noopener noreferrer">
+       <span class="news-h">${escapeHtml(a.headline)}</span>
+       <span class="news-m">${escapeHtml(a.source)} · ${relTime(a.datetime)}</span></a>`).join('') + '</div>';
+}
+
+// renderLookupCard: draw the breakdown; `live` may be null (demo),
+// {loading:true}, or {quote, news}
+function renderLookupCard(raw, s, r, live) {
   const bh = baseHit(s.comp), ra = regimeAdj(s.comp, r);
   const [call, cls] = callFor(ra);
   const inUniverse = universe().includes(raw);
-  const px = priceSeries(raw);
-  const up = px.changePct >= 0;
-
-  box.innerHTML = `
+  const liveOn = !!(live && live.quote);
+  document.getElementById('lookupResult').innerHTML = `
     <div class="lk-card">
       <div class="lk-head">
-        <span class="sym">$${raw}</span>
+        <span class="sym">$${escapeHtml(raw)}</span>
         <span class="comp">composite ${s.comp.toFixed(1)}</span>
         <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adj)</span>
-        <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list symbol'}</span>
+        <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list'}</span>
       </div>
-      <div class="lk-price">
-        ${sparkSVG(px.series, up)}
-        <span class="px">$${px.price.toFixed(2)}</span>
-        <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(px.changePct).toFixed(1)}% <span class="muted" style="font-weight:600">~30d (sim)</span></span>
-      </div>
+      ${priceBlock(raw, live)}
       <div class="lk-grid">
         <div class="lk-cell"><div class="v">${s.vel.toFixed(0)}</div><div class="l">Velocity</div></div>
         <div class="lk-cell"><div class="v">${s.obs.toFixed(0)}</div><div class="l">Obscurity</div></div>
@@ -545,7 +648,38 @@ function doLookup(forced) {
         <div class="lk-cell"><div class="v">${Math.round(REGIME_WINRATE[r] * 100)}%</div><div class="l">Regime win rate</div></div>
         <div class="lk-cell"><div class="v">${s.comp.toFixed(0)}</div><div class="l">Composite</div></div>
       </div>
+      ${newsBlock(live)}
+      <div class="muted" style="font-size:11px;margin-top:12px">
+        Price &amp; news ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
+      </div>
     </div>`;
+}
+
+// doLookup: score a symbol, render it, and (if a key is set) overlay live data
+async function doLookup(forced) {
+  const box = document.getElementById('lookupResult');
+  const raw = (forced || document.getElementById('lookupInput').value)
+    .trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
+  if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
+  lastLookup = raw;
+
+  const s = buildSignal(raw);
+  const r = currentRegime();
+  const key = getKey();
+  if (!key) { renderLookupCard(raw, s, r, null); return; }
+
+  renderLookupCard(raw, s, r, { loading: true });  // show demo immediately
+  setLive('load');
+  try {
+    const [quote, news] = await Promise.all([fetchQuote(raw, key), fetchNews(raw, key).catch(() => [])]);
+    if (lastLookup !== raw) return;                 // superseded by a newer lookup
+    renderLookupCard(raw, s, r, { quote, news });
+    setLive('on');
+  } catch (e) {
+    if (lastLookup !== raw) return;
+    renderLookupCard(raw, s, r, null);              // fall back to simulated
+    setLive('err', e.message);
+  }
 }
 
 function renderAll() {
@@ -566,6 +700,9 @@ document.getElementById('addInput').addEventListener('keydown', (e) => {
 
 customTickers = loadCustom();        // restore the user's saved tickers
 renderChips();
+const savedKey = getKey();            // restore the user's Finnhub key
+if (savedKey) { document.getElementById('apiKey').value = savedKey; setLive('saved'); }
+else { setLive('off'); }
 signals = universe().map(buildSignal); // initial scan at epoch 1 (no bump)
 renderAll();
 </script>
