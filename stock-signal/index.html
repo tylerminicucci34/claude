@@ -139,6 +139,18 @@
     .news:hover { background: #0e0e16; }
     .news-h { display: block; font-size: 13px; font-weight: 600; color: #e8e8e8; }
     .news-m { display: block; font-size: 11px; color: #888; margin-top: 2px; }
+    /* research prompt stack */
+    .prompt { background: #12121b; border: 1px solid #26263a; border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+    .prompt h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 800; margin-bottom: 3px; }
+    .prompt h3 .n { color: #ff8c33; }
+    .prompt .sub { font-style: italic; color: #9a9aae; font-size: 13px; margin-bottom: 12px; }
+    .prompt .body {
+      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.5px;
+      line-height: 1.65; color: #cfcfe0; border-top: 1px solid #20202e; padding-top: 12px;
+    }
+    .prompt .body .ph { color: #ffd700; font-weight: 700; }
+    .prompt .foot { font-style: italic; color: #777; font-size: 12px; margin-top: 12px; }
+    .prompt .copybtn { margin-top: 14px; font-size: 13px; padding: 8px 18px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -197,6 +209,16 @@
       <button onclick="doLookup()">Look up</button>
     </div>
     <div id="lookupResult"></div>
+  </div>
+
+  <!-- RESEARCH PROMPTS -->
+  <div class="panel">
+    <h2>🧪 Research prompt stack <span class="tag">auto-fills your ticker</span></h2>
+    <div class="regime-desc" style="margin-bottom:14px">
+      Copy these into your AI research tool. <span class="ph" style="color:#ffd700;font-weight:700">[TICKER]</span>
+      is filled with the stock you last looked up<span id="promptTicker"></span>.
+    </div>
+    <div id="promptCards"></div>
   </div>
 
   <!-- SIGNALS -->
@@ -662,6 +684,7 @@ async function doLookup(forced) {
     .trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
   if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
   lastLookup = raw;
+  renderPrompts();  // keep the research prompts filled with this ticker
 
   const s = buildSignal(raw);
   const r = currentRegime();
@@ -680,6 +703,71 @@ async function doLookup(forced) {
     renderLookupCard(raw, s, r, null);              // fall back to simulated
     setLive('err', e.message);
   }
+}
+
+/* --- Research prompt stack ------------------------------------------------- */
+const PROMPTS = [
+  {
+    n: '1', title: 'The Deep Dive', sub: '4-part company breakdown',
+    body: "Generate a comprehensive Deep Research Report on [TICKER]. Cover these 4 areas: 1. Business Model: How do they actually make money? Core product in plain English. 2. Moat: Top 3 competitors. Does [TICKER] have a durable edge — patent, switching cost, network effect, or cost structure — that rivals can't copy? 3. Catalysts: Upcoming launches, earnings, regulatory events, or partnerships in the next 12 months. 4. Asymmetry: Low valuation floor vs high growth ceiling? Why or why not?",
+    foot: 'Your anchor prompt. Run it first. Feeds every other prompt in the stack.',
+  },
+  {
+    n: '2', title: 'The Peer Comparison', sub: 'Does the valuation actually make sense?',
+    body: "Search Yahoo Finance and Macrotrends. Build a relative valuation table for [TICKER] vs [PEER 1] and [PEER 2]. Include: P/S (TTM and forward), P/FCF, EV/EBITDA, gross margin, YoY revenue growth, and a Value/Growth Score (P/S TTM ÷ revenue growth %). Lowest score = most growth per dollar of valuation.",
+    foot: 'Cheap only matters relative to growth. This is how you catch mispriced winners.',
+  },
+  {
+    n: '3', title: 'The Bear Case', sub: '3 biggest reasons NOT to own this',
+    body: "Act as a skeptical short-seller researching [TICKER]. Search SEC filings, earnings transcripts, and recent news. Give me the 3 most serious red flags, ranked by severity. Check for: customer concentration (any single customer over 25% of revenue — latest 10-K), margin compression (gross AND operating, last 4 quarters), unscheduled insider selling (Form 4, not pre-planned 10b5-1), widening GAAP vs non-GAAP gap, and guidance cuts in the last 12 months. Cite sources for each.",
+    foot: "If you can't find 3 real reasons to be bearish, you haven't done the research.",
+  },
+];
+
+// currentTicker: the symbol prompts fill with — last lookup, else the input
+function currentTicker() {
+  const typed = document.getElementById('lookupInput').value.trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
+  return lastLookup || typed || '[TICKER]';
+}
+// fillTicker: substitute [TICKER] in a prompt with the current symbol
+function fillTicker(text) { return text.replace(/\[TICKER\]/g, currentTicker()); }
+
+// renderPrompts: draw the prompt cards with the ticker filled in. Highlights
+// the [TICKER]/[PEER] tokens by split/join on the literal tokens (after HTML-
+// escaping the body), which avoids any substring/regex pitfalls.
+function renderPrompts() {
+  const t = currentTicker();
+  const tickDisplay = t === '[TICKER]' ? '[TICKER]' : t;
+  document.getElementById('promptTicker').textContent = t === '[TICKER]' ? '' : ' (currently $' + t + ')';
+  document.getElementById('promptCards').innerHTML = PROMPTS.map((p, i) => {
+    const body = escapeHtml(p.body)
+      .split('[TICKER]').join('<span class="ph">' + escapeHtml(tickDisplay) + '</span>')
+      .split('[PEER 1]').join('<span class="ph">[PEER 1]</span>')
+      .split('[PEER 2]').join('<span class="ph">[PEER 2]</span>');
+    return `
+      <div class="prompt">
+        <h3><span class="n">${p.n}.</span> ${escapeHtml(p.title)}</h3>
+        <div class="sub">${escapeHtml(p.sub)}</div>
+        <div class="body">${body}</div>
+        <div class="foot">${escapeHtml(p.foot)}</div>
+        <button class="copybtn" onclick="copyPrompt(${i}, this)">📋 Copy prompt</button>
+      </div>`;
+  }).join('');
+}
+// copyPrompt: copy the filled prompt text to the clipboard with feedback
+function copyPrompt(i, btn) {
+  const text = fillTicker(PROMPTS[i].body);
+  const done = () => { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = '📋 Copy prompt'; }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta); done();
 }
 
 function renderAll() {
@@ -704,6 +792,7 @@ const savedKey = getKey();            // restore the user's Finnhub key
 if (savedKey) { document.getElementById('apiKey').value = savedKey; setLive('saved'); }
 else { setLive('off'); }
 signals = universe().map(buildSignal); // initial scan at epoch 1 (no bump)
+renderPrompts();
 renderAll();
 </script>
 </body>
