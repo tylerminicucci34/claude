@@ -9,6 +9,7 @@ matured follow-up prices -> print a terminal report. Runs every 30 minutes.
 Flags:
     --backfill-only   update follow-up prices/outcomes, then exit (no scraping)
     --report-only     print the current database state, then exit
+    --dry-run         hit StockTwits once, print the parse, then exit
 """
 
 import argparse
@@ -109,7 +110,17 @@ def main():
         action="store_true",
         help="Only print the current database state, then exit.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Hit StockTwits once, print the parsed result, then exit.",
+    )
     args = parser.parse_args()
+
+    # --dry-run needs no database; do it before touching disk.
+    if args.dry_run:
+        ok = scraper.dry_run()
+        raise SystemExit(0 if ok else 1)
 
     db.init_db()
     conn = db.get_connection()
