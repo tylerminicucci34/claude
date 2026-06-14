@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Signal Scout</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #15151f 0%, #08080d 70%);
+      color: #f0f0f0;
+      min-height: 100dvh;
+      padding: 24px 16px 64px;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    .top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .back { color: #777; text-decoration: none; font-size: 14px; font-weight: 600; }
+    .back:hover { color: #ffd700; }
+    .header { text-align: center; margin: 24px 0 8px; }
+    .header h1 {
+      font-size: 38px; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, #ff6b00, #ffd700);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .header p { color: #888; font-size: 15px; margin-top: 8px; }
+    .note {
+      max-width: 720px; margin: 16px auto 0; font-size: 12.5px; line-height: 1.5;
+      color: #b9883a; background: rgba(255,170,0,0.07); border: 1px solid rgba(255,170,0,0.25);
+      border-radius: 12px; padding: 10px 14px; text-align: center;
+    }
+    .panel {
+      background: linear-gradient(135deg, #16161f 0%, #0f0f16 100%);
+      border: 1px solid #26263a; border-radius: 18px; padding: 22px; margin-top: 22px;
+    }
+    .panel h2 { font-size: 17px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .panel h2 .tag { font-size: 11px; font-weight: 700; color: #888; background: #20202e; padding: 3px 8px; border-radius: 8px; }
+
+    /* Market status */
+    .regime-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .regime-badge {
+      font-size: 18px; font-weight: 900; padding: 10px 20px; border-radius: 14px; letter-spacing: .5px;
+    }
+    .risk-on  { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.4); }
+    .neutral  { background: rgba(241,196,15,0.13); color: #f1c40f; border: 1px solid rgba(241,196,15,0.4); }
+    .risk-off { background: rgba(231,76,60,0.15);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+    @media (max-width: 560px) { .controls { grid-template-columns: 1fr; } }
+    .control label { display: flex; justify-content: space-between; font-size: 13px; color: #aaa; margin-bottom: 7px; }
+    .control label b { color: #f0f0f0; }
+    input[type=range] { width: 100%; accent-color: #ff8c33; }
+    .regime-desc { font-size: 12.5px; color: #999; margin-top: 14px; line-height: 1.5; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 8px; text-align: right; border-bottom: 1px solid #20202e; white-space: nowrap; }
+    th { color: #888; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    td:first-child, th:first-child { text-align: left; }
+    .ticker { font-weight: 800; color: #ffd700; }
+    .bar { display: inline-block; height: 7px; border-radius: 4px; background: linear-gradient(90deg, #ff6b00, #ffd700); vertical-align: middle; }
+    .pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+    .p-win { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .p-loss{ background: rgba(231,76,60,0.15);  color: #e74c3c; }
+    .p-flat{ background: rgba(150,150,150,0.15); color: #aaa; }
+    .hot { color: #ff8c33; font-weight: 800; }
+    .scrollx { overflow-x: auto; }
+
+    .actions { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    button {
+      font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      padding: 11px 26px; border-radius: 24px; border: 1px solid #ff8c33;
+      background: rgba(255,107,0,0.15); color: #ff8c33; transition: background .15s;
+    }
+    button:hover { background: rgba(255,107,0,0.28); }
+    button.ghost { border-color: #33334a; background: transparent; color: #aaa; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
+    .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
+    .stat .v { font-size: 26px; font-weight: 900; }
+    .stat .l { font-size: 12px; color: #888; margin-top: 4px; }
+    .footer { text-align: center; margin-top: 40px; color: #555; font-size: 13px; }
+    .muted { color: #777; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="back" href="../index.html">← My Apps</a></div>
+
+  <div class="header">
+    <h1>📈 Signal Scout</h1>
+    <p>Early sentiment-velocity signals, conditioned on market status</p>
+  </div>
+
+  <div class="note">
+    Demo mode — runs on <b>simulated sample data</b> in your browser. The live detector
+    (<code>stock-signal-detector/</code>, Python) pulls real StockTwits/Finnhub data and yfinance prices;
+    that requires a network-allowlisted API key and can't run on a static page. The scoring &amp;
+    market-conditioning logic below mirror the real engine.
+  </div>
+
+  <!-- MARKET STATUS -->
+  <div class="panel">
+    <h2>🌐 Market Status <span class="tag">drives predictions</span></h2>
+    <div class="regime-row">
+      <div id="regimeBadge" class="regime-badge neutral">NEUTRAL</div>
+      <div class="muted" style="font-size:13px">Regime is derived from the broad-market trend and volatility below.</div>
+    </div>
+    <div class="controls">
+      <div class="control">
+        <label>S&amp;P 500 — 5-day trend <b><span id="spyVal">+0.4</span>%</b></label>
+        <input id="spy" type="range" min="-5" max="5" step="0.1" value="0.4">
+      </div>
+      <div class="control">
+        <label>Volatility (VIX) <b><span id="vixVal">17</span></b></label>
+        <input id="vix" type="range" min="9" max="45" step="0.5" value="17">
+      </div>
+    </div>
+    <div id="regimeDesc" class="regime-desc"></div>
+  </div>
+
+  <!-- SIGNALS -->
+  <div class="panel">
+    <h2>🔥 Live Signals <span class="tag">composite ≥ 60</span></h2>
+    <div class="scrollx">
+      <table id="sigTable">
+        <thead>
+          <tr>
+            <th>Ticker</th><th>Composite</th><th>Vel</th><th>Obsc</th><th>Sent</th>
+            <th>M/1h</th><th>Base hit</th><th>Regime-adj</th><th>Call</th>
+          </tr>
+        </thead>
+        <tbody id="sigBody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button onclick="rescan()">↻ Re-scan</button>
+      <button class="ghost" onclick="toggleAll()">Show all (incl. below threshold)</button>
+    </div>
+  </div>
+
+  <!-- BACKTEST BY REGIME -->
+  <div class="panel">
+    <h2>📊 Backtest — accuracy by market status <span class="tag">simulated history</span></h2>
+    <div class="stat-grid" id="regimeStats"></div>
+    <div class="regime-desc" style="margin-top:16px">
+      This is the core of "predictions based on market status": the same signal historically resolves
+      differently depending on the regime it fired in. The <b>Regime-adj</b> hit-rate above blends a
+      signal's composite score with the win rate of its current regime.
+    </div>
+  </div>
+
+  <div class="footer">Built with Claude Code · scoring logic ported from the Python engine</div>
+</div>
+
+<script>
+/* ----------------------------------------------------------------------------
+   Scoring logic — a faithful client-side port of signals.py.
+---------------------------------------------------------------------------- */
+const VELOCITY_RATIO_GATE = 2.5, MIN_MENTIONS_1H = 5, COMPOSITE_THRESHOLD = 60;
+
+// velocityScore: unusual 1h volume vs 24h baseline -> {score, ratio, flagged}
+function velocityScore(m1h, m24h) {
+  const avg = m24h / 24;
+  if (avg <= 0) return { score: 0, ratio: 0, flagged: false };
+  const ratio = m1h / avg;
+  const score = Math.max(0, Math.min(100, (ratio - 1) * 50));
+  return { score, ratio, flagged: ratio > VELOCITY_RATIO_GATE };
+}
+// accountObscurity: 100 under 100 followers -> 0 at 10k, +20 if young (<180d)
+function accountObscurity(followers, ageDays) {
+  let base;
+  if (followers <= 100) base = 100;
+  else if (followers >= 10000) base = 0;
+  else base = 100 * (10000 - followers) / 9900;
+  if (ageDays != null && ageDays < 180) base += 20;
+  return Math.min(100, Math.max(0, base));
+}
+// obscurityScore: average obscurity across the 1h accounts
+function obscurityScore(accts) {
+  if (!accts.length) return 0;
+  return accts.reduce((s, a) => s + accountObscurity(a.followers, a.age), 0) / accts.length;
+}
+// sentimentScore: 50 neutral, 100 all-bull, 0 all-bear (tagged only)
+function sentimentScore(accts) {
+  const bull = accts.filter(a => a.sentiment === 'bullish').length;
+  const bear = accts.filter(a => a.sentiment === 'bearish').length;
+  const t = bull + bear;
+  return t === 0 ? 50 : 100 * bull / t;
+}
+// composite: weighted 0.5 / 0.3 / 0.2
+const composite = (v, o, s) => v * 0.5 + o * 0.3 + s * 0.2;
+
+/* ----------------------------------------------------------------------------
+   Market status -> regime, and regime-conditioned win rates.
+---------------------------------------------------------------------------- */
+// classifyRegime: from S&P 5-day trend % and VIX level
+function classifyRegime(spyTrend, vix) {
+  if (spyTrend > 1 && vix < 18) return 'risk-on';
+  if (spyTrend < -1 || vix > 25) return 'risk-off';
+  return 'neutral';
+}
+// Simulated historical win rate of the strategy, by regime.
+const REGIME_WINRATE = { 'risk-on': 0.61, 'neutral': 0.48, 'risk-off': 0.34 };
+const REGIME_LABEL   = { 'risk-on': 'RISK-ON', 'neutral': 'NEUTRAL', 'risk-off': 'RISK-OFF' };
+const REGIME_DESC = {
+  'risk-on':  'Up-trending market, low volatility — momentum chatter tends to follow through. Signals weighted up.',
+  'neutral':  'Choppy / rangebound market — signals resolve near a coin-flip. No regime tilt.',
+  'risk-off': 'Falling market or high volatility — sentiment spikes often fade. Signals weighted down.'
+};
+
+/* ----------------------------------------------------------------------------
+   Sample data generator (stands in for the StockTwits/Finnhub firehose).
+---------------------------------------------------------------------------- */
+const TICKERS = ['NVDA','GME','PLTR','AMC','SOFI','RIOT','TSLA','BBAI','MARA','AFRM','LCID','HOOD'];
+let rngSeed = 1234;
+function rng() { rngSeed = (rngSeed * 1103515245 + 12345) & 0x7fffffff; return rngSeed / 0x7fffffff; }
+const pick = (a) => a[Math.floor(rng() * a.length)];
+
+// buildSignal: synthesize one ticker's 1h/24h activity and score it
+function buildSignal(ticker) {
+  const m24h = 20 + Math.floor(rng() * 120);
+  const burst = rng();
+  const m1h = Math.max(1, Math.floor((m24h / 24) * (1 + burst * 7)));
+  const accts = Array.from({ length: m1h }, () => ({
+    followers: Math.floor(rng() * rng() * 9000),      // skew toward small accounts
+    age: Math.floor(rng() * 900),
+    sentiment: rng() < 0.6 ? (rng() < 0.7 ? 'bullish' : 'bearish') : null
+  }));
+  const vel = velocityScore(m1h, m24h);
+  const obs = obscurityScore(accts);
+  const sen = sentimentScore(accts);
+  const comp = composite(vel.score, obs, sen);
+  const qualifies = m1h >= MIN_MENTIONS_1H && vel.flagged && comp >= COMPOSITE_THRESHOLD;
+  return { ticker, m1h, m24h, vel: vel.score, obs, sen, comp, qualifies };
+}
+
+/* ----------------------------------------------------------------------------
+   Prediction: blend composite score with the current regime's win rate.
+---------------------------------------------------------------------------- */
+// baseHit: map composite 60..100 -> ~45..75% standalone hit estimate
+const baseHit = (comp) => 0.45 + (Math.min(100, Math.max(60, comp)) - 60) / 40 * 0.30;
+// regimeAdj: shrink/expand the base hit toward the regime's historical win rate
+function regimeAdj(comp, regime) {
+  const b = baseHit(comp), w = REGIME_WINRATE[regime];
+  return Math.max(0.05, Math.min(0.95, 0.6 * b + 0.4 * w));
+}
+const callFor = (p) => p >= 0.55 ? ['BUY', 'p-win'] : p <= 0.42 ? ['AVOID', 'p-loss'] : ['WATCH', 'p-flat'];
+
+/* ----------------------------------------------------------------------------
+   Render
+---------------------------------------------------------------------------- */
+let showAll = false;
+let signals = [];
+
+function currentRegime() {
+  return classifyRegime(parseFloat(spy.value), parseFloat(vix.value));
+}
+
+function renderRegime() {
+  const r = currentRegime();
+  const badge = document.getElementById('regimeBadge');
+  badge.className = 'regime-badge ' + r;
+  badge.textContent = REGIME_LABEL[r];
+  document.getElementById('regimeDesc').innerHTML =
+    REGIME_DESC[r] + ' &nbsp;·&nbsp; historical win rate in this regime: <b>' +
+    Math.round(REGIME_WINRATE[r] * 100) + '%</b>';
+  spyVal.textContent = (parseFloat(spy.value) >= 0 ? '+' : '') + parseFloat(spy.value).toFixed(1);
+  vixVal.textContent = parseFloat(vix.value).toFixed(0);
+}
+
+function renderSignals() {
+  const r = currentRegime();
+  const rows = signals
+    .filter(s => showAll || s.qualifies)
+    .sort((a, b) => b.comp - a.comp);
+  const body = document.getElementById('sigBody');
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="muted">No qualifying signals this scan.</td></tr>'; return; }
+  body.innerHTML = rows.map(s => {
+    const bh = baseHit(s.comp), ra = regimeAdj(s.comp, r);
+    const [call, cls] = callFor(ra);
+    const w = Math.round(s.comp);
+    return `<tr>
+      <td class="ticker">$${s.ticker}</td>
+      <td><span class="bar" style="width:${w * 0.6}px"></span> ${s.comp.toFixed(1)}</td>
+      <td>${s.vel.toFixed(0)}</td>
+      <td>${s.obs.toFixed(0)}</td>
+      <td>${s.sen.toFixed(0)}</td>
+      <td class="${s.m1h >= MIN_MENTIONS_1H ? 'hot' : 'muted'}">${s.m1h}</td>
+      <td>${Math.round(bh * 100)}%</td>
+      <td><b>${Math.round(ra * 100)}%</b></td>
+      <td><span class="pill ${cls}">${call}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRegimeStats() {
+  const cur = currentRegime();
+  document.getElementById('regimeStats').innerHTML = ['risk-on', 'neutral', 'risk-off'].map(r => `
+    <div class="stat" style="border-color:${r === cur ? '#ff8c33' : '#222232'}">
+      <div class="v ${r === 'risk-on' ? '' : ''}" style="color:${r === 'risk-on' ? '#2ecc71' : r === 'neutral' ? '#f1c40f' : '#e74c3c'}">
+        ${Math.round(REGIME_WINRATE[r] * 100)}%</div>
+      <div class="l">${REGIME_LABEL[r]} win rate${r === cur ? ' · now' : ''}</div>
+    </div>`).join('');
+}
+
+function rescan() {
+  signals = TICKERS.map(buildSignal);
+  renderSignals();
+}
+function toggleAll() { showAll = !showAll; renderSignals(); }
+
+function renderAll() { renderRegime(); renderSignals(); renderRegimeStats(); }
+
+spy.addEventListener('input', renderAll);
+vix.addEventListener('input', renderAll);
+
+rescan();
+renderAll();
+</script>
+</body>
+</html>
