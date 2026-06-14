@@ -92,6 +92,33 @@
     .lk-cell { background: #0e0e16; border-radius: 10px; padding: 10px; text-align: center; }
     .lk-cell .v { font-size: 18px; font-weight: 800; }
     .lk-cell .l { font-size: 11px; color: #888; margin-top: 3px; }
+    /* Sparkline + price */
+    .lk-price { display: flex; align-items: center; gap: 14px; margin: 4px 0 16px; flex-wrap: wrap; }
+    .lk-price .px { font-size: 22px; font-weight: 900; }
+    .lk-price .chg { font-size: 14px; font-weight: 800; }
+    .up { color: #2ecc71; } .down { color: #e74c3c; }
+    .spark { display: block; }
+    /* Custom-ticker chips */
+    .addrow { display: flex; gap: 10px; margin-bottom: 12px; }
+    .addrow input {
+      flex: 1; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #f0f0f0; background: #12121b;
+      border: 1px solid #33334a; border-radius: 12px; padding: 9px 12px;
+    }
+    .addrow input:focus { outline: none; border-color: #2ecc71; }
+    .addrow button { border-color: #2ecc71; background: rgba(46,204,113,0.13); color: #2ecc71; padding: 9px 18px; }
+    .addrow button:hover { background: rgba(46,204,113,0.25); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+      background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3);
+      border-radius: 20px; padding: 4px 6px 4px 12px;
+    }
+    .chip button {
+      all: unset; cursor: pointer; width: 18px; height: 18px; line-height: 16px; text-align: center;
+      border-radius: 50%; color: #2ecc71; font-size: 13px;
+    }
+    .chip button:hover { background: rgba(46,204,113,0.25); }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -151,6 +178,11 @@
   <div class="panel">
     <h2>🔥 Whole-market scan <span class="tag">composite ≥ 60</span></h2>
     <div id="scanSummary" class="regime-desc" style="margin-bottom:14px"></div>
+    <div class="addrow">
+      <input id="addInput" type="text" placeholder="Add your own ticker to the scan…" maxlength="6" autocomplete="off" spellcheck="false">
+      <button onclick="addTicker()">+ Add</button>
+    </div>
+    <div id="customChips" class="chips"></div>
     <div class="scrollx">
       <table id="sigTable">
         <thead>
@@ -302,6 +334,42 @@ function buildSignal(ticker) {
   return { ticker, m1h, m24h, vel: vel.score, obs, sen, comp, qualifies };
 }
 
+// priceSeries: deterministic simulated recent price history for a ticker. Seed
+// is ticker-only (stable history) mixed with scanEpoch on the latest move so a
+// re-scan nudges the last point. Returns {series, price, changePct}.
+function priceSeries(ticker, n = 32) {
+  const rng = mulberry32(hashStr(ticker + '|px'));
+  const base = 8 + (hashStr(ticker) % 4000) / 10;   // ~$8–$408, stable per ticker
+  let p = base;
+  const series = [];
+  for (let i = 0; i < n; i++) {
+    const drift = (rng() - 0.48) * 0.05;            // small daily move
+    p = Math.max(1, p * (1 + drift));
+    series.push(p);
+  }
+  // Nudge the final point using the current scan epoch so it "updates".
+  const er = mulberry32(hashStr(ticker) ^ Math.imul(scanEpoch, 40503));
+  series[n - 1] = Math.max(1, series[n - 1] * (1 + (er() - 0.5) * 0.04));
+  const price = series[n - 1];
+  const changePct = (price / series[0] - 1) * 100;
+  return { series, price, changePct };
+}
+
+// sparkSVG: render a price series as a small inline SVG sparkline.
+function sparkSVG(series, up) {
+  const w = 170, h = 40, pad = 3;
+  const min = Math.min(...series), max = Math.max(...series), span = (max - min) || 1;
+  const pts = series.map((v, i) => {
+    const x = pad + i * (w - 2 * pad) / (series.length - 1);
+    const y = h - pad - (v - min) / span * (h - 2 * pad);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join(' ');
+  const col = up ? '#2ecc71' : '#e74c3c';
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <polyline fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"
+      stroke-linecap="round" points="${pts}"/></svg>`;
+}
+
 /* ----------------------------------------------------------------------------
    Prediction: blend composite score with the current regime's win rate.
 ---------------------------------------------------------------------------- */
@@ -319,6 +387,50 @@ const callFor = (p) => p >= 0.55 ? ['BUY', 'p-win'] : p <= 0.42 ? ['AVOID', 'p-l
 ---------------------------------------------------------------------------- */
 let showAll = false;
 let signals = [];
+let customTickers = [];   // user-added symbols, persisted in localStorage
+const CUSTOM_KEY = 'signalScoutTickers';
+
+// universe: the full set of symbols to scan (built-in + custom, de-duped)
+function universe() {
+  return [...new Set([...TICKERS, ...customTickers])];
+}
+// loadCustom / saveCustom: persist the user's added tickers across reloads
+function loadCustom() {
+  try { return JSON.parse(localStorage.getItem(CUSTOM_KEY)) || []; }
+  catch (e) { return []; }
+}
+function saveCustom() {
+  try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(customTickers)); }
+  catch (e) { /* storage unavailable; keep in-memory only */ }
+}
+// addTicker: validate the input, add to the custom list, re-scan
+function addTicker() {
+  const el = document.getElementById('addInput');
+  const sym = el.value.trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
+  el.value = '';
+  if (!sym) return;
+  if (universe().includes(sym)) { renderChips(); return; }  // already scanned
+  customTickers.push(sym);
+  saveCustom();
+  renderChips();
+  rescan();
+}
+// removeTicker: drop a custom symbol and re-scan
+function removeTicker(sym) {
+  customTickers = customTickers.filter(t => t !== sym);
+  saveCustom();
+  renderChips();
+  rescan();
+}
+// renderChips: show the user's custom tickers with remove buttons
+function renderChips() {
+  const box = document.getElementById('customChips');
+  if (!customTickers.length) { box.innerHTML = ''; return; }
+  box.innerHTML = '<span class="muted" style="font-size:12px;align-self:center">Your tickers:</span> ' +
+    customTickers.map(t =>
+      `<span class="chip">$${t}<button title="Remove" onclick="removeTicker('${t}')">×</button></span>`
+    ).join('');
+}
 
 function currentRegime() {
   return classifyRegime(parseFloat(spy.value), parseFloat(vix.value));
@@ -381,8 +493,8 @@ function renderRegimeStats() {
 }
 
 function rescan() {
-  scanEpoch++;                         // fresh "data" for the whole market
-  signals = TICKERS.map(buildSignal);
+  scanEpoch++;                          // fresh "data" for the whole market
+  signals = universe().map(buildSignal);
   if (lastLookup) doLookup(lastLookup); // refresh the open lookup too
   renderSignals();
 }
@@ -398,7 +510,7 @@ let lastLookup = null;
 function doLookup(forced) {
   const box = document.getElementById('lookupResult');
   const raw = (forced || document.getElementById('lookupInput').value)
-    .trim().toUpperCase().replace(/[^A-Z.]/g, '');
+    .trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
   if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
   lastLookup = raw;
 
@@ -406,7 +518,9 @@ function doLookup(forced) {
   const r = currentRegime();
   const bh = baseHit(s.comp), ra = regimeAdj(s.comp, r);
   const [call, cls] = callFor(ra);
-  const inUniverse = TICKERS.includes(raw);
+  const inUniverse = universe().includes(raw);
+  const px = priceSeries(raw);
+  const up = px.changePct >= 0;
 
   box.innerHTML = `
     <div class="lk-card">
@@ -415,6 +529,11 @@ function doLookup(forced) {
         <span class="comp">composite ${s.comp.toFixed(1)}</span>
         <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adj)</span>
         <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list symbol'}</span>
+      </div>
+      <div class="lk-price">
+        ${sparkSVG(px.series, up)}
+        <span class="px">$${px.price.toFixed(2)}</span>
+        <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(px.changePct).toFixed(1)}% <span class="muted" style="font-weight:600">~30d (sim)</span></span>
       </div>
       <div class="lk-grid">
         <div class="lk-cell"><div class="v">${s.vel.toFixed(0)}</div><div class="l">Velocity</div></div>
@@ -441,8 +560,13 @@ vix.addEventListener('input', renderAll);
 document.getElementById('lookupInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') doLookup();
 });
+document.getElementById('addInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addTicker();
+});
 
-signals = TICKERS.map(buildSignal);  // initial scan at epoch 1 (no bump)
+customTickers = loadCustom();        // restore the user's saved tickers
+renderChips();
+signals = universe().map(buildSignal); // initial scan at epoch 1 (no bump)
 renderAll();
 </script>
 </body>
