@@ -7,9 +7,11 @@ each ticker -> persist qualifying signals (with entry price) -> backfill any
 matured follow-up prices -> print a terminal report. Runs every 30 minutes.
 
 Flags:
+    --source {stocktwits,finnhub}
+                      which data backend to use (default: stocktwits)
     --backfill-only   update follow-up prices/outcomes, then exit (no scraping)
     --report-only     print the current database state, then exit
-    --dry-run         hit StockTwits once, print the parse, then exit
+    --dry-run         hit the selected source once, print the parse, then exit
 """
 
 import argparse
@@ -18,6 +20,7 @@ import traceback
 from datetime import datetime, timezone
 
 import db
+import finnhub_source
 import prices
 import report
 import scraper
@@ -26,13 +29,30 @@ import signals
 SCAN_INTERVAL_SECONDS = 30 * 60  # 30 minutes
 
 
-def run_scan(conn, scan_count):
+def get_source(name):
+    """
+    Resolve a source name to its scraper module and entry-price function.
+
+    Inputs:  name - "stocktwits" or "finnhub"
+    Outputs: tuple (source_module, price_fn) where source_module exposes
+             scrape_all_trending()/dry_run() and price_fn(ticker) -> float|None.
+    Notes: finnhub prices come from its own /quote endpoint because yfinance is
+           also blocked by the egress allowlist in this environment.
+    """
+    if name == "finnhub":
+        return finnhub_source, finnhub_source.get_quote
+    return scraper, prices.get_current_price
+
+
+def run_scan(conn, scan_count, source_mod, price_fn):
     """
     Execute one full scan: scrape, score, persist, backfill, report.
 
     Inputs:
         conn       - open sqlite3.Connection
         scan_count - 1-based index of this scan (int)
+        source_mod - data-source module exposing scrape_all_trending()
+        price_fn   - callable(ticker) -> entry price float or None
     Outputs: list of signal dicts saved during this scan (may be empty).
     Errors during scraping/scoring are logged and swallowed so the loop never
     crashes.
@@ -41,7 +61,7 @@ def run_scan(conn, scan_count):
     new_signals = []
 
     try:
-        scraped = scraper.scrape_all_trending()
+        scraped = source_mod.scrape_all_trending()
     except Exception:  # defensive: scraper should not raise, but never crash
         print("[main] scrape failed:")
         traceback.print_exc()
@@ -68,8 +88,8 @@ def run_scan(conn, scan_count):
         if not signal:
             continue
 
-        # Capture the entry price at detection time.
-        signal["price_at_detection"] = prices.get_current_price(ticker)
+        # Capture the entry price at detection time (source-specific).
+        signal["price_at_detection"] = price_fn(ticker)
         try:
             db.insert_signal(conn, signal)
             new_signals.append(signal)
@@ -101,6 +121,12 @@ def main():
         description="Stock market early sentiment signal detector."
     )
     parser.add_argument(
+        "--source",
+        choices=["stocktwits", "finnhub"],
+        default="stocktwits",
+        help="Data backend to use (default: stocktwits).",
+    )
+    parser.add_argument(
         "--backfill-only",
         action="store_true",
         help="Only backfill follow-up prices/outcomes, then exit.",
@@ -113,13 +139,15 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Hit StockTwits once, print the parsed result, then exit.",
+        help="Hit the selected source once, print the parsed result, then exit.",
     )
     args = parser.parse_args()
 
+    source_mod, price_fn = get_source(args.source)
+
     # --dry-run needs no database; do it before touching disk.
     if args.dry_run:
-        ok = scraper.dry_run()
+        ok = source_mod.dry_run()
         raise SystemExit(0 if ok else 1)
 
     db.init_db()
@@ -147,7 +175,7 @@ def main():
         scan_count = 0
         while True:
             scan_count += 1
-            run_scan(conn, scan_count)
+            run_scan(conn, scan_count, source_mod, price_fn)
             print(f"[main] sleeping {SCAN_INTERVAL_SECONDS // 60} minutes...")
             time.sleep(SCAN_INTERVAL_SECONDS)
     except KeyboardInterrupt:
