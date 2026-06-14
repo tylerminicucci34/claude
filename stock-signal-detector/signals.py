@@ -14,6 +14,7 @@ import db
 
 # Tuning constants drawn directly from the spec.
 VELOCITY_RATIO_GATE = 2.5      # raw 1h-vs-baseline ratio required to flag
+MIN_MENTIONS_1H = 5            # absolute floor: ignore bursts thinner than this
 OBSCURITY_FLOOR_FOLLOWERS = 100      # at/below this -> obscurity 100
 OBSCURITY_CEIL_FOLLOWERS = 10000     # at/above this -> obscurity 0
 YOUNG_ACCOUNT_DAYS = 180             # younger than this earns the age bonus
@@ -171,6 +172,12 @@ def evaluate_ticker(conn, ticker, now=None):
 
     count_1h = len(rows_1h)
     count_24h = len(rows_24h)
+
+    # Absolute-volume floor: on thinly-mentioned tickers a tiny 24h baseline
+    # lets a single new mention clear the 2.5x ratio gate, producing noise.
+    # Require a minimum number of real mentions in the last hour first.
+    if count_1h < MIN_MENTIONS_1H:
+        return None
 
     vel, ratio, flagged = velocity_score(count_1h, count_24h)
     if not flagged:

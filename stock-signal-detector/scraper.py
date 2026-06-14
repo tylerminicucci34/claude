@@ -155,6 +155,54 @@ def get_ticker_messages(ticker):
     return mentions
 
 
+def dry_run(max_tickers=2):
+    """
+    Hit StockTwits once and print the raw + normalized parse for inspection.
+
+    Use this to confirm the public API still returns the shape this code
+    expects (entities.sentiment.basic, user.join_date, etc.) before committing
+    to a long scan loop. Makes a small number of live requests only.
+
+    Inputs:  max_tickers - how many trending tickers to sample (int)
+    Outputs: bool - True if at least one message was parsed successfully,
+             False if trending or all sampled streams came back empty.
+    """
+    print("=== StockTwits dry run ===")
+    tickers = get_trending_tickers()
+    if not tickers:
+        print("FAIL: trending endpoint returned no tickers "
+              "(network, rate-limit, or API shape changed)")
+        return False
+    print(f"OK: trending returned {len(tickers)} tickers: "
+          f"{', '.join(tickers[:10])}{' ...' if len(tickers) > 10 else ''}")
+
+    any_parsed = False
+    for ticker in tickers[:max_tickers]:
+        mentions = get_ticker_messages(ticker)
+        print(f"\n--- {ticker}: {len(mentions)} message(s) parsed ---")
+        if not mentions:
+            print("  (no messages parsed for this ticker)")
+            continue
+        any_parsed = True
+        sample = mentions[0]
+        for key in (
+            "message_id", "created_at", "user_id", "user_followers",
+            "user_following", "account_age_days", "sentiment",
+        ):
+            print(f"  {key:18}= {sample.get(key)}")
+        body = (sample.get("body") or "").replace("\n", " ")
+        print(f"  body              = {body[:80]}")
+        tagged = sum(1 for m in mentions if m["sentiment"])
+        print(f"  sentiment-tagged   = {tagged}/{len(mentions)}")
+
+    if not any_parsed:
+        print("\nFAIL: streams returned data but nothing parsed "
+              "(message/user shape likely changed)")
+    else:
+        print("\nOK: parse looks healthy")
+    return any_parsed
+
+
 def scrape_all_trending():
     """
     Scrape every trending ticker's message stream in one pass.
