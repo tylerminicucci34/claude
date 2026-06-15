@@ -139,18 +139,28 @@
     .news:hover { background: #0e0e16; }
     .news-h { display: block; font-size: 13px; font-weight: 600; color: #e8e8e8; }
     .news-m { display: block; font-size: 11px; color: #888; margin-top: 2px; }
-    /* research prompt stack */
-    .prompt { background: #12121b; border: 1px solid #26263a; border-radius: 14px; padding: 18px; margin-bottom: 14px; }
-    .prompt h3 { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 800; margin-bottom: 3px; }
-    .prompt h3 .n { color: #ff8c33; }
-    .prompt .sub { font-style: italic; color: #9a9aae; font-size: 13px; margin-bottom: 12px; }
-    .prompt .body {
-      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.5px;
-      line-height: 1.65; color: #cfcfe0; border-top: 1px solid #20202e; padding-top: 12px;
+    /* market-status read button */
+    #readMktBtn { padding: 8px 16px; font-size: 13px; border-color: #4a86e8; background: rgba(74,134,232,0.14); color: #6fa1ff; }
+    #readMktBtn:hover { background: rgba(74,134,232,0.28); }
+    /* research steps (shown inside a stock lookup) */
+    .steps { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
+    .steps-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
+    .steps-h .ph { color: #ffd700; }
+    .step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1a1a26; }
+    .step:last-child { border-bottom: none; }
+    .step-n {
+      flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,140,51,0.16);
+      color: #ff8c33; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
     }
-    .prompt .body .ph { color: #ffd700; font-weight: 700; }
-    .prompt .foot { font-style: italic; color: #777; font-size: 12px; margin-top: 12px; }
-    .prompt .copybtn { margin-top: 14px; font-size: 13px; padding: 8px 18px; }
+    .step-body { flex: 1; min-width: 0; }
+    .step-title { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .step-title .muted { font-family: -apple-system, system-ui, sans-serif; font-style: italic; font-weight: 400; font-size: 12.5px; }
+    .step-text {
+      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
+      line-height: 1.6; color: #c7c7d8;
+    }
+    .step-text .ph { color: #ffd700; font-weight: 700; }
+    .step .copybtn { margin-top: 10px; font-size: 12px; padding: 6px 14px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -170,10 +180,10 @@
   </div>
 
   <div class="note">
-    Add a free <b>Finnhub API key</b> below to pull <b>live prices &amp; news</b> in the lookup (fetched
-    directly from your browser; key stored only on your device, never uploaded). Signal <i>scores</i> and
-    the whole-market scan stay simulated — there's no free real-time social-velocity feed, and a full live
-    scan would exceed the free rate limit. The scoring logic mirrors the Python engine.
+    Add a free <b>Finnhub API key</b> below to enable <b>live market status</b> (read automatically from
+    SPY &amp; VIX) and <b>live prices &amp; news</b> in the lookup — fetched directly from your browser; key
+    stored only on your device, never uploaded. Signal <i>scores</i> and the whole-market scan stay simulated
+    (no free real-time social-velocity feed). The scoring logic mirrors the Python engine.
   </div>
 
   <!-- MARKET STATUS -->
@@ -181,11 +191,12 @@
     <h2>🌐 Market Status <span class="tag">drives predictions</span></h2>
     <div class="regime-row">
       <div id="regimeBadge" class="regime-badge neutral">NEUTRAL</div>
-      <div class="muted" style="font-size:13px">Regime is derived from the broad-market trend and volatility below.</div>
+      <button id="readMktBtn" onclick="fetchMarketStatus()">↻ Read live market</button>
+      <span id="mktStatus" class="livestat"></span>
     </div>
     <div class="controls">
       <div class="control">
-        <label>S&amp;P 500 — 5-day trend <b><span id="spyVal">+0.4</span>%</b></label>
+        <label>S&amp;P 500 — daily move <b><span id="spyVal">+0.4</span>%</b></label>
         <input id="spy" type="range" min="-5" max="5" step="0.1" value="0.4">
       </div>
       <div class="control">
@@ -209,16 +220,6 @@
       <button onclick="doLookup()">Look up</button>
     </div>
     <div id="lookupResult"></div>
-  </div>
-
-  <!-- RESEARCH PROMPTS -->
-  <div class="panel">
-    <h2>🧪 Research prompt stack <span class="tag">auto-fills your ticker</span></h2>
-    <div class="regime-desc" style="margin-bottom:14px">
-      Copy these into your AI research tool. <span class="ph" style="color:#ffd700;font-weight:700">[TICKER]</span>
-      is filled with the stock you last looked up<span id="promptTicker"></span>.
-    </div>
-    <div id="promptCards"></div>
   </div>
 
   <!-- SIGNALS -->
@@ -560,6 +561,7 @@ function saveKey() {
   const k = document.getElementById('apiKey').value.trim();
   try { k ? localStorage.setItem(KEY_LS, k) : localStorage.removeItem(KEY_LS); } catch (e) {}
   setLive(k ? 'saved' : 'off');
+  if (k) fetchMarketStatus(); else setMkt('off');   // read market status with the new key
   if (lastLookup) doLookup(lastLookup);
 }
 // setLive: update the little status badge by the key input
@@ -596,6 +598,41 @@ async function fetchNews(ticker, key) {
   if (!r.ok) throw new Error('news HTTP ' + r.status);
   const a = await r.json();
   return Array.isArray(a) ? a : [];
+}
+
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+// setMkt: status badge for the live market-status read
+function setMkt(state, msg) {
+  const el = document.getElementById('mktStatus');
+  if (!el) return;
+  const map = {
+    off:  ['◌ manual — add key for live', '#888'],
+    load: ['… reading market…', '#f1c40f'],
+    on:   ['● live · ' + (msg || ''), '#2ecc71'],
+    err:  ['⚠ ' + (msg || 'failed') + ' — manual', '#e74c3c'],
+  };
+  const [t, c] = map[state] || map.off;
+  el.textContent = t; el.style.color = c;
+}
+// fetchMarketStatus: read the regime itself from live SPY (trend) + VIX (vol),
+// setting the sliders and re-rendering. Falls back to manual on missing key or
+// unsupported symbols.
+async function fetchMarketStatus() {
+  const key = getKey();
+  if (!key) { setMkt('off'); return; }
+  setMkt('load');
+  try {
+    const spyQ = await fetchQuote('SPY', key);              // ETF proxy for S&P
+    spy.value = clamp(spyQ.dp, -5, 5).toFixed(1);
+    let note = 'S&P ' + (spyQ.dp >= 0 ? '+' : '') + spyQ.dp.toFixed(2) + '%';
+    try {
+      const vixQ = await fetchQuote('^VIX', key);           // ^VIX (often index-gated)
+      vix.value = clamp(vixQ.c, 9, 45).toFixed(1);
+      note += ' · VIX ' + vixQ.c.toFixed(1);
+    } catch (e) { note += ' · VIX n/a (slider)'; }
+    renderAll();                                            // sliders set; refresh
+    setMkt('on', note);
+  } catch (e) { setMkt('err', e.message); }
 }
 
 /* --- helpers --- */
@@ -674,6 +711,7 @@ function renderLookupCard(raw, s, r, live) {
       <div class="muted" style="font-size:11px;margin-top:12px">
         Price &amp; news ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
       </div>
+      ${stepsBlock()}
     </div>`;
 }
 
@@ -684,7 +722,6 @@ async function doLookup(forced) {
     .trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
   if (!raw) { box.innerHTML = '<div class="muted" style="margin-top:14px">Enter a ticker symbol to look it up.</div>'; return; }
   lastLookup = raw;
-  renderPrompts();  // keep the research prompts filled with this ticker
 
   const s = buildSignal(raw);
   const r = currentRegime();
@@ -732,32 +769,37 @@ function currentTicker() {
 // fillTicker: substitute [TICKER] in a prompt with the current symbol
 function fillTicker(text) { return text.replace(/\[TICKER\]/g, currentTicker()); }
 
-// renderPrompts: draw the prompt cards with the ticker filled in. Highlights
-// the [TICKER]/[PEER] tokens by split/join on the literal tokens (after HTML-
-// escaping the body), which avoids any substring/regex pitfalls.
-function renderPrompts() {
+// stepsBlock: the ordered research steps the app walks through to read the
+// current stock. Reuses the prompt content as numbered steps with [TICKER]
+// filled in and [TICKER]/[PEER] tokens highlighted (split/join on literal
+// tokens after HTML-escaping, avoiding substring/regex pitfalls).
+function stepsBlock() {
   const t = currentTicker();
   const tickDisplay = t === '[TICKER]' ? '[TICKER]' : t;
-  document.getElementById('promptTicker').textContent = t === '[TICKER]' ? '' : ' (currently $' + t + ')';
-  document.getElementById('promptCards').innerHTML = PROMPTS.map((p, i) => {
+  const steps = PROMPTS.map((p, i) => {
     const body = escapeHtml(p.body)
       .split('[TICKER]').join('<span class="ph">' + escapeHtml(tickDisplay) + '</span>')
       .split('[PEER 1]').join('<span class="ph">[PEER 1]</span>')
       .split('[PEER 2]').join('<span class="ph">[PEER 2]</span>');
     return `
-      <div class="prompt">
-        <h3><span class="n">${p.n}.</span> ${escapeHtml(p.title)}</h3>
-        <div class="sub">${escapeHtml(p.sub)}</div>
-        <div class="body">${body}</div>
-        <div class="foot">${escapeHtml(p.foot)}</div>
-        <button class="copybtn" onclick="copyPrompt(${i}, this)">📋 Copy prompt</button>
+      <div class="step">
+        <div class="step-n">${i + 1}</div>
+        <div class="step-body">
+          <div class="step-title">${escapeHtml(p.title)} <span class="muted">— ${escapeHtml(p.sub)}</span></div>
+          <div class="step-text">${body}</div>
+          <button class="copybtn" onclick="copyPrompt(${i}, this)">📋 Copy step</button>
+        </div>
       </div>`;
   }).join('');
+  return `<div class="steps">
+      <div class="steps-h">🔬 How to read <span class="ph">$${escapeHtml(tickDisplay)}</span> — research steps, in order</div>
+      ${steps}
+    </div>`;
 }
-// copyPrompt: copy the filled prompt text to the clipboard with feedback
+// copyPrompt: copy the filled step text to the clipboard with feedback
 function copyPrompt(i, btn) {
   const text = fillTicker(PROMPTS[i].body);
-  const done = () => { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = '📋 Copy prompt'; }, 1500); };
+  const done = () => { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = '📋 Copy step'; }, 1500); };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
   } else { fallbackCopy(text, done); }
@@ -792,8 +834,8 @@ const savedKey = getKey();            // restore the user's Finnhub key
 if (savedKey) { document.getElementById('apiKey').value = savedKey; setLive('saved'); }
 else { setLive('off'); }
 signals = universe().map(buildSignal); // initial scan at epoch 1 (no bump)
-renderPrompts();
 renderAll();
+if (savedKey) fetchMarketStatus(); else setMkt('off'); // read live market status on load
 </script>
 </body>
 </html>
