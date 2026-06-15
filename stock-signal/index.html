@@ -113,6 +113,31 @@
     .hz-long  { color: #6fa1ff; background: rgba(74,134,232,0.14); border: 1px solid rgba(74,134,232,0.4); }
     .hz-both  { color: #2ecc71; background: rgba(46,204,113,0.14); border: 1px solid rgba(46,204,113,0.4); }
     .hz-none  { color: #9aa0b4; background: rgba(150,150,150,0.12); border: 1px solid rgba(150,150,150,0.3); }
+    /* scan sort/filter controls */
+    .scancontrols { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+    .scancontrols label { font-size: 12px; color: #9aa0b4; display: flex; align-items: center; gap: 8px; }
+    .scancontrols select { font-family: inherit; font-size: 13px; color: #f0f0f0; background: #12121b; border: 1px solid #33334a; border-radius: 10px; padding: 7px 10px; }
+    .scancontrols select:focus { outline: none; border-color: #ff8c33; }
+    th[title] { cursor: help; }
+    /* compare two stocks */
+    .cmp-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .cmp-row input { flex: 1; min-width: 120px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #f0f0f0; background: #12121b; border: 1px solid #33334a; border-radius: 12px; padding: 10px 14px; }
+    .cmp-row input:focus { outline: none; border-color: #a78bfa; }
+    .cmp-vs { color: #888; font-weight: 700; }
+    .cmp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+    @media (max-width: 560px) { .cmp-cards { grid-template-columns: 1fr; } }
+    .cmp-card { background: #12121b; border: 1px solid #26263a; border-radius: 14px; padding: 18px; text-align: center; }
+    .cmp-sym { font-size: 22px; font-weight: 900; color: #ffd700; margin-bottom: 8px; }
+    .cmp-stats { margin-top: 14px; text-align: left; border-top: 1px solid #20202e; padding-top: 10px; }
+    .cmp-stats > div { display: flex; justify-content: space-between; font-size: 12.5px; padding: 4px 0; }
+    .cmp-stats span { color: #9aa0b4; }
+    .cmp-verdict { text-align: center; margin-top: 16px; font-size: 13px; }
+    /* glossary */
+    .glossary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 680px) { .glossary { grid-template-columns: 1fr; } }
+    .gloss { background: #12121b; border: 1px solid #20202e; border-radius: 12px; padding: 14px; }
+    .gloss-t { font-size: 13px; font-weight: 800; color: #ffd700; margin-bottom: 5px; }
+    .gloss-d { font-size: 12.5px; color: #c7c7d8; line-height: 1.55; }
     /* Custom-ticker chips */
     .addrow { display: flex; gap: 10px; margin-bottom: 12px; }
     .addrow input {
@@ -237,6 +262,22 @@
     <div id="lookupResult"></div>
   </div>
 
+  <!-- COMPARE -->
+  <div class="panel">
+    <h2>⚖️ Compare two stocks <span class="tag">side by side</span></h2>
+    <div class="regime-desc" style="margin-bottom:14px">
+      Stack two tickers against each other on upside rating, rise horizon, and the underlying scores.
+      Uses simulated signal scores (same as the scan) so you can compare any two symbols instantly.
+    </div>
+    <div class="cmp-row">
+      <input id="cmpA" type="text" placeholder="First ticker — e.g. NVDA" maxlength="6" autocomplete="off" spellcheck="false">
+      <span class="cmp-vs">vs</span>
+      <input id="cmpB" type="text" placeholder="Second ticker — e.g. AMD" maxlength="6" autocomplete="off" spellcheck="false">
+      <button onclick="doCompare()">Compare</button>
+    </div>
+    <div id="cmpResult"></div>
+  </div>
+
   <!-- SIGNALS -->
   <div class="panel">
     <h2>🔥 Whole-market scan <span class="tag">composite ≥ 60</span></h2>
@@ -246,12 +287,38 @@
       <button onclick="addTicker()">+ Add</button>
     </div>
     <div id="customChips" class="chips"></div>
+    <div class="scancontrols">
+      <label>Sort by
+        <select id="sortBy" onchange="renderSignals()">
+          <option value="comp">Composite</option>
+          <option value="upside">Likely to rise</option>
+          <option value="vel">Velocity</option>
+          <option value="sen">Sentiment</option>
+        </select>
+      </label>
+      <label>Rise horizon
+        <select id="hzFilter" onchange="renderSignals()">
+          <option value="all">All</option>
+          <option value="hz-short">Short-term only</option>
+          <option value="hz-long">Long-term only</option>
+          <option value="hz-both">Both short &amp; long</option>
+        </select>
+      </label>
+    </div>
     <div class="scrollx">
       <table id="sigTable">
         <thead>
           <tr>
-            <th>Ticker</th><th>Composite</th><th>Velocity</th><th>Obscurity</th><th>Sentiment</th>
-            <th>Mentions/1h</th><th>Base hit-rate</th><th>Regime-adjusted</th><th>Call</th>
+            <th title="Stock ticker symbol">Ticker</th>
+            <th title="Overall signal strength 0–100: velocity×0.5 + obscurity×0.3 + sentiment×0.2. 60+ qualifies.">Composite</th>
+            <th title="How unusual the last hour's mentions are vs the 24h average. Must exceed 2.5× to flag.">Velocity</th>
+            <th title="How small/new the mentioning accounts are (0–100). Higher = early, under-the-radar chatter.">Obscurity</th>
+            <th title="Bullish vs bearish lean of tagged messages (0–100; 50 = neutral).">Sentiment</th>
+            <th title="Mentions in the last hour. Must be at least 5 to qualify.">Mentions/1h</th>
+            <th title="Estimated standalone chance the signal precedes a +3% move, from composite alone.">Base hit-rate</th>
+            <th title="Base hit-rate blended with the current market regime's historical win rate.">Regime-adjusted</th>
+            <th title="1–100 rating of how likely the stock is to rise (regime-adjusted hit rate + sentiment + momentum).">Likely&nbsp;↑</th>
+            <th title="BUY / WATCH / AVOID based on the regime-adjusted likelihood.">Call</th>
           </tr>
         </thead>
         <tbody id="sigBody"></tbody>
@@ -269,9 +336,16 @@
     <div class="stat-grid" id="regimeStats"></div>
     <div class="regime-desc" style="margin-top:16px">
       This is the core of "predictions based on market status": the same signal historically resolves
-      differently depending on the regime it fired in. The <b>Regime-adj</b> hit-rate above blends a
+      differently depending on the regime it fired in. The <b>Regime-adjusted</b> hit-rate above blends a
       signal's composite score with the win rate of its current regime.
     </div>
+  </div>
+
+  <!-- GLOSSARY -->
+  <div class="panel">
+    <h2>📖 What every number means <span class="tag">plain-English glossary</span></h2>
+    <div class="regime-desc" style="margin-bottom:14px">Every metric on this page, explained. Hover any table header for a quick tooltip too.</div>
+    <div id="glossary" class="glossary"></div>
   </div>
 
   <div class="footer">Built with Claude Code · scoring logic ported from the Python engine</div>
@@ -542,19 +616,31 @@ const MAX_ROWS = 30;  // cap the table; summary reports the full counts
 
 function renderSignals() {
   const r = currentRegime();
+  const sortBy = (document.getElementById('sortBy') || {}).value || 'comp';
+  const hzFilter = (document.getElementById('hzFilter') || {}).value || 'all';
   const qualifying = signals.filter(s => s.qualifies);
-  const pool = (showAll ? signals.slice() : qualifying.slice()).sort((a, b) => b.comp - a.comp);
+
+  // enrich each candidate with its upside rating + rise-horizon class
+  let pool = (showAll ? signals : qualifying).map(s => ({
+    s, up: upsideScore(s, r, null), hz: riseHorizon(s, s.ticker)[1],
+  }));
+  if (hzFilter !== 'all') pool = pool.filter(x => x.hz === hzFilter);
+
+  const sortKey = { comp: x => x.s.comp, upside: x => x.up, vel: x => x.s.vel, sen: x => x.s.sen };
+  const keyFn = sortKey[sortBy] || sortKey.comp;
+  pool.sort((a, b) => keyFn(b) - keyFn(a));
   const rows = pool.slice(0, MAX_ROWS);
 
   document.getElementById('scanSummary').innerHTML =
     'Scanned <b>' + signals.length + '</b> symbols · <b class="hot">' + qualifying.length +
     '</b> qualifying (composite ≥ 60) · showing ' + rows.length +
     (pool.length > rows.length ? ' of ' + pool.length : '') +
-    (showAll ? ' (all symbols)' : '');
+    (showAll ? ' (all symbols)' : '') +
+    (hzFilter !== 'all' ? ' · ' + hzFilter.replace('hz-', '') + '-term only' : '');
 
   const body = document.getElementById('sigBody');
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="9" class="muted">No qualifying signals this scan.</td></tr>'; return; }
-  body.innerHTML = rows.map(s => {
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="10" class="muted">No signals match this view.</td></tr>'; return; }
+  body.innerHTML = rows.map(({ s, up }) => {
     const bh = baseHit(s.comp), ra = regimeAdj(s.comp, r);
     const [call, cls] = callFor(ra);
     const w = Math.round(s.comp);
@@ -567,6 +653,7 @@ function renderSignals() {
       <td class="${s.m1h >= MIN_MENTIONS_1H ? 'hot' : 'muted'}">${s.m1h}</td>
       <td>${Math.round(bh * 100)}%</td>
       <td><b>${Math.round(ra * 100)}%</b></td>
+      <td style="color:${upsideColor(up)};font-weight:800">${up}</td>
       <td><span class="pill ${cls}">${call}</span></td>
     </tr>`;
   }).join('');
@@ -867,6 +954,67 @@ function fallbackCopy(text, done) {
   document.body.removeChild(ta); done();
 }
 
+/* --- Compare two stocks ---------------------------------------------------- */
+// readTicker: sanitize a ticker from an input element
+function readTicker(id) {
+  return document.getElementById(id).value.trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
+}
+// compareCard: one stock's verdict for the side-by-side compare
+function compareCard(ticker) {
+  const s = buildSignal(ticker), r = currentRegime();
+  const up = upsideScore(s, r, null), upc = upsideColor(up);
+  const [hzLabel, hzClass] = riseHorizon(s, ticker);
+  const px = priceSeries(ticker), pxUp = px.changePct >= 0;
+  return `<div class="cmp-card">
+      <div class="cmp-sym">$${escapeHtml(ticker)}</div>
+      <div class="upbig" style="color:${upc};font-size:30px">${up}<span>/100</span></div>
+      <div class="uplabel">Likely to rise</div>
+      <span class="hz-badge ${hzClass}" style="display:inline-block;margin-top:10px">${hzLabel}</span>
+      <div class="cmp-stats">
+        <div><span>Composite</span><b>${s.comp.toFixed(1)}</b></div>
+        <div><span>Velocity</span><b>${s.vel.toFixed(0)}</b></div>
+        <div><span>Obscurity</span><b>${s.obs.toFixed(0)}</b></div>
+        <div><span>Sentiment</span><b>${s.sen.toFixed(0)}</b></div>
+        <div><span>~30-day trend</span><b class="${pxUp ? 'up' : 'down'}">${pxUp ? '+' : ''}${px.changePct.toFixed(1)}%</b></div>
+      </div>
+    </div>`;
+}
+// doCompare: render both cards plus which has the higher upside
+function doCompare() {
+  const a = readTicker('cmpA'), b = readTicker('cmpB');
+  const box = document.getElementById('cmpResult');
+  if (!a || !b) { box.innerHTML = '<div class="muted" style="margin-top:12px">Enter two ticker symbols to compare.</div>'; return; }
+  const r = currentRegime();
+  const ua = upsideScore(buildSignal(a), r, null), ub = upsideScore(buildSignal(b), r, null);
+  const winner = ua === ub ? 'a tie' : ('$' + (ua > ub ? a : b));
+  box.innerHTML = `<div class="cmp-cards">${compareCard(a)}${compareCard(b)}</div>
+    <div class="cmp-verdict">Higher upside rating: <b>${escapeHtml(winner)}</b>` +
+    (ua !== ub ? ' (' + Math.max(ua, ub) + ' vs ' + Math.min(ua, ub) + ')' : '') +
+    ' <span class="muted">— simulated scores</span></div>';
+}
+
+/* --- Glossary -------------------------------------------------------------- */
+const GLOSSARY = [
+  ['Composite score', 'Overall signal strength from 0–100, combining velocity (50%), obscurity (30%), and sentiment (20%). A ticker must reach 60 to count as a qualifying signal.'],
+  ['Velocity', "How unusual the last hour of mentions is versus the 24-hour average. The hourly rate must be more than 2.5× the baseline to flag. Higher means a sharper, more sudden spike in chatter."],
+  ['Obscurity', 'How small and new the accounts doing the mentioning are. Under 100 followers scores 100, scaling down to 0 at 10,000 followers, with a bonus for accounts younger than 180 days. High obscurity means early, under-the-radar chatter rather than crowded mainstream attention.'],
+  ['Sentiment', 'The bullish-vs-bearish lean of messages that carry an explicit tag. 50 means neutral or evenly split, 100 means all bullish, 0 means all bearish.'],
+  ['Mentions 1h / 24h', 'Raw counts of mentions in the last hour and last day. A signal needs at least 5 mentions in the last hour so a single post on a quiet ticker cannot trip the alert.'],
+  ['Qualifying signal', 'A ticker that clears all three gates at once: more than 2.5× normal velocity, at least 5 mentions this hour, and a composite of 60 or higher.'],
+  ['Market status (regime)', 'The overall market backdrop, read from the S&P 500 daily move and the VIX volatility index. Risk-on = market up and calm; Risk-off = market down or volatile; Neutral = in between. With a Finnhub key it is read live; otherwise you set it with the sliders.'],
+  ['Base hit-rate', 'The estimated standalone chance a signal is followed by a +3% move within 72 hours, based on its composite score alone (before considering the market).'],
+  ['Regime-adjusted', 'The base hit-rate blended with how this kind of signal has historically performed in the current market regime. The same signal is worth more in a risk-on market than a risk-off one.'],
+  ['Likely to rise (1–100)', "A single headline rating of upside, combining the regime-adjusted hit-rate with the sentiment lean and, when live, today's price move. Higher means more likely to go up."],
+  ['Rise horizon', 'Whether a likely rise looks short-term (a near-term mention spike that may fade fast), long-term (a sustained ~30-day price uptrend), both, or neither.'],
+  ['Call (BUY / WATCH / AVOID)', 'A shorthand action from the regime-adjusted likelihood: BUY above 55%, AVOID below 42%, WATCH in between.'],
+  ['Win rate by regime', 'Of past signals that resolved, the share that ended as wins, split by the market regime they fired in — the evidence behind the regime adjustment.'],
+  ['Live vs simulated', 'With a Finnhub API key, the price, day range, and news are live. Signal scores and the whole-market scan are simulated, because there is no free real-time feed of social mention velocity. The math mirrors the real Python engine; only the inputs are synthetic.'],
+];
+function renderGlossary() {
+  document.getElementById('glossary').innerHTML = GLOSSARY.map(([t, d]) =>
+    `<div class="gloss"><div class="gloss-t">${escapeHtml(t)}</div><div class="gloss-d">${escapeHtml(d)}</div></div>`).join('');
+}
+
 function renderAll() {
   renderRegime();
   renderSignals();
@@ -882,7 +1030,11 @@ document.getElementById('lookupInput').addEventListener('keydown', (e) => {
 document.getElementById('addInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') addTicker();
 });
+['cmpA', 'cmpB'].forEach(id => document.getElementById(id).addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doCompare();
+}));
 
+renderGlossary();                    // render the plain-English glossary once
 customTickers = loadCustom();        // restore the user's saved tickers
 renderChips();
 const savedKey = getKey();            // restore the user's Finnhub key
