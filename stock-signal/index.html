@@ -98,6 +98,21 @@
     .lk-price .chg { font-size: 14px; font-weight: 800; }
     .up { color: #2ecc71; } .down { color: #e74c3c; }
     .spark { display: block; }
+    /* upside rating + rise horizon */
+    .verdict { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin: 4px 0 16px; padding: 14px 16px; background: #0e0e16; border-radius: 12px; }
+    .upside { text-align: center; min-width: 92px; }
+    .upbig { font-size: 36px; font-weight: 900; line-height: 1; }
+    .upbig span { font-size: 15px; color: #888; font-weight: 700; }
+    .uplabel { font-size: 10.5px; color: #9aa0b4; margin-top: 4px; text-transform: uppercase; letter-spacing: .5px; }
+    .upbar { height: 8px; border-radius: 5px; background: #1a1a26; margin-top: 8px; overflow: hidden; }
+    .upbar > div { height: 100%; border-radius: 5px; transition: width .3s; }
+    .horizon { flex: 1; min-width: 160px; }
+    .hz-badge { display: inline-block; font-size: 14px; font-weight: 800; padding: 6px 14px; border-radius: 10px; }
+    .hz-desc { font-size: 12px; color: #9aa0b4; margin-top: 7px; line-height: 1.45; }
+    .hz-short { color: #ff8c33; background: rgba(255,140,51,0.14); border: 1px solid rgba(255,140,51,0.4); }
+    .hz-long  { color: #6fa1ff; background: rgba(74,134,232,0.14); border: 1px solid rgba(74,134,232,0.4); }
+    .hz-both  { color: #2ecc71; background: rgba(46,204,113,0.14); border: 1px solid rgba(46,204,113,0.4); }
+    .hz-none  { color: #9aa0b4; background: rgba(150,150,150,0.12); border: 1px solid rgba(150,150,150,0.3); }
     /* Custom-ticker chips */
     .addrow { display: flex; gap: 10px; margin-bottom: 12px; }
     .addrow input {
@@ -235,8 +250,8 @@
       <table id="sigTable">
         <thead>
           <tr>
-            <th>Ticker</th><th>Composite</th><th>Vel</th><th>Obsc</th><th>Sent</th>
-            <th>M/1h</th><th>Base hit</th><th>Regime-adj</th><th>Call</th>
+            <th>Ticker</th><th>Composite</th><th>Velocity</th><th>Obscurity</th><th>Sentiment</th>
+            <th>Mentions/1h</th><th>Base hit-rate</th><th>Regime-adjusted</th><th>Call</th>
           </tr>
         </thead>
         <tbody id="sigBody"></tbody>
@@ -429,6 +444,33 @@ function regimeAdj(comp, regime) {
   return Math.max(0.05, Math.min(0.95, 0.6 * b + 0.4 * w));
 }
 const callFor = (p) => p >= 0.55 ? ['BUY', 'p-win'] : p <= 0.42 ? ['AVOID', 'p-loss'] : ['WATCH', 'p-flat'];
+
+// upsideScore: a single 1-100 rating of how likely the stock is to go up.
+// Built from the regime-adjusted hit rate, nudged by sentiment lean and (when
+// live) today's price move.
+function upsideScore(s, regime, live) {
+  let score = regimeAdj(s.comp, regime) * 100;   // 5..95 base
+  score += (s.sen - 50) * 0.15;                  // bullish/bearish lean: +/-7.5
+  if (live && live.quote) score += clampN(live.quote.dp, -3, 3) * 2; // momentum: +/-6
+  return Math.round(clampN(score, 1, 100));
+}
+// upsideColor: green (strong) / yellow (mixed) / red (weak)
+function upsideColor(n) { return n >= 60 ? '#2ecc71' : n >= 45 ? '#f1c40f' : '#e74c3c'; }
+
+// riseHorizon: classify a likely rise as short-term, long-term, both, or none.
+// Short-term = a near-term mention-velocity spike. Long-term = a sustained
+// ~30-day price uptrend. Returns [label, cssClass, explanation].
+function riseHorizon(s, ticker) {
+  const shortStr = s.vel;                                  // velocity = near-term buzz
+  const longStr = clampN(50 + priceSeries(ticker).changePct * 2.5, 0, 100); // 30d trend
+  const SHORT = shortStr >= 60, LONG = longStr >= 55;
+  if (SHORT && LONG) return ['Short & long-term rise', 'hz-both', 'a near-term mention-velocity spike on top of a sustained ~30-day uptrend'];
+  if (SHORT) return ['Short-term rise', 'hz-short', 'driven by a near-term mention-velocity spike (may fade quickly)'];
+  if (LONG) return ['Long-term rise', 'hz-long', 'driven by a sustained ~30-day price uptrend'];
+  return ['No clear uptrend', 'hz-none', 'neither near-term buzz nor a price trend stands out'];
+}
+// clampN: numeric clamp helper (named to avoid colliding with the live clamp)
+function clampN(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
 
 /* ----------------------------------------------------------------------------
    Render
@@ -667,7 +709,7 @@ function priceBlock(raw, live) {
     <div class="lk-price">
       ${sparkSVG(px.series, up)}
       <span class="px">$${px.price.toFixed(2)}</span>
-      <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(px.changePct).toFixed(1)}% <span class="muted" style="font-weight:600">~30d (sim)</span></span>
+      <span class="chg ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(px.changePct).toFixed(1)}% <span class="muted" style="font-weight:600">~30-day (simulated)</span></span>
     </div>`;
 }
 // newsBlock: live headlines, a loading note, or nothing
@@ -688,13 +730,26 @@ function renderLookupCard(raw, s, r, live) {
   const [call, cls] = callFor(ra);
   const inUniverse = universe().includes(raw);
   const liveOn = !!(live && live.quote);
+  const up = upsideScore(s, r, live), upc = upsideColor(up);
+  const [hzLabel, hzClass, hzDesc] = riseHorizon(s, raw);
   document.getElementById('lookupResult').innerHTML = `
     <div class="lk-card">
       <div class="lk-head">
         <span class="sym">$${escapeHtml(raw)}</span>
         <span class="comp">composite ${s.comp.toFixed(1)}</span>
-        <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adj)</span>
+        <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adjusted)</span>
         <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list'}</span>
+      </div>
+      <div class="verdict">
+        <div class="upside">
+          <div class="upbig" style="color:${upc}">${up}<span>/100</span></div>
+          <div class="uplabel">Likely to rise</div>
+          <div class="upbar"><div style="width:${up}%;background:${upc}"></div></div>
+        </div>
+        <div class="horizon">
+          <span class="hz-badge ${hzClass}">${hzLabel}</span>
+          <div class="hz-desc">${hzDesc}</div>
+        </div>
       </div>
       ${priceBlock(raw, live)}
       <div class="lk-grid">
