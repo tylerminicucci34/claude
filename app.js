@@ -833,10 +833,7 @@ function promptTag() {
 
 /* ── INIT ────────────────────────────────────────────── */
 function init() {
-  // API key modal
-  if (!state.apiKey) {
-    document.getElementById("apiModal").classList.add("open");
-  }
+  // API key modal — only opens when user clicks "Change API Key"
   document.getElementById("saveKeyBtn").addEventListener("click", () => {
     const k = document.getElementById("apiKeyInput").value.trim();
     if (k) {
