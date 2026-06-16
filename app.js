@@ -155,9 +155,9 @@ function parseJSON(text) {
 }
 
 /* ── API CALLS ───────────────────────────────────────── */
-async function callClaude(systemPrompt, userPrompt, maxTokens = 2000) {
+async function callClaude(systemPrompt, userPrompt, maxTokens = 2000, demoKind = "text") {
   if (!state.apiKey) {
-    return demoResponse(systemPrompt, userPrompt);
+    return demoResponse(demoKind);
   }
   const res = await fetch(API_URL, {
     method: "POST",
@@ -184,10 +184,39 @@ async function callClaude(systemPrompt, userPrompt, maxTokens = 2000) {
   return data.content?.[0]?.text || "";
 }
 
-function demoResponse(systemPrompt, userPrompt) {
+function demoResponse(kind) {
+  const sev = ["CRITICAL", "HIGH", "MEDIUM"];
+  const stub = "[DEMO] Add your Anthropic API key to get real expert responses in their actual voice.";
   return new Promise(resolve => setTimeout(() => {
-    resolve("[DEMO MODE — add your API key to get real expert responses]\n\nThis is a stub. Your prompt was: \"" + userPrompt.slice(0, 120) + "...\"");
-  }, 600));
+    if (kind === "hotseat") {
+      resolve(JSON.stringify(EXPERTS.map((e, i) => ({
+        expert: e.id,
+        severity: sev[i % 3],
+        diagnosis: stub
+      }))));
+    } else if (kind === "decision") {
+      resolve(JSON.stringify({
+        votes: EXPERTS.map((e, i) => ({
+          expert: e.id,
+          vote: i % 2 === 0 ? "YES" : "NO",
+          reason: stub
+        }))
+      }));
+    } else if (kind === "mixtape") {
+      resolve(JSON.stringify(EXPERTS.map(e => ({ expert: e.id, text: stub }))));
+    } else if (kind === "challenge") {
+      const days = [];
+      for (let i = 1; i <= 30; i++) days.push({ day: i, task: "Day " + i + " action (demo)" });
+      resolve(JSON.stringify({
+        expert: EXPERTS[0].id,
+        goal: "Demo goal",
+        intro: stub,
+        days
+      }));
+    } else {
+      resolve(stub);
+    }
+  }, 400));
 }
 
 /* ── RENDER: SIDEBAR ─────────────────────────────────── */
@@ -277,7 +306,7 @@ function renderComposer() {
   } else {
     composerExpert.textContent = "All 15 Experts";
   }
-  document.getElementById("composerTag").innerHTML = "🏷️ " + esc(state.currentTag);
+  document.getElementById("tagBtn").innerHTML = "🏷️ " + esc(state.currentTag);
   const ph = {
     hotseat: "Describe your business, project, or situation in detail...",
     decision: "Frame your decision (e.g. Should I X or Y, given Z)...",
@@ -565,7 +594,7 @@ Return ONLY this JSON array (no markdown, no preamble), one entry per expert in 
 ${ids.map(id => `  { "expert": "${id}", "severity": "CRITICAL|HIGH|MEDIUM", "diagnosis": "..." }`).join(",\n")}
 ]`;
 
-  const raw = await callClaude(system, prompt, 4000);
+  const raw = await callClaude(system, prompt, 6000, "hotseat");
   const data = parseJSON(raw);
   return {
     id: "h" + Date.now(),
@@ -600,7 +629,7 @@ ${ids.map(id => `    { "expert": "${id}", "vote": "YES|NO", "reason": "..." }`).
   ]
 }`;
 
-  const raw = await callClaude(system, prompt, 3500);
+  const raw = await callClaude(system, prompt, 5000, "decision");
   const data = parseJSON(raw);
   return {
     id: "d" + Date.now(),
@@ -633,7 +662,7 @@ Return ONLY this JSON (no markdown):
 ${ids.map(id => `  { "expert": "${id}", "text": "..." }`).join(",\n")}
 ]`;
 
-  const raw = await callClaude(system, prompt, 4000);
+  const raw = await callClaude(system, prompt, 6000, "mixtape");
   const data = parseJSON(raw);
   return {
     id: "m" + Date.now(),
@@ -705,7 +734,7 @@ Design the 30-day plan. Return ONLY this JSON (no markdown):
     ... through day 30
   ]
 }`;
-  const raw = await callClaude(system, prompt, 3000);
+  const raw = await callClaude(system, prompt, 4000, "challenge");
   const data = parseJSON(raw);
   return {
     id: "c" + Date.now(),
