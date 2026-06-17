@@ -437,7 +437,19 @@ function renderModeHeader() {
       <div class="mode-header-name">${m.name}</div>
       <div class="mode-header-desc">${esc(m.desc)}</div>
     </div>
+    <button id="clearChatBtn" class="clear-chat-btn" title="Clear all chat history">🗑️ Clear</button>
   `;
+  document.getElementById("clearChatBtn").addEventListener("click", clearChat);
+}
+
+function clearChat() {
+  if (confirm("Clear all chat history?")) {
+    state.history = [];
+    state.ratings = {};
+    state.challenge = null;
+    save();
+    renderChat();
+  }
 }
 
 function renderHints() {
@@ -831,15 +843,7 @@ function promptTag() {
 function init() {
   // Session actions
   document.getElementById("exportBtn").addEventListener("click", exportSession);
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    if (confirm("Clear all chat history?")) {
-      state.history = [];
-      state.ratings = {};
-      state.challenge = null;
-      save();
-      renderChat();
-    }
-  });
+  document.getElementById("clearBtn").addEventListener("click", clearChat);
   document.getElementById("tagBtn").addEventListener("click", promptTag);
 
   // Send
