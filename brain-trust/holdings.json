@@ -1,6 +1,52 @@
 {
-  "updated_utc": "2026-06-18T19:59:05.700414+00:00",
-  "buffett": null,
+  "updated_utc": "2026-06-18T20:00:17.249287+00:00",
+  "buffett": {
+    "filing_date": "2026-05-15",
+    "accession": "0001193125-26-226661",
+    "source": "SEC EDGAR 13F-HR \u2014 Berkshire Hathaway",
+    "top_holdings": [
+      {
+        "name": "APPLE INC",
+        "value_thousands": 57843260493
+      },
+      {
+        "name": "AMERICAN EXPRESS CO",
+        "value_thousands": 45859204536
+      },
+      {
+        "name": "COCA COLA CO",
+        "value_thousands": 30420000000
+      },
+      {
+        "name": "BANK AMERICA CORP",
+        "value_thousands": 25039178044
+      },
+      {
+        "name": "CHEVRON CORPORATION",
+        "value_thousands": 17457364606
+      },
+      {
+        "name": "OCCIDENTAL PETE CORP",
+        "value_thousands": 17221193015
+      },
+      {
+        "name": "ALPHABET INC",
+        "value_thousands": 16628526688
+      },
+      {
+        "name": "CHUBB LTD SWITZ",
+        "value_thousands": 11162836215
+      },
+      {
+        "name": "MOODYS CORP",
+        "value_thousands": 10762190653
+      },
+      {
+        "name": "KRAFT HEINZ CO",
+        "value_thousands": 7323527057
+      }
+    ]
+  },
   "musk": {
     "source": "SEC EDGAR Form 4 filings (CIK 0001494730)",
     "filings": [
