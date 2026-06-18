@@ -1,15 +1,39 @@
 {
-  "updated_utc": "2026-06-18T19:36:43.312291+00:00",
+  "updated_utc": "2026-06-18T19:59:05.700414+00:00",
   "buffett": null,
   "musk": {
-    "error": "'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte",
-    "filings": []
+    "source": "SEC EDGAR Form 4 filings (CIK 0001494730)",
+    "filings": [
+      {
+        "date": "2026-06-17",
+        "accession": "0001628280-26-044069",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000162828026044069/"
+      },
+      {
+        "date": "2026-06-17",
+        "accession": "0001104659-26-075213",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926075213/"
+      },
+      {
+        "date": "2026-04-23",
+        "accession": "0001104659-26-047678",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926047678/"
+      },
+      {
+        "date": "2025-12-31",
+        "accession": "0001104659-25-125703",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925125703/"
+      },
+      {
+        "date": "2025-11-10",
+        "accession": "0001104659-25-109263",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/"
+      }
+    ]
   },
   "trump": {
-    "error": "'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte",
+    "source": "SEC EDGAR Form 4 filings (CIK 0001746139)",
     "filings": []
   },
-  "errors": [
-    "buffett: 'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte"
-  ]
+  "errors": []
 }
