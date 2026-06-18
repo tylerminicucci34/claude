@@ -57,29 +57,37 @@ def find_latest_filing(cik, form_type):
 def fetch_berkshire_13f():
     acc, date, _ = find_latest_filing(BERKSHIRE_CIK, "13F-HR")
     if not acc:
-        return None
+        raise RuntimeError("No 13F-HR found in Berkshire submissions")
     acc_clean = acc.replace("-", "")
     base = f"https://www.sec.gov/Archives/edgar/data/{int(BERKSHIRE_CIK)}/{acc_clean}"
 
-    # Find the information table XML
+    # Find the information table XML. Berkshire names it various things
+    # ("infotable.xml", "form13fInfoTable.xml", etc), so try every .xml in
+    # the directory and pick the first one that parses with infoTable entries.
     index = fetch_json(f"{base}/index.json")
-    info_xml_name = None
-    for item in index["directory"]["item"]:
-        name = item["name"].lower()
-        if name.endswith(".xml") and ("infotable" in name or "informationtable" in name or "info_table" in name):
-            info_xml_name = item["name"]
+    xml_candidates = [
+        item["name"] for item in index["directory"]["item"]
+        if item["name"].lower().endswith(".xml")
+    ]
+
+    entries = []
+    used = None
+    for cand in xml_candidates:
+        try:
+            xml = fetch_text(f"{base}/{cand}")
+            root = ET.fromstring(xml)
+        except Exception:
+            continue
+        # Try namespaced lookup, then any-namespace lookup
+        ns = {"i": "http://www.sec.gov/edgar/document/thirteenf/informationtable"}
+        found = root.findall("i:infoTable", ns) or root.findall(".//{*}infoTable")
+        if found:
+            entries = found
+            used = cand
             break
-    if not info_xml_name:
-        return None
 
-    xml = fetch_text(f"{base}/{info_xml_name}")
-    root = ET.fromstring(xml)
-    ns = {"i": "http://www.sec.gov/edgar/document/thirteenf/informationtable"}
-
-    # Some filings use a different namespace prefix; fall back to no-namespace.
-    entries = root.findall("i:infoTable", ns)
     if not entries:
-        entries = root.findall(".//{*}infoTable")
+        raise RuntimeError(f"No infoTable entries found in any XML under {acc} (candidates: {xml_candidates})")
 
     aggregated = {}  # name -> (ticker_guess, value_thousands)
     for e in entries:
