@@ -173,6 +173,14 @@
     .range { position: relative; height: 6px; background: #0e0e16; border-radius: 4px; margin: 2px 0 6px; }
     .range-fill { position: absolute; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: #ffd700; transform: translateX(-50%); }
     .range-lab { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 14px; }
+    /* analyst consensus */
+    .analyst { margin-top: 16px; border-top: 1px solid #20202e; padding-top: 14px; }
+    .an-h { font-size: 13px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .an-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: #1a1a26; }
+    .an-bar > div { height: 100%; }
+    .an-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 11.5px; color: #9aa0b4; }
+    .an-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+    .an-sum { font-size: 12.5px; color: #c7c7d8; margin-top: 10px; }
     /* news list */
     .news-list { margin-top: 6px; border-top: 1px solid #20202e; }
     .news { display: block; padding: 9px 2px; border-bottom: 1px solid #20202e; text-decoration: none; color: inherit; }
@@ -728,6 +736,16 @@ async function fetchNews(ticker, key) {
   const a = await r.json();
   return Array.isArray(a) ? a : [];
 }
+// fetchRecommendations: Finnhub analyst recommendation trends (free tier).
+// Returns the latest period object {strongBuy,buy,hold,sell,strongSell,period}
+// or null if there's no coverage.
+async function fetchRecommendations(ticker, key) {
+  const u = 'https://finnhub.io/api/v1/stock/recommendation?symbol=' + encodeURIComponent(ticker) + '&token=' + encodeURIComponent(key);
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('rec HTTP ' + r.status);
+  const a = await r.json();
+  return Array.isArray(a) && a.length ? a[0] : null;
+}
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // setMkt: status badge for the live market-status read
@@ -810,6 +828,43 @@ function newsBlock(live) {
        <span class="news-m">${escapeHtml(a.source)} · ${relTime(a.datetime)}</span></a>`).join('') + '</div>';
 }
 
+// analystSummary: roll a Finnhub recommendation period into a consensus.
+// Returns null when there are no ratings. mean rating 1=strong buy … 5=strong
+// sell, mapped to a label/colour.
+function analystSummary(rec) {
+  const sb = rec.strongBuy || 0, b = rec.buy || 0, h = rec.hold || 0, s = rec.sell || 0, ss = rec.strongSell || 0;
+  const total = sb + b + h + s + ss;
+  if (!total) return null;
+  const mean = (sb * 1 + b * 2 + h * 3 + s * 4 + ss * 5) / total;
+  let label, cls;
+  if (mean <= 1.8) { label = 'Strong Buy'; cls = 'p-win'; }
+  else if (mean <= 2.6) { label = 'Buy'; cls = 'p-win'; }
+  else if (mean <= 3.4) { label = 'Hold'; cls = 'p-flat'; }
+  else if (mean <= 4.2) { label = 'Sell'; cls = 'p-loss'; }
+  else { label = 'Strong Sell'; cls = 'p-loss'; }
+  return { sb, b, h, s, ss, total, mean, label, cls, buySide: sb + b, sellSide: s + ss, period: rec.period };
+}
+// analystBlock: live "what analysts say (buy/sell)" summary for the lookup.
+function analystBlock(live) {
+  if (!live) return '<div class="muted" style="font-size:12px;margin-top:14px">📊 Add a Finnhub key above to pull live analyst buy/sell consensus.</div>';
+  if (live.loading) return '<div class="muted" style="font-size:12px;margin-top:14px">Fetching analyst ratings…</div>';
+  const sum = live.recs ? analystSummary(live.recs) : null;
+  if (!sum) return live.quote ? '<div class="analyst"><div class="an-h">📊 Analyst consensus</div><div class="muted" style="font-size:12px">No analyst coverage found for this symbol.</div></div>' : '';
+  const seg = (n, c) => n > 0 ? '<div style="width:' + (n / sum.total * 100).toFixed(1) + '%;background:' + c + '"></div>' : '';
+  return `<div class="analyst">
+      <div class="an-h">📊 Analyst consensus — what people say <span class="pill ${sum.cls}">${sum.label}</span> <span class="livetag">LIVE</span></div>
+      <div class="an-bar">${seg(sum.sb, '#1a9e54')}${seg(sum.b, '#2ecc71')}${seg(sum.h, '#f1c40f')}${seg(sum.s, '#e67e22')}${seg(sum.ss, '#e74c3c')}</div>
+      <div class="an-legend">
+        <span><i style="background:#1a9e54"></i>Strong buy ${sum.sb}</span>
+        <span><i style="background:#2ecc71"></i>Buy ${sum.b}</span>
+        <span><i style="background:#f1c40f"></i>Hold ${sum.h}</span>
+        <span><i style="background:#e67e22"></i>Sell ${sum.s}</span>
+        <span><i style="background:#e74c3c"></i>Strong sell ${sum.ss}</span>
+      </div>
+      <div class="an-sum"><b>${sum.buySide}</b> of <b>${sum.total}</b> analysts say <b class="up">buy</b> or better · <b>${sum.sellSide}</b> say <b class="down">sell</b>${sum.period ? ' · as of ' + escapeHtml(sum.period) : ''}</div>
+    </div>`;
+}
+
 // renderLookupCard: draw the breakdown; `live` may be null (demo),
 // {loading:true}, or {quote, news}
 function renderLookupCard(raw, s, r, live) {
@@ -849,9 +904,10 @@ function renderLookupCard(raw, s, r, live) {
         <div class="lk-cell"><div class="v">${Math.round(REGIME_WINRATE[r] * 100)}%</div><div class="l">Regime win rate</div></div>
         <div class="lk-cell"><div class="v">${s.comp.toFixed(0)}</div><div class="l">Composite</div></div>
       </div>
+      ${analystBlock(live)}
       ${newsBlock(live)}
       <div class="muted" style="font-size:11px;margin-top:12px">
-        Price &amp; news ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
+        Price, news &amp; analyst consensus ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
       </div>
       ${stepsBlock()}
     </div>`;
@@ -873,9 +929,13 @@ async function doLookup(forced) {
   renderLookupCard(raw, s, r, { loading: true });  // show demo immediately
   setLive('load');
   try {
-    const [quote, news] = await Promise.all([fetchQuote(raw, key), fetchNews(raw, key).catch(() => [])]);
+    const [quote, news, recs] = await Promise.all([
+      fetchQuote(raw, key),
+      fetchNews(raw, key).catch(() => []),
+      fetchRecommendations(raw, key).catch(() => null),
+    ]);
     if (lastLookup !== raw) return;                 // superseded by a newer lookup
-    renderLookupCard(raw, s, r, { quote, news });
+    renderLookupCard(raw, s, r, { quote, news, recs });
     setLive('on');
   } catch (e) {
     if (lastLookup !== raw) return;
@@ -1007,6 +1067,7 @@ const GLOSSARY = [
   ['Likely to rise (1–100)', "A single headline rating of upside, combining the regime-adjusted hit-rate with the sentiment lean and, when live, today's price move. Higher means more likely to go up."],
   ['Rise horizon', 'Whether a likely rise looks short-term (a near-term mention spike that may fade fast), long-term (a sustained ~30-day price uptrend), both, or neither.'],
   ['Call (BUY / WATCH / AVOID)', 'A shorthand action from the regime-adjusted likelihood: BUY above 55%, AVOID below 42%, WATCH in between.'],
+  ['Analyst consensus', "A live summary of Wall Street analyst ratings (from Finnhub, with a key): how many rate the stock strong buy / buy / hold / sell / strong sell, rolled into one label. This is real analyst data — what people are actually saying to buy or sell — separate from the app's simulated signal scores."],
   ['Win rate by regime', 'Of past signals that resolved, the share that ended as wins, split by the market regime they fired in — the evidence behind the regime adjustment.'],
   ['Live vs simulated', 'With a Finnhub API key, the price, day range, and news are live. Signal scores and the whole-market scan are simulated, because there is no free real-time feed of social mention velocity. The math mirrors the real Python engine; only the inputs are synthetic.'],
 ];
