@@ -1,0 +1,7 @@
+{
+  "updated_utc": null,
+  "note": "Auto-populated weekly by .github/workflows/update-holdings.yml from SEC EDGAR. Until the first scheduled run, the app uses built-in hardcoded holdings.",
+  "buffett": null,
+  "musk": null,
+  "trump": null
+}

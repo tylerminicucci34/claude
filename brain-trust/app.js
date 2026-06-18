@@ -925,6 +925,49 @@ function init() {
   renderExperts();
   renderTags();
   renderChat();
+
+  loadLiveHoldings();
+}
+
+/* ── LIVE HOLDINGS LOADER ───────────────────────────────
+   Pulls brain-trust/holdings.json (auto-updated weekly by
+   GitHub Actions from SEC EDGAR) and injects real recent
+   positions into Buffett, Musk, and Trump's stock advice. */
+async function loadLiveHoldings() {
+  try {
+    const res = await fetch("./holdings.json?ts=" + Date.now());
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.updated_utc) return;
+
+    const dateStr = new Date(data.updated_utc).toISOString().slice(0, 10);
+
+    // Buffett — Berkshire 13F top holdings
+    if (data.buffett && Array.isArray(data.buffett.top_holdings) && data.buffett.top_holdings.length) {
+      const top = data.buffett.top_holdings.slice(0, 8)
+        .map(h => h.name + " ($" + Math.round(h.value_thousands / 1000) + "M)")
+        .join(", ");
+      STOCK_VOICES.buffett.advice =
+        "Berkshire's latest 13F filing (" + (data.buffett.filing_date || dateStr) + "): " + top +
+        ". For 95 percent of people though, the right answer is a low-cost S&P 500 index fund, bought monthly, held for decades. Rule No. 1: never lose money.";
+    }
+
+    // Musk — recent Form 4 filings
+    if (data.musk && Array.isArray(data.musk.filings) && data.musk.filings.length) {
+      const f = data.musk.filings[0];
+      STOCK_VOICES.musk.advice =
+        "My most recent SEC Form 4 was filed " + f.date + " (TSLA insider transaction). " + STOCK_VOICES.musk.advice;
+    }
+
+    // Trump — recent Form 4 on DJT
+    if (data.trump && Array.isArray(data.trump.filings) && data.trump.filings.length) {
+      const f = data.trump.filings[0];
+      STOCK_VOICES.trump.advice =
+        "Latest Form 4 filed " + f.date + " (DJT insider transaction). " + STOCK_VOICES.trump.advice;
+    }
+  } catch (e) {
+    // Silent — fall back to hardcoded advice
+  }
 }
 
 init();
