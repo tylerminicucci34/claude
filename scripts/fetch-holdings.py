@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 
 HEADERS = {
     "User-Agent": "BrainTrust Holdings Bot tyler@example.com",
-    "Accept-Encoding": "gzip, deflate",
 }
 
 BERKSHIRE_CIK = "0001067983"
