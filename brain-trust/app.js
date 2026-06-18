@@ -152,9 +152,19 @@ function parseJSON(text) {
 
 /* ── OFFLINE EXPERT ENGINE ──────────────────────────────
    In-character phrase banks per expert. No API, no keys.
-   Each expert has 3 signature openers, 3 diagnoses, 3 votes,
-   3 advice lines that get composed against the user's input.
+   VOICES = default / business-coaching takes
+   STOCK_VOICES = stocks / investing / market takes
+   BIZ_PICK_VOICES = "what business should I start?" takes
 ─────────────────────────────────────────────────────────── */
+
+function detectTopic(text) {
+  const t = (text || "").toLowerCase();
+  const stockWords = /\b(stock|stocks|invest|investing|market|share|shares|portfolio|etf|s&p|nasdaq|dow|bond|bonds|crypto|bitcoin|ethereum|nvda|tsla|aapl|msft|amzn|googl|meta|spy|qqq|ticker|dividend|buy the dip|short|long position|options|calls|puts|gold|silver)\b/;
+  const bizPickWords = /\b(what business|start a business|side hustle|which business|what should i start|biz idea|business idea|business to start|what to sell|business opportunity)\b/;
+  if (bizPickWords.test(t)) return "biz";
+  if (stockWords.test(t)) return "stocks";
+  return "default";
+}
 const VOICES = {
   hormozi: {
     sev: "HIGH",
@@ -263,32 +273,74 @@ const VOICES = {
   }
 };
 
+const STOCK_VOICES = {
+  hormozi: { sev:"MEDIUM", diag:"Stocks are not a business. You are buying a piece of someone else's compounding. If you want real returns, build your own offer — the multiple is yours, not the market's.", yes:"If it cashflows and beats your CAC payback, yes. Otherwise build the business.", no:"Stocks are not where wealth is created — they store it. Build first.", advice:"Look — stocks are a savings account with volatility. Real wealth comes from owning the offer, the customer relationship, the operating leverage. Buy a basket of cashflow-producing index funds for storage, then build a business that prints money. That is the play." },
+  cardone: { sev:"HIGH", diag:"STOCKS WILL NOT MAKE YOU RICH. You need cash flow. You need real estate. The market is a SLOW LANE. Get in the FAST LANE.", yes:"10X positions only. Massive action.", no:"Stocks are middle-class thinking. NO.", advice:"Listen — the stock market is for storing money, NOT making it. Buy CASHFLOWING REAL ESTATE. Apartments. Multifamily. That is how the rich get richer. A 401k is a 40-year LOSER plan. 10X your income FIRST, then buy assets that cashflow MONTHLY." },
+  andrewtate: { sev:"MEDIUM", diag:"Brother, the stock market is rigged. The whales know before you do. You are playing their game in their casino.", yes:"Crypto, gold, real estate — yes. Stocks? Slow.", no:"Matrix paper. No.", advice:"G, the matrix wants you in their stock market because they print the money and inflate the asset. Stack BTC, stack physical gold, build an income stream that pays in cash. Speed is everything. While you are waiting for Tesla to go up 8 percent, I made 50K on a copywriting client." },
+  tristantate: { sev:"MEDIUM", diag:"You are buying into a position with no leverage. Retail traders are the exit liquidity for someone else's plan. Know your role.", yes:"If it serves a long-term strategic position — yes.", no:"Tactical retail trading is for losers. No.", advice:"The stock market rewards patience and information asymmetry. Retail has neither. Either build a 20-year index position and forget it, or get out of the casino entirely and put capital into businesses you control. Position, not prediction." },
+  buffett: { sev:"LOW", diag:"Most investors lose by trying to be clever. Buy a low-cost S&P 500 index fund. Hold it for fifty years. Charlie agrees.", yes:"If the moat is wide and the price is fair, yes. Hold forever.", no:"I cannot value it. No.", advice:"Be fearful when others are greedy, and greedy when others are fearful. For 95 percent of people, the right answer is a low-cost S&P 500 index fund, bought monthly, held for decades. If you must pick stocks, stay inside your circle of competence, demand a margin of safety, and never bet more than you can afford to lose. Rule No. 1: never lose money." },
+  musk: { sev:"MEDIUM", diag:"Most stock picking is gambling with extra steps. Index funds are the rational default unless you have informational edge.", yes:"If the technology compounds at 10x, yes. Long.", no:"Probability of being right is too low. No.", advice:"From first principles: most active traders underperform an index. Unless you have an informational edge, buy the index. If you want to pick individual companies, pick the ones building technology with exponential improvements — energy, AI, automation. Time horizon: ten plus years. Anything shorter is noise." },
+  trump: { sev:"MEDIUM", diag:"The market is HUGE. Tremendous. But you need to buy WINNERS. Losers stay losers. Believe me.", yes:"Big winner. Tremendous. Yes.", no:"Total loser. Walk away.", advice:"Look — the stock market is the greatest casino in the world, and I have made tremendous deals there. But you have to back winners. American companies. American jobs. Buy the strong brands — the dominant names. And real estate — always real estate. They are not making any more land, believe me." },
+  garyv: { sev:"MEDIUM", diag:"You are putting money into Apple instead of building YOUR brand. Your attention is the asset. Bet on yourself.", yes:"If you understand the business — yes.", no:"You don't even use the product. No.", advice:"Listen, I am long stocks I personally use and believe in for decades — Apple, Twitter at the time, brands I love. But the BEST investment for most people in their 20s and 30s is yourself. Your skills. Your audience. Your distribution. Buy index funds for the long game, then put your real energy into building your personal brand. That compounds 100x faster." },
+  belfort: { sev:"HIGH", diag:"Retail traders lose because they have no system. They chase, they panic, they sell at the bottom. Get a system or get out.", yes:"With a system and discipline — yes.", no:"You are emotional. You will lose. No.", advice:"Look — I sold penny stocks. I know how this game works. Most retail traders are emotional, undisciplined, and serve as exit liquidity for the pros. If you are going to trade, get a system. Define entry, exit, risk per trade, and follow it like a religion. Better yet, index and chill, and put your energy into sales — which actually has a closing rate you can control." },
+  robbins: { sev:"LOW", diag:"Most retail investors lose because of state. Fear sells the bottom, greed buys the top. Master your psychology first.", yes:"With the right strategy, yes.", no:"Not in this emotional state. No.", advice:"I wrote MONEY: Master The Game with Ray Dalio and Jack Bogle — and the consensus from every one of them is the same: low-cost index funds, dollar-cost average, asset allocation, never panic sell. The All-Weather portfolio handles every economic season. Master your emotions, automate the investing, and focus your time on producing — not predicting." },
+  goggins: { sev:"MEDIUM", diag:"You are looking for an easy way out. There isn't one. Stock picking is a shortcut and shortcuts make you soft.", yes:"If you accept you might lose it all — yes.", no:"You want the gain without the work. No.", advice:"The stock market is not your savior. Doing the hard work — that is your savior. Stack the index funds, automate it, and stop checking your portfolio every five minutes. Your job is to callus your mind and make so much income that the market is irrelevant. Stay hard." },
+  martell: { sev:"LOW", diag:"You are trading time for stock charts instead of building systems that compound. Wrong leverage point.", yes:"Index it, automate it, ignore it. Yes.", no:"Active trading is the opposite of buyback. No.", advice:"The buyback principle applies to investing too: automate it so it does not consume your attention. Set a monthly auto-buy into a broad index fund, ignore the news, and put your active hours into building your business. Most founders I coach who beat the market did it by 10x-ing their business income — not by picking stocks." },
+  andyelliott: { sev:"MEDIUM", diag:"BROTHER. Stocks are not going to change your life. SALES will. Your sales skill compounds 100x faster than NVDA.", yes:"If you have stable income and zero debt — yes.", no:"Your sales game is not at a 10 yet. Get there first. NO.", advice:"BROTHER, listen to me — your income is your fastest asset. You make 200K a year as a closer, you can buy any stock you want. You make 50K trying to pick stocks, you stay broke. Bet on yourself. Train every day. Become so dangerous in sales that money flows to you. THEN park it in index funds and let it compound." },
+  kiyosaki: { sev:"HIGH", diag:"The stock market is a paper asset. The rich don't trust paper — they own real estate, businesses, and precious metals. WAKE UP.", yes:"If it is a cashflow asset — yes.", no:"Paper. Fake. No.", advice:"Stocks are paper assets — controlled by Wall Street, taxed at every turn, inflated by the Fed. Rich Dad would say: own assets you can touch. Real estate that cashflows. Businesses that produce. Silver and gold that the government cannot print. The stock market is for retail. The B and I quadrant build real wealth." },
+  rogan: { sev:"MEDIUM", diag:"It is wild how confident people are about stocks they don't understand. Have you ever talked to a real fund manager? It humbles you.", yes:"I mean, sure — if you believe in the company. Yeah.", no:"That's wild. No.", advice:"Look, I am not a financial guy. But the smartest investors I have had on the podcast — Ray Dalio, Cliff Asness — they all say the same thing. Diversify. Index funds. Long time horizon. Do not try to time it. And honestly? Take a fraction and bet on yourself, your skill, your business. That is the real edge." }
+};
+
+const BIZ_PICK_VOICES = {
+  hormozi: { sev:"HIGH", diag:"You are picking a business before you have picked a customer. Pick a starving crowd first, then build the offer they cannot refuse.", yes:"If the market is hungry and you can deliver — yes.", no:"No starving crowd. No.", advice:"Pick a business with these four traits: starving crowd, high pain, willing to pay, easy to reach. Service businesses for small businesses (cleaning, lawn care, agencies for local biz) are the fastest path to your first 100K. Build a grand-slam offer, run hand-raise ads, close on the phone. You can hit 30K a month in six months if you do not get clever." },
+  cardone: { sev:"CRITICAL", diag:"You are still THINKING about what business. STOP. Get into SALES first. Then real estate. That is the path.", yes:"Sales + real estate. YES.", no:"You are still researching. NO.", advice:"Listen — the BEST business for you right now is SALES. Get a high-ticket commission job. Close everything that moves. Make 200K a year as a closer. THEN take that money and buy multifamily real estate. Apartments. Cashflow. Tenant pays the mortgage. THAT is how you become rich. 10X EVERYTHING." },
+  andrewtate: { sev:"HIGH", diag:"You are slow. While you research, brothers are stacking. Pick one — copywriting, e-commerce, content creation, crypto. GO.", yes:"Pick today. Move tomorrow. YES.", no:"You are still talking. NO.", advice:"G, here are the income streams: copywriting (sell a service in 30 days), e-com (drop ship, white label), content (build an audience, sell to it), crypto (study, invest). Pick ONE this week. Don't pivot for 90 days. Speed is everything, brother. The matrix wants you researching forever. Escape now." },
+  tristantate: { sev:"MEDIUM", diag:"You are choosing tactics before strategy. Decide your endgame — wealth? power? freedom? — then pick the business that compounds toward it.", yes:"If it builds toward your endgame — yes.", no:"It is a distraction. No.", advice:"Think in five-year arcs. The best businesses for a new operator: agency services (high margin, no inventory), licensing (you own the IP), and acquisition (buy small profitable businesses with seller financing). Pick the one that compounds your network and reputation, because those become your real assets at scale." },
+  buffett: { sev:"MEDIUM", diag:"Pick a business inside your circle of competence. Most people fail because they chase what is hot instead of what they understand.", yes:"If you understand it and the moat is real — yes.", no:"You do not understand it. No.", advice:"Charlie and I would say: pick a business you understand. A laundromat. A car wash. A neighborhood service business. The boring ones with predictable cash flow, repeat customers, and a moat — even a small local one — beat the next shiny thing. Buy or build it for cash flow, reinvest the profits, and hold it for decades." },
+  musk: { sev:"MEDIUM", diag:"Most business ideas are derivative. Pick a problem important to the future of civilization. The best companies solve real physics-level problems.", yes:"If it improves the future at 10x — yes.", no:"Too small. No.", advice:"From first principles: the best businesses solve genuinely hard problems with massive markets. Energy, transportation, AI, biotech, manufacturing — these are where the leverage is. If you are starting today and want to maximize impact, build software in a vertical where the incumbent is sleepy. Or solve a hardware problem nobody has touched in 30 years. Pick something that is hard." },
+  trump: { sev:"MEDIUM", diag:"You are thinking small. Tremendous opportunities are everywhere — real estate, branding, licensing your name. Think BIG.", yes:"Tremendous deal. Yes.", no:"Small deal. Pass.", advice:"Look — the best business is the one where YOUR NAME goes on it. Real estate. Licensing. Branding. You build the brand, then you put it on everything — buildings, hotels, ties, water. Leverage is everything. Find a great location, get the financing, slap your name on it, win. People love a winner. Believe me." },
+  garyv: { sev:"HIGH", diag:"You are picking a business without picking a platform. Where do your customers live? Pick the platform first, then build the business.", yes:"If you can dominate the platform — yes.", no:"No distribution edge. No.", advice:"In 2025, the best business is one with a content-driven distribution engine. Agency for local businesses, e-commerce DTC brand, info products, services — they all win when you have organic distribution. Start a TikTok or YouTube channel TODAY for the niche you want to serve. Build the audience FIRST. Then layer the business on top. Macro patience, micro speed." },
+  belfort: { sev:"HIGH", diag:"Pick a business where you can sell something high-margin on the phone. Sales is the leverage point. Without it, nothing works.", yes:"If the close rate is real — yes.", no:"No phone sales motion. No.", advice:"The best businesses are ones with a tight phone sales motion. Coaching, agencies, financial advice, B2B services — anything with a sales call. Build a list, run ads, book calls, close 30 percent of qualified leads. That is the cleanest path from zero to seven figures. If you can sell on the phone, the business almost picks itself." },
+  robbins: { sev:"MEDIUM", diag:"You are looking for the perfect business. There is no perfect business. There is only the one you commit to. Decide.", yes:"With commitment — yes.", no:"You are not committed. No.", advice:"The right business is the one aligned with your strengths, your story, and your soul. Ask: what do people already pay me for? What am I obsessed with? Who do I want to serve? The intersection of those three is your business. Decide today. Commit. Resolve. Take massive action — and adjust as you go. The market gives feedback you cannot get from planning." },
+  goggins: { sev:"MEDIUM", diag:"You are looking for the easy business. There isn't one. Pick the one nobody wants — and outwork everyone.", yes:"If you accept it will be hard — yes.", no:"You want easy. No.", advice:"The best business for you is the one nobody else wants to do. Manual labor businesses. Service businesses. Junk removal. Power washing. Real estate cleanups. Boring, hard, profitable. You do not need an idea — you need the will to outwork the soft people in those industries. Get up at 4am. Stay hard. Build it brick by brick." },
+  martell: { sev:"MEDIUM", diag:"Pick a SaaS or productized service. Recurring revenue plus systems equals a sellable asset. Anything else is a job.", yes:"If it has recurring revenue — yes.", no:"One-time revenue is a job. No.", advice:"Three businesses with the highest leverage today: 1) a productized service (one offer, one price, one delivery process), 2) a niche SaaS (vertical, painful problem, monthly), 3) a content-led education business (course + community). All three scale with systems, not your time. Pick the one closest to a skill you already have. The 1-3-1 rule applies — three options, pick one, commit." },
+  andyelliott: { sev:"HIGH", diag:"BROTHER. The best business is one where your INCOME is uncapped. Commission sales. Period.", yes:"Sales role. YES.", no:"Salary cap. NO.", advice:"BROTHER, the best business in America is COMMISSION SALES. Car sales, solar sales, roofing sales, high-ticket coaching closer — uncapped income. You go in, you become the BEST in your dealership, the BEST in your market, and you make 300K, 500K, a million. Then once you've mastered sales, you OWN the dealership, the agency, the company. Sales first. Always." },
+  kiyosaki: { sev:"HIGH", diag:"Don't pick a business that owns you. Pick one that builds toward the B and I quadrant — systems and investments, not your labor.", yes:"If you can leave and it still runs — yes.", no:"It is just a job in disguise. No.", advice:"The wrong business is one where YOU are the asset. The right business is one with systems, employees, and a brand that operates without you. Real estate is the king — rental properties, syndications, commercial. Network marketing teaches you sales for cheap. Vending, laundromats, ATM routes, storage units — boring, cashflowing, mostly hands-off. Move toward B and I." },
+  rogan: { sev:"MEDIUM", diag:"It is wild how many people pick a business they don't actually like. You will hate it in two years. Pick something you would do for free.", yes:"If you'd do it for free — yes.", no:"You'd quit in a year. No.", advice:"Honestly? Pick a business around something you are genuinely obsessed with. I started a podcast because I loved talking. Joe Schmoe started a BBQ company because he loved BBQ. The grind is brutal — the only fuel that lasts is curiosity and obsession. Look at what you do for free. Make a business around it. Money follows passion, not the other way around — most of the time." }
+};
+
+function pickVoice(expertId, topic) {
+  if (topic === "stocks" && STOCK_VOICES[expertId]) return STOCK_VOICES[expertId];
+  if (topic === "biz" && BIZ_PICK_VOICES[expertId]) return BIZ_PICK_VOICES[expertId];
+  return VOICES[expertId];
+}
+
 async function generateResponse(kind, userText, expert) {
   await new Promise(r => setTimeout(r, 350));
+  const topic = detectTopic(userText);
   if (kind === "hotseat") {
-    return JSON.stringify(EXPERTS.map(e => ({
-      expert: e.id,
-      severity: VOICES[e.id].sev,
-      diagnosis: VOICES[e.id].diag
-    })));
+    return JSON.stringify(EXPERTS.map(e => {
+      const v = pickVoice(e.id, topic);
+      return { expert: e.id, severity: v.sev, diagnosis: v.diag };
+    }));
   }
   if (kind === "decision") {
     return JSON.stringify({
-      votes: EXPERTS.map((e, i) => ({
-        expert: e.id,
-        vote: i % 5 < 3 ? "YES" : "NO",
-        reason: i % 5 < 3 ? VOICES[e.id].yes : VOICES[e.id].no
-      }))
+      votes: EXPERTS.map((e, i) => {
+        const v = pickVoice(e.id, topic);
+        const yes = i % 5 < 3;
+        return { expert: e.id, vote: yes ? "YES" : "NO", reason: yes ? v.yes : v.no };
+      })
     });
   }
   if (kind === "mixtape") {
     return JSON.stringify(EXPERTS.map(e => ({
       expert: e.id,
-      text: VOICES[e.id].advice
+      text: pickVoice(e.id, topic).advice
     })));
   }
   if (kind === "challenge") {
-    const v = VOICES[expert.id];
+    const v = pickVoice(expert.id, topic);
     const tasks = challengeTasksFor(expert.id);
     const days = [];
     for (let i = 1; i <= 30; i++) days.push({ day: i, task: tasks[(i - 1) % tasks.length] });
@@ -306,9 +358,9 @@ async function generateResponse(kind, userText, expert) {
     return reversalFor(expert, userText);
   }
   if (kind === "tracker") {
-    return VOICES[expert.id].advice;
+    return pickVoice(expert.id, topic).advice;
   }
-  return VOICES[expert.id].advice;
+  return pickVoice(expert.id, topic).advice;
 }
 
 function challengeTasksFor(id) {
@@ -662,7 +714,11 @@ function attachMessageHandlers() {
 }
 
 /* ── MODE SWITCHING ──────────────────────────────────── */
+function draftKey() { return "brainTrustDraft:" + state.mode; }
+
 function switchMode(modeId) {
+  const input = document.getElementById("userInput");
+  if (input) localStorage.setItem(draftKey(), input.value);
   state.mode = modeId;
   state.activeTag = null;
   renderModeTabs();
@@ -671,6 +727,7 @@ function switchMode(modeId) {
   renderComposer();
   renderTags();
   renderChat();
+  if (input) input.value = localStorage.getItem(draftKey()) || "";
 }
 
 /* ── SEND ────────────────────────────────────────────── */
@@ -696,6 +753,7 @@ async function send() {
   };
   state.history.push(userMsg);
   input.value = "";
+  localStorage.removeItem(draftKey());
 
   // loading indicator
   const chat = document.getElementById("chat");
@@ -848,12 +906,17 @@ function init() {
 
   // Send
   document.getElementById("sendBtn").addEventListener("click", send);
-  document.getElementById("userInput").addEventListener("keydown", e => {
+  const input = document.getElementById("userInput");
+  input.addEventListener("keydown", e => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
     }
   });
+
+  // Draft memory — restore and persist across reloads, per mode
+  input.value = localStorage.getItem(draftKey()) || "";
+  input.addEventListener("input", () => localStorage.setItem(draftKey(), input.value));
 
   renderModeTabs();
   renderModeHeader();
