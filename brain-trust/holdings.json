@@ -1,7 +1,15 @@
 {
-  "updated_utc": null,
-  "note": "Auto-populated weekly by .github/workflows/update-holdings.yml from SEC EDGAR. Until the first scheduled run, the app uses built-in hardcoded holdings.",
+  "updated_utc": "2026-06-18T19:36:43.312291+00:00",
   "buffett": null,
-  "musk": null,
-  "trump": null
+  "musk": {
+    "error": "'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte",
+    "filings": []
+  },
+  "trump": {
+    "error": "'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte",
+    "filings": []
+  },
+  "errors": [
+    "buffett: 'utf-8' codec can't decode byte 0x8b in position 1: invalid start byte"
+  ]
 }
