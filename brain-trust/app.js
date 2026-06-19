@@ -904,6 +904,18 @@ function init() {
   document.getElementById("clearBtn").addEventListener("click", clearChat);
   document.getElementById("tagBtn").addEventListener("click", promptTag);
 
+  // Glossary
+  document.getElementById("glossaryBtn").addEventListener("click", openGlossary);
+  document.getElementById("glossaryBtnMobile").addEventListener("click", openGlossary);
+  document.getElementById("closeGlossary").addEventListener("click", closeGlossary);
+  document.getElementById("glossaryDrawer").addEventListener("click", e => {
+    if (e.target.id === "glossaryDrawer") closeGlossary();
+  });
+  document.getElementById("glossarySearch").addEventListener("input", e => {
+    glossaryFilter = e.target.value;
+    renderGlossary();
+  });
+
   // Send
   document.getElementById("sendBtn").addEventListener("click", send);
   const input = document.getElementById("userInput");
@@ -929,45 +941,180 @@ function init() {
   loadLiveHoldings();
 }
 
+/* ── GLOSSARY ────────────────────────────────────────────
+   Plain-English definitions for the jargon the experts use,
+   organized by category. Searchable in the drawer. */
+const GLOSSARY = [
+  { cat: "Stocks & Trading", term: "Velocity", def: "How fast a stock price (or sentiment around it) is changing. High velocity = price moving fast in a short window. Used in momentum trading to spot stocks gaining traction before they peak." },
+  { cat: "Stocks & Trading", term: "Momentum", def: "The tendency of a stock that is going up to keep going up, and one going down to keep going down. Momentum traders ride the trend until it breaks." },
+  { cat: "Stocks & Trading", term: "Sentiment", def: "The overall mood of the market or investors toward a stock — bullish (positive), bearish (negative), or neutral. Often measured from news, social posts, and analyst ratings." },
+  { cat: "Stocks & Trading", term: "Bull / Bear Market", def: "Bull = prices rising or expected to rise. Bear = prices falling or expected to fall. A 20%+ drop from recent highs is the formal definition of a bear market." },
+  { cat: "Stocks & Trading", term: "Market Cap", def: "Share price × total shares outstanding. The total value of all of a company's stock. Small-cap < $2B, mid-cap $2–10B, large-cap $10B+." },
+  { cat: "Stocks & Trading", term: "P/E Ratio", def: "Price-to-Earnings ratio. Stock price divided by earnings per share. Lower P/E = cheaper relative to profits; higher P/E = investors paying more for future growth." },
+  { cat: "Stocks & Trading", term: "EPS", def: "Earnings Per Share. The company's profit divided by total shares. Rising EPS is good." },
+  { cat: "Stocks & Trading", term: "Dividend", def: "A cash payment a company makes to shareholders, usually quarterly. Mature stocks like Coca-Cola pay dividends; growth stocks usually reinvest instead." },
+  { cat: "Stocks & Trading", term: "Volume", def: "How many shares traded in a time window. High volume on a price move = strong conviction; low volume = weak signal." },
+  { cat: "Stocks & Trading", term: "Volatility", def: "How much a stock's price swings. High volatility = bigger moves up and down. Measured with metrics like beta or standard deviation." },
+  { cat: "Stocks & Trading", term: "Beta", def: "Compares a stock's volatility to the overall market. Beta = 1 means it moves with the market; beta > 1 = more volatile; beta < 1 = less volatile." },
+  { cat: "Stocks & Trading", term: "Liquidity", def: "How easily an asset can be bought or sold without affecting its price. Apple stock = highly liquid. A small-cap or rural rental property = illiquid." },
+  { cat: "Stocks & Trading", term: "Short Selling", def: "Betting a stock will go DOWN. You borrow shares, sell them now, and buy them back later (hopefully cheaper) to return them. Profit = the difference." },
+  { cat: "Stocks & Trading", term: "Options (Calls / Puts)", def: "Contracts that let you buy (call) or sell (put) a stock at a set price by a set date. Used for leverage or hedging. Risky — most expire worthless." },
+
+  { cat: "SEC Filings", term: "13F", def: "A quarterly report institutional managers with $100M+ must file with the SEC, disclosing all their long stock positions. This is how the public knows what Warren Buffett owns." },
+  { cat: "SEC Filings", term: "Form 4", def: "An SEC filing required when corporate officers, directors, or large shareholders buy or sell their own company's stock. Filed within 2 business days. This is how we see Musk's TSLA trades." },
+  { cat: "SEC Filings", term: "10-K / 10-Q", def: "Annual (10-K) and quarterly (10-Q) reports filed with the SEC. They contain financials, risks, and management commentary. Buffett reads them religiously." },
+  { cat: "SEC Filings", term: "Insider Trading (Legal)", def: "When company insiders buy or sell their own stock, disclosed on Form 4. It's legal as long as it's reported. Heavy insider buying is often a bullish signal." },
+
+  { cat: "Buffett-style", term: "Moat", def: "A durable competitive advantage that protects a business from competitors — brand, network effects, switching costs, patents, or low cost. Buffett only buys businesses with wide moats." },
+  { cat: "Buffett-style", term: "Margin of Safety", def: "Buying a stock for significantly less than its estimated intrinsic value, so you have a buffer if you're wrong. Core concept from Ben Graham." },
+  { cat: "Buffett-style", term: "Circle of Competence", def: "The set of industries and businesses you actually understand. Buffett: 'I don't have to be right about every business — just the ones inside my circle.'" },
+  { cat: "Buffett-style", term: "Intrinsic Value", def: "What a business is actually worth based on the cash it will produce over its lifetime, discounted to today. Different from its stock price." },
+
+  { cat: "Portfolio Theory", term: "All-Weather Portfolio", def: "Ray Dalio's strategy: 30% stocks, 40% long-term bonds, 15% intermediate bonds, 7.5% gold, 7.5% commodities. Designed to perform in any economic season — growth, recession, inflation, deflation." },
+  { cat: "Portfolio Theory", term: "Index Fund", def: "A fund that holds every stock in an index (e.g. S&P 500). Low fees, broad diversification. Beats most active managers over 20+ years." },
+  { cat: "Portfolio Theory", term: "ETF", def: "Exchange-Traded Fund — like an index fund but trades on a stock exchange like a regular stock. Lower fees, more tax-efficient." },
+  { cat: "Portfolio Theory", term: "Dollar-Cost Average (DCA)", def: "Buying a fixed dollar amount on a fixed schedule (e.g. $500 every Monday) instead of trying to time the market. Smooths out volatility." },
+  { cat: "Portfolio Theory", term: "Asset Allocation", def: "How you split capital across stocks, bonds, real estate, gold, cash, crypto. Drives more than 90% of long-run returns — way more than which specific stocks you pick." },
+  { cat: "Portfolio Theory", term: "Diversification", def: "Spreading money across many positions so no single failure ruins you. The only free lunch in investing." },
+
+  { cat: "Hormozi / Business", term: "Value Equation", def: "Hormozi's formula: (Dream Outcome × Perceived Likelihood) ÷ (Time Delay × Effort & Sacrifice). Make each lever better to make your offer irresistible." },
+  { cat: "Hormozi / Business", term: "CAC", def: "Customer Acquisition Cost. What you pay (in ads, sales, time) to get one new customer." },
+  { cat: "Hormozi / Business", term: "LTV", def: "Lifetime Value. The total profit a customer generates over their entire relationship with you. A healthy business has LTV at least 3× CAC." },
+  { cat: "Hormozi / Business", term: "Grand-Slam Offer", def: "An offer so good people feel stupid saying no. High value, low risk, urgent, with bonuses that exceed the price." },
+  { cat: "Hormozi / Business", term: "Gross Margin", def: "Revenue minus direct costs of delivering the product, divided by revenue. SaaS = 80%+. Agency = 50–70%. Most service businesses = 30–50%." },
+
+  { cat: "Real Estate", term: "Cash Flow", def: "Money left over each month after collecting rent and paying mortgage, taxes, insurance, maintenance, and management. Positive cash flow means the property pays YOU." },
+  { cat: "Real Estate", term: "Cap Rate", def: "Net operating income ÷ property price. A quick way to compare returns across properties. Higher cap rate = better return (but usually more risk)." },
+  { cat: "Real Estate", term: "Multifamily", def: "Apartment buildings with 5+ units. Cardone's specialty. Easier to scale than single-family because one property = many tenants." },
+  { cat: "Real Estate", term: "Syndication", def: "Pooling money from many investors to buy a big property. You become a passive investor in a deal run by a 'sponsor.'" },
+
+  { cat: "Kiyosaki / Cashflow", term: "Asset vs Liability", def: "Kiyosaki: an asset puts money IN your pocket each month; a liability takes money OUT. Your house (with a mortgage) is a liability. A rental that cash-flows is an asset." },
+  { cat: "Kiyosaki / Cashflow", term: "E / S / B / I Quadrant", def: "Employee, Self-employed, Business owner, Investor. The rich live on the right side (B and I) — making money through systems and assets instead of trading time." },
+  { cat: "Kiyosaki / Cashflow", term: "Passive Income", def: "Money that flows in whether you work or not — rents, dividends, royalties, business cash flow from a system you don't run day-to-day." },
+
+  { cat: "Sales / Martell", term: "Three Tens", def: "Belfort's Straight Line: certainty in YOU (10/10), your PRODUCT (10/10), your COMPANY (10/10). All three must be at a 10 before the prospect buys." },
+  { cat: "Sales / Martell", term: "Straight Line", def: "Belfort's selling system: opener → pitch → loop the objection → close. Don't let the conversation drift sideways." },
+  { cat: "Sales / Martell", term: "Buyback Principle", def: "Dan Martell: track your time, find the lowest-dollar tasks, delegate them first. Then reinvest your reclaimed hours in growth." },
+  { cat: "Sales / Martell", term: "1-3-1 Framework", def: "Martell's decision tool: state ONE problem, present THREE options, give ONE recommendation. Forces clarity in every meeting." },
+
+  { cat: "Crypto / Alternatives", term: "BTC (Bitcoin)", def: "The original cryptocurrency. Fixed supply of 21 million. Held by Tate, Kiyosaki, Rogan, Cardone, and on Tesla's balance sheet." },
+  { cat: "Crypto / Alternatives", term: "DOGE (Dogecoin)", def: "Meme cryptocurrency Musk has publicly held and promoted. Started as a joke; now worth tens of billions." },
+  { cat: "Crypto / Alternatives", term: "Gold / Silver", def: "Physical precious metals. Kiyosaki's go-to hedge against fiat currency printing. No counterparty risk if you hold the actual metal." }
+];
+
+let glossaryFilter = "";
+function renderGlossary() {
+  const list = document.getElementById("glossaryList");
+  const q = glossaryFilter.toLowerCase().trim();
+  const items = q
+    ? GLOSSARY.filter(g => g.term.toLowerCase().includes(q) || g.def.toLowerCase().includes(q) || g.cat.toLowerCase().includes(q))
+    : GLOSSARY;
+  const byCat = {};
+  items.forEach(g => { (byCat[g.cat] = byCat[g.cat] || []).push(g); });
+  list.innerHTML = Object.entries(byCat).map(([cat, arr]) => `
+    <div class="glossary-cat">${esc(cat)}</div>
+    ${arr.map(g => `
+      <div class="glossary-item">
+        <div class="glossary-term">${esc(g.term)}</div>
+        <div class="glossary-def">${esc(g.def)}</div>
+      </div>
+    `).join("")}
+  `).join("");
+  if (!items.length) list.innerHTML = '<div class="glossary-empty">No matches.</div>';
+}
+
+function openGlossary() {
+  document.getElementById("glossaryDrawer").classList.add("open");
+  document.getElementById("glossarySearch").value = "";
+  glossaryFilter = "";
+  renderGlossary();
+  setTimeout(() => document.getElementById("glossarySearch").focus(), 50);
+}
+function closeGlossary() {
+  document.getElementById("glossaryDrawer").classList.remove("open");
+}
+
 /* ── LIVE HOLDINGS LOADER ───────────────────────────────
-   Pulls brain-trust/holdings.json (auto-updated weekly by
-   GitHub Actions from SEC EDGAR) and injects real recent
-   positions into Buffett, Musk, and Trump's stock advice. */
+   Pulls brain-trust/holdings.json (auto-updated weekly from
+   SEC EDGAR) and silently swaps the real recent positions into
+   each expert's stock-mode advice — no jargon visible. */
 async function loadLiveHoldings() {
   try {
     const res = await fetch("./holdings.json?ts=" + Date.now());
     if (!res.ok) return;
     const data = await res.json();
-    if (!data || !data.updated_utc) return;
 
-    const dateStr = new Date(data.updated_utc).toISOString().slice(0, 10);
-
-    // Buffett — Berkshire 13F top holdings
+    // Buffett — Berkshire top positions, formatted as the conversational paragraph
     if (data.buffett && Array.isArray(data.buffett.top_holdings) && data.buffett.top_holdings.length) {
       const top = data.buffett.top_holdings.slice(0, 8)
-        .map(h => h.name + " ($" + Math.round(h.value_thousands / 1000) + "M)")
+        .map(h => prettyCompany(h.name) + " (" + dollars(h.value_thousands * 1000) + ")")
         .join(", ");
       STOCK_VOICES.buffett.advice =
-        "Berkshire's latest 13F filing (" + (data.buffett.filing_date || dateStr) + "): " + top +
-        ". For 95 percent of people though, the right answer is a low-cost S&P 500 index fund, bought monthly, held for decades. Rule No. 1: never lose money.";
+        "Right now at Berkshire our biggest positions are " + top + ". " +
+        "We've owned Coca-Cola since 1988 — we hold for the moat and the dividends. " +
+        "For 95 percent of people, the right answer is a low-cost S&P 500 index fund, bought monthly, held for decades. Rule No. 1: never lose money.";
     }
 
-    // Musk — recent Form 4 filings
+    // Musk — replace the date-and-form-4 framing with a natural mention
     if (data.musk && Array.isArray(data.musk.filings) && data.musk.filings.length) {
       const f = data.musk.filings[0];
       STOCK_VOICES.musk.advice =
-        "My most recent SEC Form 4 was filed " + f.date + " (TSLA insider transaction). " + STOCK_VOICES.musk.advice;
+        "Most recent insider activity in Tesla was logged " + relativeDate(f.date) + ". " + STOCK_VOICES.musk.advice;
     }
 
-    // Trump — recent Form 4 on DJT
+    // Trump — same natural framing for DJT activity
     if (data.trump && Array.isArray(data.trump.filings) && data.trump.filings.length) {
       const f = data.trump.filings[0];
       STOCK_VOICES.trump.advice =
-        "Latest Form 4 filed " + f.date + " (DJT insider transaction). " + STOCK_VOICES.trump.advice;
+        "Latest DJT insider activity logged " + relativeDate(f.date) + ". " + STOCK_VOICES.trump.advice;
     }
   } catch (e) {
     // Silent — fall back to hardcoded advice
   }
+}
+
+function dollars(n) {
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M";
+  return "$" + Math.round(n).toLocaleString();
+}
+
+function prettyCompany(name) {
+  const map = {
+    "APPLE INC": "Apple (AAPL)",
+    "AMERICAN EXPRESS CO": "American Express (AXP)",
+    "COCA COLA CO": "Coca-Cola (KO)",
+    "BANK AMERICA CORP": "Bank of America (BAC)",
+    "CHEVRON CORPORATION": "Chevron (CVX)",
+    "OCCIDENTAL PETE CORP": "Occidental Petroleum (OXY)",
+    "ALPHABET INC": "Alphabet (GOOGL)",
+    "CHUBB LTD SWITZ": "Chubb (CB)",
+    "MOODYS CORP": "Moody's (MCO)",
+    "KRAFT HEINZ CO": "Kraft Heinz (KHC)",
+    "HP INC": "HP Inc (HPQ)",
+    "VERISIGN INC": "VeriSign (VRSN)",
+    "VISA INC": "Visa (V)",
+    "MASTERCARD INC": "Mastercard (MA)",
+    "AMAZON COM INC": "Amazon (AMZN)",
+    "CITIGROUP INC": "Citigroup (C)",
+    "DOMINOS PIZZA INC": "Domino's Pizza (DPZ)"
+  };
+  return map[name.toUpperCase().trim()] || titleCase(name);
+}
+
+function titleCase(s) {
+  return String(s).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function relativeDate(iso) {
+  const d = new Date(iso);
+  const days = Math.round((Date.now() - d.getTime()) / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return days + " days ago";
+  if (days < 30) return Math.round(days / 7) + " weeks ago";
+  if (days < 365) return Math.round(days / 30) + " months ago";
+  return Math.round(days / 365) + " years ago";
 }
 
 init();
