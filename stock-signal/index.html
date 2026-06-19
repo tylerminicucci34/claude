@@ -198,29 +198,25 @@
     /* market-status read button */
     #readMktBtn { padding: 8px 16px; font-size: 13px; border-color: #4a86e8; background: rgba(74,134,232,0.14); color: #6fa1ff; }
     #readMktBtn:hover { background: rgba(74,134,232,0.28); }
-    /* company summary (shown inside a stock lookup) */
-    .cs { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
-    .cs-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
-    .cs-facts {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+    /* research steps (shown inside a stock lookup) */
+    .steps { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
+    .steps-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
+    .steps-h .ph { color: #ffd700; }
+    .step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1a1a26; }
+    .step:last-child { border-bottom: none; }
+    .step-n {
+      flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,140,51,0.16);
+      color: #ff8c33; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
     }
-    .cs-fact {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #12121b; border: 1px solid #22223a; border-radius: 999px;
-      padding: 5px 10px;
+    .step-body { flex: 1; min-width: 0; }
+    .step-title { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .step-title .muted { font-family: -apple-system, system-ui, sans-serif; font-style: italic; font-weight: 400; font-size: 12.5px; }
+    .step-text {
+      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
+      line-height: 1.6; color: #c7c7d8;
     }
-    .cs-fact-l { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
-    .cs-fact-v { font-size: 12px; color: #f0f0f0; font-weight: 700; }
-    .cs-desc {
-      font-size: 13.5px; line-height: 1.6; color: #c7c7d8;
-      background: #11111a; border: 1px solid #1f1f2e; border-radius: 12px; padding: 14px;
-    }
-    .cs-desc.cs-loading { color: #666; font-style: italic; }
-    .cs-link {
-      display: inline-block; margin-top: 6px;
-      color: #ff8c33; font-size: 12px; font-weight: 700; text-decoration: none;
-    }
-    .cs-link:hover { color: #ffd700; }
+    .step-text .ph { color: #ffd700; font-weight: 700; }
+    .step .copybtn { margin-top: 10px; font-size: 12px; padding: 6px 14px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -977,15 +973,7 @@ async function doLookup(forced) {
   const s = buildSignal(raw);
   const r = currentRegime();
   const key = getKey();
-  if (!key) {
-    renderLookupCard(raw, s, r, null);
-    loadCompanyContext(raw, null, null).then(() => {
-      if (lastLookup !== raw) return;
-      const el = document.getElementById('cs-' + raw);
-      if (el) el.outerHTML = companySummaryBlock(raw, null);
-    });
-    return;
-  }
+  if (!key) { renderLookupCard(raw, s, r, null); return; }
 
   renderLookupCard(raw, s, r, { loading: true });  // show demo immediately
   setLive('load');
@@ -999,12 +987,6 @@ async function doLookup(forced) {
     if (lastLookup !== raw) return;                 // superseded by a newer lookup
     renderLookupCard(raw, s, r, { quote, news, recs, profile });
     setLive('on');
-    // Wikipedia summary loads after the card paints — refresh just the company block.
-    loadCompanyContext(raw, key, profile).then(() => {
-      if (lastLookup !== raw) return;
-      const el = document.getElementById('cs-' + raw);
-      if (el) el.outerHTML = companySummaryBlock(raw, { quote, news, recs, profile });
-    });
   } catch (e) {
     if (lastLookup !== raw) return;
     renderLookupCard(raw, s, r, null);              // fall back to simulated
