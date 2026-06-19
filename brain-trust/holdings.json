@@ -1,0 +1,85 @@
+{
+  "updated_utc": "2026-06-18T20:00:17.249287+00:00",
+  "buffett": {
+    "filing_date": "2026-05-15",
+    "accession": "0001193125-26-226661",
+    "source": "SEC EDGAR 13F-HR \u2014 Berkshire Hathaway",
+    "top_holdings": [
+      {
+        "name": "APPLE INC",
+        "value_thousands": 57843260493
+      },
+      {
+        "name": "AMERICAN EXPRESS CO",
+        "value_thousands": 45859204536
+      },
+      {
+        "name": "COCA COLA CO",
+        "value_thousands": 30420000000
+      },
+      {
+        "name": "BANK AMERICA CORP",
+        "value_thousands": 25039178044
+      },
+      {
+        "name": "CHEVRON CORPORATION",
+        "value_thousands": 17457364606
+      },
+      {
+        "name": "OCCIDENTAL PETE CORP",
+        "value_thousands": 17221193015
+      },
+      {
+        "name": "ALPHABET INC",
+        "value_thousands": 16628526688
+      },
+      {
+        "name": "CHUBB LTD SWITZ",
+        "value_thousands": 11162836215
+      },
+      {
+        "name": "MOODYS CORP",
+        "value_thousands": 10762190653
+      },
+      {
+        "name": "KRAFT HEINZ CO",
+        "value_thousands": 7323527057
+      }
+    ]
+  },
+  "musk": {
+    "source": "SEC EDGAR Form 4 filings (CIK 0001494730)",
+    "filings": [
+      {
+        "date": "2026-06-17",
+        "accession": "0001628280-26-044069",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000162828026044069/"
+      },
+      {
+        "date": "2026-06-17",
+        "accession": "0001104659-26-075213",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926075213/"
+      },
+      {
+        "date": "2026-04-23",
+        "accession": "0001104659-26-047678",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926047678/"
+      },
+      {
+        "date": "2025-12-31",
+        "accession": "0001104659-25-125703",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925125703/"
+      },
+      {
+        "date": "2025-11-10",
+        "accession": "0001104659-25-109263",
+        "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/"
+      }
+    ]
+  },
+  "trump": {
+    "source": "SEC EDGAR Form 4 filings (CIK 0001746139)",
+    "filings": []
+  },
+  "errors": []
+}

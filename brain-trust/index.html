@@ -9,20 +9,6 @@
 <body>
 <div id="app">
 
-  <!-- API KEY MODAL -->
-  <div id="apiModal" class="modal">
-    <div class="modal-card">
-      <h2>🔑 Connect Claude</h2>
-      <p>Paste your Anthropic API key to power the Brain Trust. Stored locally in your browser only.</p>
-      <input id="apiKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off" />
-      <div class="modal-actions">
-        <button id="saveKeyBtn" class="btn-primary">Save & Continue</button>
-        <button id="skipKeyBtn" class="btn-ghost">Skip (Demo Mode)</button>
-      </div>
-      <p class="modal-hint">Get a key at console.anthropic.com</p>
-    </div>
-  </div>
-
   <!-- SIDEBAR -->
   <aside id="sidebar">
     <div class="brand">
@@ -42,7 +28,7 @@
       <div class="side-label">Session</div>
       <button id="exportBtn" class="side-btn">📥 Export Session</button>
       <button id="clearBtn" class="side-btn">🗑️ Clear Chat</button>
-      <button id="changeKeyBtn" class="side-btn">🔑 Change API Key</button>
+      <button id="glossaryBtn" class="side-btn">📖 Glossary</button>
     </div>
 
     <div class="side-section">
@@ -64,7 +50,21 @@
         <div class="mode-header-name">Hot Seat</div>
         <div class="mode-header-desc">Describe your business or situation in detail. All 15 experts roast and audit it simultaneously, each finding the biggest problem from their lens with a severity rating.</div>
       </div>
+      <button id="glossaryBtnMobile" class="glossary-btn" title="Open glossary">📖 Glossary</button>
+      <button id="clearChatBtn" class="clear-chat-btn" title="Clear all chat history">🗑️ Clear</button>
     </header>
+
+    <!-- GLOSSARY DRAWER -->
+    <div id="glossaryDrawer" class="glossary-drawer">
+      <div class="glossary-card">
+        <div class="glossary-head">
+          <div class="glossary-title">📖 Glossary</div>
+          <button id="closeGlossary" class="glossary-close">✕</button>
+        </div>
+        <input id="glossarySearch" class="glossary-search" type="text" placeholder="Search a term…" />
+        <div id="glossaryList" class="glossary-list"></div>
+      </div>
+    </div>
 
     <!-- CHAT -->
     <section id="chat" class="chat"></section>
