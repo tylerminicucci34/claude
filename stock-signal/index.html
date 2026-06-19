@@ -190,25 +190,29 @@
     /* market-status read button */
     #readMktBtn { padding: 8px 16px; font-size: 13px; border-color: #4a86e8; background: rgba(74,134,232,0.14); color: #6fa1ff; }
     #readMktBtn:hover { background: rgba(74,134,232,0.28); }
-    /* research steps (shown inside a stock lookup) */
-    .steps { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
-    .steps-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
-    .steps-h .ph { color: #ffd700; }
-    .step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1a1a26; }
-    .step:last-child { border-bottom: none; }
-    .step-n {
-      flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,140,51,0.16);
-      color: #ff8c33; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
+    /* company summary (shown inside a stock lookup) */
+    .cs { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
+    .cs-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
+    .cs-facts {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
     }
-    .step-body { flex: 1; min-width: 0; }
-    .step-title { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-    .step-title .muted { font-family: -apple-system, system-ui, sans-serif; font-style: italic; font-weight: 400; font-size: 12.5px; }
-    .step-text {
-      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
-      line-height: 1.6; color: #c7c7d8;
+    .cs-fact {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #12121b; border: 1px solid #22223a; border-radius: 999px;
+      padding: 5px 10px;
     }
-    .step-text .ph { color: #ffd700; font-weight: 700; }
-    .step .copybtn { margin-top: 10px; font-size: 12px; padding: 6px 14px; }
+    .cs-fact-l { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+    .cs-fact-v { font-size: 12px; color: #f0f0f0; font-weight: 700; }
+    .cs-desc {
+      font-size: 13.5px; line-height: 1.6; color: #c7c7d8;
+      background: #11111a; border: 1px solid #1f1f2e; border-radius: 12px; padding: 14px;
+    }
+    .cs-desc.cs-loading { color: #666; font-style: italic; }
+    .cs-link {
+      display: inline-block; margin-top: 6px;
+      color: #ff8c33; font-size: 12px; font-weight: 700; text-decoration: none;
+    }
+    .cs-link:hover { color: #ffd700; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -909,7 +913,7 @@ function renderLookupCard(raw, s, r, live) {
       <div class="muted" style="font-size:11px;margin-top:12px">
         Price, news &amp; analyst consensus ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
       </div>
-      ${stepsBlock()}
+      ${companySummaryBlock(raw, live)}
     </div>`;
 }
 
@@ -924,19 +928,34 @@ async function doLookup(forced) {
   const s = buildSignal(raw);
   const r = currentRegime();
   const key = getKey();
-  if (!key) { renderLookupCard(raw, s, r, null); return; }
+  if (!key) {
+    renderLookupCard(raw, s, r, null);
+    loadCompanyContext(raw, null, null).then(() => {
+      if (lastLookup !== raw) return;
+      const el = document.getElementById('cs-' + raw);
+      if (el) el.outerHTML = companySummaryBlock(raw, null);
+    });
+    return;
+  }
 
   renderLookupCard(raw, s, r, { loading: true });  // show demo immediately
   setLive('load');
   try {
-    const [quote, news, recs] = await Promise.all([
+    const [quote, news, recs, profile] = await Promise.all([
       fetchQuote(raw, key),
       fetchNews(raw, key).catch(() => []),
       fetchRecommendations(raw, key).catch(() => null),
+      fetchProfile(raw, key).catch(() => null),
     ]);
     if (lastLookup !== raw) return;                 // superseded by a newer lookup
-    renderLookupCard(raw, s, r, { quote, news, recs });
+    renderLookupCard(raw, s, r, { quote, news, recs, profile });
     setLive('on');
+    // Wikipedia summary loads after the card paints — refresh just the company block.
+    loadCompanyContext(raw, key, profile).then(() => {
+      if (lastLookup !== raw) return;
+      const el = document.getElementById('cs-' + raw);
+      if (el) el.outerHTML = companySummaryBlock(raw, { quote, news, recs, profile });
+    });
   } catch (e) {
     if (lastLookup !== raw) return;
     renderLookupCard(raw, s, r, null);              // fall back to simulated
@@ -944,74 +963,82 @@ async function doLookup(forced) {
   }
 }
 
-/* --- Research prompt stack ------------------------------------------------- */
-const PROMPTS = [
-  {
-    n: '1', title: 'The Deep Dive', sub: '4-part company breakdown',
-    body: "Generate a comprehensive Deep Research Report on [TICKER]. Cover these 4 areas: 1. Business Model: How do they actually make money? Core product in plain English. 2. Moat: Top 3 competitors. Does [TICKER] have a durable edge — patent, switching cost, network effect, or cost structure — that rivals can't copy? 3. Catalysts: Upcoming launches, earnings, regulatory events, or partnerships in the next 12 months. 4. Asymmetry: Low valuation floor vs high growth ceiling? Why or why not?",
-    foot: 'Your anchor prompt. Run it first. Feeds every other prompt in the stack.',
-  },
-  {
-    n: '2', title: 'The Peer Comparison', sub: 'Does the valuation actually make sense?',
-    body: "Search Yahoo Finance and Macrotrends. Build a relative valuation table for [TICKER] vs [PEER 1] and [PEER 2]. Include: P/S (TTM and forward), P/FCF, EV/EBITDA, gross margin, YoY revenue growth, and a Value/Growth Score (P/S TTM ÷ revenue growth %). Lowest score = most growth per dollar of valuation.",
-    foot: 'Cheap only matters relative to growth. This is how you catch mispriced winners.',
-  },
-  {
-    n: '3', title: 'The Bear Case', sub: '3 biggest reasons NOT to own this',
-    body: "Act as a skeptical short-seller researching [TICKER]. Search SEC filings, earnings transcripts, and recent news. Give me the 3 most serious red flags, ranked by severity. Check for: customer concentration (any single customer over 25% of revenue — latest 10-K), margin compression (gross AND operating, last 4 quarters), unscheduled insider selling (Form 4, not pre-planned 10b5-1), widening GAAP vs non-GAAP gap, and guidance cuts in the last 12 months. Cite sources for each.",
-    foot: "If you can't find 3 real reasons to be bearish, you haven't done the research.",
-  },
-];
+/* --- Company summary --------------------------------------------------------
+   Renders a "what this company does" panel: industry, country, and a 2-3
+   sentence plain-English description. Pulls Finnhub profile2 (sector, HQ,
+   IPO, market cap) plus a Wikipedia summary paragraph. Both are optional —
+   the block degrades gracefully if neither is available. */
 
-// currentTicker: the symbol prompts fill with — last lookup, else the input
-function currentTicker() {
-  const typed = document.getElementById('lookupInput').value.trim().toUpperCase().replace(/[^A-Z0-9.]/g, '');
-  return lastLookup || typed || '[TICKER]';
+const COMPANY_CACHE = {};
+
+async function fetchProfile(ticker, key) {
+  const u = 'https://finnhub.io/api/v1/stock/profile2?symbol=' + encodeURIComponent(ticker) + '&token=' + encodeURIComponent(key);
+  const r = await fetch(u);
+  if (!r.ok) return null;
+  const p = await r.json();
+  return p && p.name ? p : null;
 }
-// fillTicker: substitute [TICKER] in a prompt with the current symbol
-function fillTicker(text) { return text.replace(/\[TICKER\]/g, currentTicker()); }
 
-// stepsBlock: the ordered research steps the app walks through to read the
-// current stock. Reuses the prompt content as numbered steps with [TICKER]
-// filled in and [TICKER]/[PEER] tokens highlighted (split/join on literal
-// tokens after HTML-escaping, avoiding substring/regex pitfalls).
-function stepsBlock() {
-  const t = currentTicker();
-  const tickDisplay = t === '[TICKER]' ? '[TICKER]' : t;
-  const steps = PROMPTS.map((p, i) => {
-    const body = escapeHtml(p.body)
-      .split('[TICKER]').join('<span class="ph">' + escapeHtml(tickDisplay) + '</span>')
-      .split('[PEER 1]').join('<span class="ph">[PEER 1]</span>')
-      .split('[PEER 2]').join('<span class="ph">[PEER 2]</span>');
-    return `
-      <div class="step">
-        <div class="step-n">${i + 1}</div>
-        <div class="step-body">
-          <div class="step-title">${escapeHtml(p.title)} <span class="muted">— ${escapeHtml(p.sub)}</span></div>
-          <div class="step-text">${body}</div>
-          <button class="copybtn" onclick="copyPrompt(${i}, this)">📋 Copy step</button>
-        </div>
-      </div>`;
-  }).join('');
-  return `<div class="steps">
-      <div class="steps-h">🔬 How to read <span class="ph">$${escapeHtml(tickDisplay)}</span> — research steps, in order</div>
-      ${steps}
+async function fetchWikiSummary(name) {
+  if (!name) return null;
+  // Try the exact name first, then with " (company)" disambiguator.
+  const candidates = [name, name + ' (company)', name + ' Inc', name.replace(/\s+(Inc|Corp|Ltd|PLC)\.?$/i, '')];
+  for (const c of candidates) {
+    const u = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(c);
+    try {
+      const r = await fetch(u);
+      if (!r.ok) continue;
+      const j = await r.json();
+      if (j && j.extract && j.type !== 'disambiguation') {
+        return { extract: j.extract, url: j.content_urls && j.content_urls.desktop && j.content_urls.desktop.page };
+      }
+    } catch (e) { /* try next */ }
+  }
+  return null;
+}
+
+async function loadCompanyContext(ticker, key, profileFromCard) {
+  if (COMPANY_CACHE[ticker]) return COMPANY_CACHE[ticker];
+  let profile = profileFromCard || null;
+  if (!profile && key) {
+    try { profile = await fetchProfile(ticker, key); } catch (e) {}
+  }
+  const wiki = await fetchWikiSummary(profile ? profile.name : ticker);
+  COMPANY_CACHE[ticker] = { profile, wiki };
+  return COMPANY_CACHE[ticker];
+}
+
+function companySummaryBlock(ticker, live) {
+  const profile = live && live.profile ? live.profile : null;
+  const ctx = COMPANY_CACHE[ticker] || { profile, wiki: null };
+  const p = ctx.profile || profile;
+
+  const factBits = [];
+  if (p) {
+    if (p.finnhubIndustry) factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Industry</span><span class="cs-fact-v">${escapeHtml(p.finnhubIndustry)}</span></span>`);
+    if (p.country)         factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Country</span><span class="cs-fact-v">${escapeHtml(p.country)}</span></span>`);
+    if (p.exchange)        factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Exchange</span><span class="cs-fact-v">${escapeHtml(p.exchange)}</span></span>`);
+    if (p.ipo)             factBits.push(`<span class="cs-fact"><span class="cs-fact-l">IPO</span><span class="cs-fact-v">${escapeHtml(p.ipo)}</span></span>`);
+    if (p.marketCapitalization) {
+      const m = p.marketCapitalization;
+      const mFmt = m >= 1e6 ? '$' + (m / 1e6).toFixed(1) + 'T' :
+                   m >= 1e3 ? '$' + (m / 1e3).toFixed(1) + 'B' :
+                              '$' + m.toFixed(0) + 'M';
+      factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Market Cap</span><span class="cs-fact-v">${mFmt}</span></span>`);
+    }
+  }
+
+  const wiki = ctx.wiki;
+  const wikiHtml = wiki
+    ? `<div class="cs-desc">${escapeHtml(wiki.extract)}${wiki.url ? ` <a class="cs-link" href="${wiki.url}" target="_blank" rel="noopener">Read more →</a>` : ''}</div>`
+    : `<div class="cs-desc cs-loading">Loading company description…</div>`;
+
+  return `
+    <div class="cs" id="cs-${escapeHtml(ticker)}">
+      <div class="cs-h">🏢 What ${escapeHtml(ticker)} actually does</div>
+      ${factBits.length ? `<div class="cs-facts">${factBits.join('')}</div>` : ''}
+      ${wikiHtml}
     </div>`;
-}
-// copyPrompt: copy the filled step text to the clipboard with feedback
-function copyPrompt(i, btn) {
-  const text = fillTicker(PROMPTS[i].body);
-  const done = () => { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = '📋 Copy step'; }, 1500); };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
-  } else { fallbackCopy(text, done); }
-}
-function fallbackCopy(text, done) {
-  const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.focus(); ta.select();
-  try { document.execCommand('copy'); } catch (e) {}
-  document.body.removeChild(ta); done();
 }
 
 /* --- Compare two stocks ---------------------------------------------------- */
