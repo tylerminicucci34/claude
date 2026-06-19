@@ -173,6 +173,14 @@
     .range { position: relative; height: 6px; background: #0e0e16; border-radius: 4px; margin: 2px 0 6px; }
     .range-fill { position: absolute; top: -3px; width: 12px; height: 12px; border-radius: 50%; background: #ffd700; transform: translateX(-50%); }
     .range-lab { display: flex; justify-content: space-between; font-size: 11px; color: #888; margin-bottom: 14px; }
+    /* company summary */
+    .company { display: flex; gap: 12px; align-items: flex-start; margin: 2px 0 14px; padding: 12px 14px; background: #0e0e16; border-radius: 12px; }
+    .co-logo { width: 38px; height: 38px; border-radius: 8px; background: #fff; object-fit: contain; flex: none; }
+    .co-name { font-size: 14px; font-weight: 800; }
+    .co-desc { font-size: 12.5px; color: #c7c7d8; line-height: 1.5; margin-top: 3px; }
+    .co-web { font-size: 12px; margin-top: 5px; }
+    .co-web a { color: #6fa1ff; text-decoration: none; }
+    .co-web a:hover { text-decoration: underline; }
     /* analyst consensus */
     .analyst { margin-top: 16px; border-top: 1px solid #20202e; padding-top: 14px; }
     .an-h { font-size: 13px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -190,29 +198,25 @@
     /* market-status read button */
     #readMktBtn { padding: 8px 16px; font-size: 13px; border-color: #4a86e8; background: rgba(74,134,232,0.14); color: #6fa1ff; }
     #readMktBtn:hover { background: rgba(74,134,232,0.28); }
-    /* company summary (shown inside a stock lookup) */
-    .cs { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
-    .cs-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
-    .cs-facts {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+    /* research steps (shown inside a stock lookup) */
+    .steps { margin-top: 18px; border-top: 1px solid #20202e; padding-top: 14px; }
+    .steps-h { font-size: 13px; font-weight: 800; color: #f0f0f0; margin-bottom: 12px; }
+    .steps-h .ph { color: #ffd700; }
+    .step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #1a1a26; }
+    .step:last-child { border-bottom: none; }
+    .step-n {
+      flex: none; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,140,51,0.16);
+      color: #ff8c33; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center;
     }
-    .cs-fact {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #12121b; border: 1px solid #22223a; border-radius: 999px;
-      padding: 5px 10px;
+    .step-body { flex: 1; min-width: 0; }
+    .step-title { font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .step-title .muted { font-family: -apple-system, system-ui, sans-serif; font-style: italic; font-weight: 400; font-size: 12.5px; }
+    .step-text {
+      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px;
+      line-height: 1.6; color: #c7c7d8;
     }
-    .cs-fact-l { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
-    .cs-fact-v { font-size: 12px; color: #f0f0f0; font-weight: 700; }
-    .cs-desc {
-      font-size: 13.5px; line-height: 1.6; color: #c7c7d8;
-      background: #11111a; border: 1px solid #1f1f2e; border-radius: 12px; padding: 14px;
-    }
-    .cs-desc.cs-loading { color: #666; font-style: italic; }
-    .cs-link {
-      display: inline-block; margin-top: 6px;
-      color: #ff8c33; font-size: 12px; font-weight: 700; text-decoration: none;
-    }
-    .cs-link:hover { color: #ffd700; }
+    .step-text .ph { color: #ffd700; font-weight: 700; }
+    .step .copybtn { margin-top: 10px; font-size: 12px; padding: 6px 14px; }
     .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr; } }
     .stat { background: #12121b; border: 1px solid #22223200; border-radius: 12px; padding: 14px; text-align: center; }
@@ -750,6 +754,15 @@ async function fetchRecommendations(ticker, key) {
   const a = await r.json();
   return Array.isArray(a) && a.length ? a[0] : null;
 }
+// fetchProfile: Finnhub company profile (free tier). Returns {name, country,
+// finnhubIndustry, marketCapitalization, ipo, weburl, logo, exchange} or null.
+async function fetchProfile(ticker, key) {
+  const u = 'https://finnhub.io/api/v1/stock/profile2?symbol=' + encodeURIComponent(ticker) + '&token=' + encodeURIComponent(key);
+  const r = await fetch(u);
+  if (!r.ok) throw new Error('profile HTTP ' + r.status);
+  const p = await r.json();
+  return p && p.name ? p : null;
+}
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // setMkt: status badge for the live market-status read
@@ -869,6 +882,38 @@ function analystBlock(live) {
     </div>`;
 }
 
+// fmtCap: Finnhub market cap (in $millions) -> readable $T/$B/$M
+function fmtCap(m) {
+  if (!m) return null;
+  if (m >= 1e6) return '$' + (m / 1e6).toFixed(2) + 'T';
+  if (m >= 1e3) return '$' + (m / 1e3).toFixed(0) + 'B';
+  return '$' + Math.round(m) + 'M';
+}
+// companyBlock: a one-line "what this company does" summary from the live
+// company profile (industry, country, size, IPO). Only shown when live.
+function companyBlock(live) {
+  if (!live || !live.profile) return '';
+  const p = live.profile;
+  const cap = fmtCap(p.marketCapitalization);
+  const desc = (p.name || 'This company')
+    + ' is a' + (/^[aeiou]/i.test(p.finnhubIndustry || '') ? 'n ' : ' ')
+    + (p.finnhubIndustry ? escapeHtml(p.finnhubIndustry) + ' company' : 'company')
+    + (p.country ? ' based in ' + escapeHtml(p.country) : '')
+    + (cap ? ', ~' + cap + ' market cap' : '')
+    + (p.ipo ? ', public since ' + escapeHtml(p.ipo) : '') + '.';
+  const web = p.weburl
+    ? '<a href="' + safeUrl(p.weburl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml((p.weburl || '').replace(/^https?:\/\//, '').replace(/\/$/, '')) + '</a>'
+    : '';
+  return `<div class="company">
+      ${p.logo ? '<img class="co-logo" src="' + safeUrl(p.logo) + '" alt="" onerror="this.style.display=\'none\'">' : ''}
+      <div class="co-text">
+        <div class="co-name">${escapeHtml(p.name || '')}${p.finnhubIndustry ? ' <span class="muted">· ' + escapeHtml(p.finnhubIndustry) + '</span>' : ''}</div>
+        <div class="co-desc">${desc}</div>
+        ${web ? '<div class="co-web">🔗 ' + web + '</div>' : ''}
+      </div>
+    </div>`;
+}
+
 // renderLookupCard: draw the breakdown; `live` may be null (demo),
 // {loading:true}, or {quote, news}
 function renderLookupCard(raw, s, r, live) {
@@ -886,6 +931,7 @@ function renderLookupCard(raw, s, r, live) {
         <span class="pill ${cls}">${call} · ${Math.round(ra * 100)}% (regime-adjusted)</span>
         <span class="muted" style="font-size:12px">${s.qualifies ? '✓ qualifying signal' : '· below signal threshold'}${inUniverse ? '' : ' · off-list'}</span>
       </div>
+      ${companyBlock(live)}
       <div class="verdict">
         <div class="upside">
           <div class="upbig" style="color:${upc}">${up}<span>/100</span></div>
@@ -913,7 +959,6 @@ function renderLookupCard(raw, s, r, live) {
       <div class="muted" style="font-size:11px;margin-top:12px">
         Price, news &amp; analyst consensus ${liveOn ? '<b class="up">live</b> (Finnhub)' : 'simulated'} · signal scores simulated (no free social-velocity feed).
       </div>
-      ${companySummaryBlock(raw, live)}
     </div>`;
 }
 
@@ -928,15 +973,7 @@ async function doLookup(forced) {
   const s = buildSignal(raw);
   const r = currentRegime();
   const key = getKey();
-  if (!key) {
-    renderLookupCard(raw, s, r, null);
-    loadCompanyContext(raw, null, null).then(() => {
-      if (lastLookup !== raw) return;
-      const el = document.getElementById('cs-' + raw);
-      if (el) el.outerHTML = companySummaryBlock(raw, null);
-    });
-    return;
-  }
+  if (!key) { renderLookupCard(raw, s, r, null); return; }
 
   renderLookupCard(raw, s, r, { loading: true });  // show demo immediately
   setLive('load');
@@ -950,95 +987,11 @@ async function doLookup(forced) {
     if (lastLookup !== raw) return;                 // superseded by a newer lookup
     renderLookupCard(raw, s, r, { quote, news, recs, profile });
     setLive('on');
-    // Wikipedia summary loads after the card paints — refresh just the company block.
-    loadCompanyContext(raw, key, profile).then(() => {
-      if (lastLookup !== raw) return;
-      const el = document.getElementById('cs-' + raw);
-      if (el) el.outerHTML = companySummaryBlock(raw, { quote, news, recs, profile });
-    });
   } catch (e) {
     if (lastLookup !== raw) return;
     renderLookupCard(raw, s, r, null);              // fall back to simulated
     setLive('err', e.message);
   }
-}
-
-/* --- Company summary --------------------------------------------------------
-   Renders a "what this company does" panel: industry, country, and a 2-3
-   sentence plain-English description. Pulls Finnhub profile2 (sector, HQ,
-   IPO, market cap) plus a Wikipedia summary paragraph. Both are optional —
-   the block degrades gracefully if neither is available. */
-
-const COMPANY_CACHE = {};
-
-async function fetchProfile(ticker, key) {
-  const u = 'https://finnhub.io/api/v1/stock/profile2?symbol=' + encodeURIComponent(ticker) + '&token=' + encodeURIComponent(key);
-  const r = await fetch(u);
-  if (!r.ok) return null;
-  const p = await r.json();
-  return p && p.name ? p : null;
-}
-
-async function fetchWikiSummary(name) {
-  if (!name) return null;
-  // Try the exact name first, then with " (company)" disambiguator.
-  const candidates = [name, name + ' (company)', name + ' Inc', name.replace(/\s+(Inc|Corp|Ltd|PLC)\.?$/i, '')];
-  for (const c of candidates) {
-    const u = 'https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(c);
-    try {
-      const r = await fetch(u);
-      if (!r.ok) continue;
-      const j = await r.json();
-      if (j && j.extract && j.type !== 'disambiguation') {
-        return { extract: j.extract, url: j.content_urls && j.content_urls.desktop && j.content_urls.desktop.page };
-      }
-    } catch (e) { /* try next */ }
-  }
-  return null;
-}
-
-async function loadCompanyContext(ticker, key, profileFromCard) {
-  if (COMPANY_CACHE[ticker]) return COMPANY_CACHE[ticker];
-  let profile = profileFromCard || null;
-  if (!profile && key) {
-    try { profile = await fetchProfile(ticker, key); } catch (e) {}
-  }
-  const wiki = await fetchWikiSummary(profile ? profile.name : ticker);
-  COMPANY_CACHE[ticker] = { profile, wiki };
-  return COMPANY_CACHE[ticker];
-}
-
-function companySummaryBlock(ticker, live) {
-  const profile = live && live.profile ? live.profile : null;
-  const ctx = COMPANY_CACHE[ticker] || { profile, wiki: null };
-  const p = ctx.profile || profile;
-
-  const factBits = [];
-  if (p) {
-    if (p.finnhubIndustry) factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Industry</span><span class="cs-fact-v">${escapeHtml(p.finnhubIndustry)}</span></span>`);
-    if (p.country)         factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Country</span><span class="cs-fact-v">${escapeHtml(p.country)}</span></span>`);
-    if (p.exchange)        factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Exchange</span><span class="cs-fact-v">${escapeHtml(p.exchange)}</span></span>`);
-    if (p.ipo)             factBits.push(`<span class="cs-fact"><span class="cs-fact-l">IPO</span><span class="cs-fact-v">${escapeHtml(p.ipo)}</span></span>`);
-    if (p.marketCapitalization) {
-      const m = p.marketCapitalization;
-      const mFmt = m >= 1e6 ? '$' + (m / 1e6).toFixed(1) + 'T' :
-                   m >= 1e3 ? '$' + (m / 1e3).toFixed(1) + 'B' :
-                              '$' + m.toFixed(0) + 'M';
-      factBits.push(`<span class="cs-fact"><span class="cs-fact-l">Market Cap</span><span class="cs-fact-v">${mFmt}</span></span>`);
-    }
-  }
-
-  const wiki = ctx.wiki;
-  const wikiHtml = wiki
-    ? `<div class="cs-desc">${escapeHtml(wiki.extract)}${wiki.url ? ` <a class="cs-link" href="${wiki.url}" target="_blank" rel="noopener">Read more →</a>` : ''}</div>`
-    : `<div class="cs-desc cs-loading">Loading company description…</div>`;
-
-  return `
-    <div class="cs" id="cs-${escapeHtml(ticker)}">
-      <div class="cs-h">🏢 What ${escapeHtml(ticker)} actually does</div>
-      ${factBits.length ? `<div class="cs-facts">${factBits.join('')}</div>` : ''}
-      ${wikiHtml}
-    </div>`;
 }
 
 /* --- Compare two stocks ---------------------------------------------------- */
@@ -1094,6 +1047,7 @@ const GLOSSARY = [
   ['Likely to rise (1–100)', "A single headline rating of upside, combining the regime-adjusted hit-rate with the sentiment lean and, when live, today's price move. Higher means more likely to go up."],
   ['Rise horizon', 'Whether a likely rise looks short-term (a near-term mention spike that may fade fast), long-term (a sustained ~30-day price uptrend), both, or neither.'],
   ['Call (BUY / WATCH / AVOID)', 'A shorthand action from the regime-adjusted likelihood: BUY above 55%, AVOID below 42%, WATCH in between.'],
+  ['Company summary', 'A live one-line profile of the company (from Finnhub, with a key): its name, industry/sector, home country, market-cap size, and when it went public — a quick "what this company is" so an unfamiliar ticker has context.'],
   ['Analyst consensus', "A live summary of Wall Street analyst ratings (from Finnhub, with a key): how many rate the stock strong buy / buy / hold / sell / strong sell, rolled into one label. This is real analyst data — what people are actually saying to buy or sell — separate from the app's simulated signal scores."],
   ['Win rate by regime', 'Of past signals that resolved, the share that ended as wins, split by the market regime they fired in — the evidence behind the regime adjustment.'],
   ['Live vs simulated', 'With a Finnhub API key, the price, day range, and news are live. Signal scores and the whole-market scan are simulated, because there is no free real-time feed of social mention velocity. The math mirrors the real Python engine; only the inputs are synthetic.'],
