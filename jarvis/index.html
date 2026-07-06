@@ -96,6 +96,13 @@
     .meta { font-size: 10.5px; color: var(--muted); padding: 0 6px; display: flex; gap: 6px; align-items: center; }
     .spec { color: var(--accent); font-weight: 700; letter-spacing: 0.4px; }
     .memflag { color: var(--gold); font-weight: 600; }
+    .srcflag { color: var(--accent); font-weight: 600; }
+    .srch { font-size: 12.5px; color: var(--accent); opacity: 0.9; margin-bottom: 5px; }
+    .sources { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+    .sources .slabel { font-size: 10px; font-weight: 800; letter-spacing: 0.6px; color: var(--muted); }
+    .sources a { font-size: 12px; color: var(--accent); text-decoration: none; display: flex; gap: 6px; align-items: baseline; line-height: 1.4; }
+    .sources a:hover { text-decoration: underline; }
+    .sources .n { color: var(--muted); flex-shrink: 0; }
     .typing { display: inline-flex; gap: 4px; padding: 4px 0; }
     .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: 0.4; animation: blink 1.2s infinite; }
     .typing span:nth-child(2){ animation-delay: 0.2s; } .typing span:nth-child(3){ animation-delay: 0.4s; }
@@ -233,6 +240,10 @@
         <div class="lbl">Extended thinking<small>Deeper stress-testing, a little slower</small></div>
         <div class="toggle" id="thinkToggle"></div>
       </div>
+      <div class="row">
+        <div class="lbl">Live web search<small>Lets SCOUT pull current facts &amp; cite sources</small></div>
+        <div class="toggle" id="searchToggle"></div>
+      </div>
       <div class="btnrow">
         <button class="fullbtn ghost" id="closeSettings">Close</button>
         <button class="fullbtn primary" id="saveSettings">Save</button>
@@ -261,12 +272,13 @@
 ═══════════════════════════════════════════════════════════ */
 
 const LS = {
-  key:   'jarvis.apikey',
-  model: 'jarvis.model',
-  tts:   'jarvis.tts',
-  think: 'jarvis.think',
-  brain: 'jarvis.brain',
-  chat:  'jarvis.chat'
+  key:    'jarvis.apikey',
+  model:  'jarvis.model',
+  tts:    'jarvis.tts',
+  think:  'jarvis.think',
+  search: 'jarvis.search',
+  brain:  'jarvis.brain',
+  chat:   'jarvis.chat'
 };
 
 const API_URL = 'https://api.anthropic.com/v1/messages';
@@ -276,6 +288,7 @@ const state = {
   model: localStorage.getItem(LS.model) || 'claude-opus-4-8',
   tts:   localStorage.getItem(LS.tts) === '1',
   think: localStorage.getItem(LS.think) === '1',
+  search: localStorage.getItem(LS.search) !== '0',   // default on
   brain: load(LS.brain, []),
   history: load(LS.chat, []),   // {role, content} sent to the API
   busy: false
@@ -322,7 +335,7 @@ Silently run the Dispatcher, pick the right specialist (or chain), then answer A
 - BUILDER — code, apps, architecture, debugging. Ships complete working artifacts, not snippets. Surfaces the one design decision that matters before writing. Precise, opinionated, minimal.
 - OPERATOR — content automation, social ops (TikTok/IG/X), scheduling, repetitive workflows. Thinks in systems and throughput. Efficient, checklist-driven.
 - STRATEGIST — business decisions, positioning, monetization, go/no-go. The ruthless-mentor seat: stress-tests, names unfair advantages, refuses to rubber-stamp weak plans. Direct, challenging, high-conviction.
-- SCOUT — live web research and retrieval. Note: you do NOT have live web access in this client — if an answer could be stale, say so and say what you'd verify. Fast, sourced, no-fluff.
+- SCOUT — live web research and retrieval. When web search is available (see the channel note), pull current facts and cite sources; when it is not, say so and name what you'd verify rather than guessing. Fast, sourced, no-fluff.
 - SCRIBE — librarian of the Second Brain. Structures captures, resolves duplicates, surfaces forgotten context. Runs quietly on most turns.
 
 ## OUTPUT CONTRACT
@@ -464,21 +477,27 @@ async function send(){
   node.bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
 
   const channel = state.tts ? 'voice' : 'screen';
+  const scoutNote = state.search
+    ? '[Web search: ENABLED — you have a live web_search tool. Use it for anything time-sensitive, factual, or that you are not certain of, then cite what you used. Never claim you lack web access.]'
+    : '[Web search: DISABLED — you have no live web access this session; flag staleness and name what you would verify rather than guessing.]';
   const sys = SYSTEM + '\n\n[Active channel: ' + channel + '. ' +
-    (channel==='voice' ? 'Keep reply to 1–3 spoken sentences.' : 'Full detail allowed.') + ']\n\n' +
-    memoryContext();
+    (channel==='voice' ? 'Keep reply to 1–3 spoken sentences.' : 'Full detail allowed.') + ']\n' +
+    scoutNote + '\n\n' + memoryContext();
 
   // build message list (cap history to keep prompt lean)
   const msgs = state.history.slice(-24).map(m => ({ role: m.role, content: m.content }));
 
   try {
-    const full = await stream(sys, msgs, node.bubble);
+    const ctx = { text:'', sources:[], status:'' };
+    const { text: full, sources } = await converse(sys, msgs, node.bubble, ctx);
     const { text: clean, writes } = stripMemory(full);
     node.bubble.innerHTML = fmt(clean || '…');
+    if(sources.length) node.bubble.appendChild(sourcesEl(sources));
     // meta with specialist inference (visual flourish only)
     const spec = inferSpec(clean);
     let metaHTML = '<span class="spec">'+spec+'</span>';
     if(writes.length){ commitWrites(writes); metaHTML += '<span class="memflag">🧠 +'+writes.length+' filed</span>'; }
+    if(sources.length){ metaHTML += '<span class="srcflag">🔗 '+sources.length+'</span>'; }
     if(!node.meta){
       const meta = document.createElement('div'); meta.className='meta'; node.wrap.appendChild(meta); node.meta = meta;
     }
@@ -495,15 +514,32 @@ async function send(){
   }
 }
 
-async function stream(system, messages, bubble){
-  const body = {
-    model: state.model,
-    max_tokens: 4096,
-    stream: true,
-    system,
-    messages
-  };
+// Newer models get dynamic-filtering web search; older ones the basic variant.
+function webSearchTool(model){
+  const modern = /opus-4-8|opus-4-7|opus-4-6|sonnet-5|sonnet-4-6/.test(model);
+  return modern
+    ? { type:'web_search_20260209', name:'web_search', max_uses:5 }
+    : { type:'web_search_20250305', name:'web_search', max_uses:5 };
+}
+
+// Drive one reply, continuing across pause_turn (server-tool iteration cap).
+async function converse(system, messages, bubble, ctx){
+  let convo = messages.slice();
+  for(let guard=0; guard<4; guard++){
+    const { stopReason, blocks } = await streamOnce(system, convo, bubble, ctx);
+    if(stopReason === 'pause_turn' && blocks.length){
+      convo = convo.concat([{ role:'assistant', content: blocks }]);
+      continue;
+    }
+    break;
+  }
+  return { text: ctx.text, sources: ctx.sources };
+}
+
+async function streamOnce(system, messages, bubble, ctx){
+  const body = { model: state.model, max_tokens: 4096, stream: true, system, messages };
   if(state.think) body.thinking = { type: 'adaptive' };
+  if(state.search) body.tools = [ webSearchTool(state.model) ];
 
   const res = await fetch(API_URL, {
     method: 'POST',
@@ -525,7 +561,16 @@ async function stream(system, messages, bubble){
 
   const reader = res.body.getReader();
   const dec = new TextDecoder();
-  let buf = '', out = '', started = false;
+  let buf = '', stopReason = null;
+  const blocks = {}; // index -> content block being assembled
+
+  const render = () => {
+    const disp = stripMemory(ctx.text).text;
+    bubble.innerHTML =
+      (ctx.status ? '<div class="srch">'+esc(ctx.status)+'</div>' : '') +
+      fmt(disp) + '<span class="typing" style="opacity:.5"><span></span></span>';
+    scrollDown();
+  };
 
   while(true){
     const { done, value } = await reader.read();
@@ -539,17 +584,75 @@ async function stream(system, messages, bubble){
       const data = l.slice(5).trim();
       if(data === '[DONE]') continue;
       let ev; try { ev = JSON.parse(data); } catch { continue; }
-      if(ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta'){
-        out += ev.delta.text;
-        // live-render, hiding any MEMORY_WRITE tail
-        const disp = stripMemory(out).text;
-        if(!started){ started = true; }
-        bubble.innerHTML = fmt(disp) + '<span class="typing" style="opacity:.5"><span></span></span>';
-        scrollDown();
+
+      if(ev.type === 'content_block_start'){
+        const cb = ev.content_block || {};
+        blocks[ev.index] = cb;
+        if(cb.type === 'server_tool_use' && cb.name === 'web_search'){
+          cb._pj = ''; ctx.status = '🔍 searching the web…'; render();
+        } else if(cb.type === 'web_search_tool_result'){
+          const c = cb.content;
+          if(Array.isArray(c)){
+            for(const r of c){
+              if(r && r.type === 'web_search_result' && r.url && !ctx.sources.some(s=>s.url===r.url))
+                ctx.sources.push({ title: r.title || r.url, url: r.url });
+            }
+            ctx.status = '🔍 read ' + ctx.sources.length + ' source' + (ctx.sources.length===1?'':'s');
+          } else {
+            ctx.status = '🔍 search unavailable';
+          }
+          render();
+        }
+      } else if(ev.type === 'content_block_delta'){
+        const d = ev.delta || {}; const b = blocks[ev.index];
+        if(d.type === 'text_delta'){
+          if(b) b.text = (b.text||'') + d.text;
+          ctx.text += d.text; ctx.status = ''; render();
+        } else if(d.type === 'input_json_delta' && b){
+          b._pj = (b._pj||'') + (d.partial_json||'');
+        } else if(d.type === 'citations_delta' && b){
+          (b.citations = b.citations || []).push(d.citation);
+        }
+      } else if(ev.type === 'content_block_stop'){
+        const b = blocks[ev.index];
+        if(b && b.type === 'server_tool_use'){
+          try { b.input = JSON.parse(b._pj || '{}'); } catch { b.input = {}; }
+          delete b._pj;
+          if(b.input && b.input.query){ ctx.status = '🔍 searching: ' + b.input.query; render(); }
+        }
+      } else if(ev.type === 'message_delta'){
+        if(ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
       }
     }
   }
-  return out;
+
+  // Assemble a clean assistant-content array, in case we must resend on pause_turn.
+  const clean = [];
+  for(const k of Object.keys(blocks).sort((a,b)=>a-b)){
+    const b = blocks[k];
+    if(b.type === 'text'){
+      const t = { type:'text', text: b.text||'' };
+      if(b.citations && b.citations.length) t.citations = b.citations;
+      clean.push(t);
+    } else if(b.type === 'server_tool_use'){
+      clean.push({ type:'server_tool_use', id:b.id, name:b.name, input:b.input||{} });
+    } else if(b.type === 'web_search_tool_result'){
+      clean.push({ type:'web_search_tool_result', tool_use_id:b.tool_use_id, content:b.content });
+    }
+  }
+  return { stopReason, blocks: clean };
+}
+
+function sourcesEl(sources){
+  const d = document.createElement('div');
+  d.className = 'sources';
+  d.innerHTML = '<div class="slabel">SOURCES</div>' + sources.slice(0,6).map((s,i)=>{
+    let host = ''; try { host = new URL(s.url).hostname.replace(/^www\./,''); } catch {}
+    return '<a href="'+esc(s.url)+'" target="_blank" rel="noopener">' +
+      '<span class="n">'+(i+1)+'.</span><span>'+esc(s.title||host)+
+      (host ? ' <span class="n">'+esc(host)+'</span>' : '')+'</span></a>';
+  }).join('');
+  return d;
 }
 
 // purely cosmetic: guess which specialist voice answered, for the meta line
@@ -611,20 +714,24 @@ $('#settingsBtn').addEventListener('click', () => {
   $('#modelSelect').value = state.model;
   $('#ttsToggle').classList.toggle('on', state.tts);
   $('#thinkToggle').classList.toggle('on', state.think);
+  $('#searchToggle').classList.toggle('on', state.search);
   settingsOverlay.classList.add('show');
 });
 $('#closeSettings').addEventListener('click', () => settingsOverlay.classList.remove('show'));
 $('#ttsToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
 $('#thinkToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#searchToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
 $('#saveSettings').addEventListener('click', () => {
   state.key = $('#keyInput').value.trim();
   state.model = $('#modelSelect').value;
   state.tts = $('#ttsToggle').classList.contains('on');
   state.think = $('#thinkToggle').classList.contains('on');
+  state.search = $('#searchToggle').classList.contains('on');
   localStorage.setItem(LS.key, state.key);
   localStorage.setItem(LS.model, state.model);
   localStorage.setItem(LS.tts, state.tts ? '1':'0');
   localStorage.setItem(LS.think, state.think ? '1':'0');
+  localStorage.setItem(LS.search, state.search ? '1':'0');
   settingsOverlay.classList.remove('show');
   refreshStatus();
 });
