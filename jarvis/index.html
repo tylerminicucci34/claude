@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#08080d">
+  <title>JARVIS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #08080d;
+      --panel: #12121b;
+      --panel2: #171722;
+      --border: #262636;
+      --text: #eef0f4;
+      --muted: #7b7f90;
+      --accent: #34c8ff;
+      --accent2: #00e0b8;
+      --user: #1c2740;
+      --danger: #ff5c6a;
+      --gold: #ffd257;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #10131f 0%, #06060b 70%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px calc(14px);
+      padding-top: max(14px, env(safe-area-inset-top));
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,16,0.75);
+      backdrop-filter: blur(12px);
+      z-index: 5;
+    }
+    .back { color: var(--muted); text-decoration: none; font-size: 20px; line-height: 1; padding: 4px; }
+    .back:hover { color: var(--accent); }
+    .brand { display: flex; align-items: center; gap: 11px; flex: 1; min-width: 0; }
+    .orb {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: radial-gradient(circle at 32% 30%, #5fe0ff, #1478ff 55%, #062a6b);
+      box-shadow: 0 0 16px rgba(52,200,255,0.55), inset 0 0 8px rgba(255,255,255,0.4);
+      flex-shrink: 0; position: relative;
+    }
+    .orb::after {
+      content: ''; position: absolute; inset: -4px; border-radius: 50%;
+      border: 1.5px solid rgba(52,200,255,0.25);
+    }
+    .orb.thinking { animation: pulse 1.1s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 12px rgba(52,200,255,0.4), inset 0 0 8px rgba(255,255,255,0.4);} 50% { box-shadow: 0 0 26px rgba(52,200,255,0.9), inset 0 0 8px rgba(255,255,255,0.5);} }
+    .titles { min-width: 0; }
+    .titles h1 { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+    .titles .sub { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 6px var(--accent2); }
+    .dot.off { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+    .iconbtn {
+      background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+      width: 38px; height: 38px; border-radius: 11px; font-size: 17px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .iconbtn:hover { color: var(--text); border-color: #3a3a52; }
+    .iconbtn.on { color: var(--accent2); border-color: var(--accent2); }
+
+    /* ── CHAT ── */
+    #chat {
+      flex: 1; overflow-y: auto; padding: 18px 14px 8px;
+      display: flex; flex-direction: column; gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .msg { max-width: 88%; display: flex; flex-direction: column; gap: 4px; animation: rise 0.25s ease; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.jarvis { align-self: flex-start; }
+    .bubble {
+      padding: 11px 14px; border-radius: 16px; font-size: 15px; line-height: 1.55;
+      white-space: pre-wrap; word-wrap: break-word;
+    }
+    .msg.user .bubble {
+      background: linear-gradient(135deg, #22345b, #1a2748);
+      border: 1px solid #2c3f66; border-bottom-right-radius: 5px;
+    }
+    .msg.jarvis .bubble {
+      background: var(--panel); border: 1px solid var(--border); border-bottom-left-radius: 5px;
+    }
+    .bubble code { background: #05050a; padding: 1px 5px; border-radius: 5px; font-size: 13px; font-family: 'SF Mono', ui-monospace, monospace; }
+    .bubble pre { background: #05050a; padding: 10px; border-radius: 9px; overflow-x: auto; margin: 6px 0; border: 1px solid var(--border); }
+    .bubble pre code { background: none; padding: 0; }
+    .meta { font-size: 10.5px; color: var(--muted); padding: 0 6px; display: flex; gap: 6px; align-items: center; }
+    .spec { color: var(--accent); font-weight: 700; letter-spacing: 0.4px; }
+    .memflag { color: var(--gold); font-weight: 600; }
+    .typing { display: inline-flex; gap: 4px; padding: 4px 0; }
+    .typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); opacity: 0.4; animation: blink 1.2s infinite; }
+    .typing span:nth-child(2){ animation-delay: 0.2s; } .typing span:nth-child(3){ animation-delay: 0.4s; }
+    @keyframes blink { 0%,60%,100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+    /* ── COMPOSER ── */
+    .composer {
+      border-top: 1px solid var(--border); background: rgba(10,10,16,0.85);
+      backdrop-filter: blur(12px);
+      padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom));
+      display: flex; gap: 9px; align-items: flex-end;
+    }
+    textarea {
+      flex: 1; resize: none; background: var(--panel); border: 1px solid var(--border);
+      color: var(--text); border-radius: 14px; padding: 11px 13px; font-size: 15px;
+      font-family: inherit; line-height: 1.4; max-height: 130px; outline: none;
+    }
+    textarea:focus { border-color: var(--accent); }
+    .cbtn {
+      width: 44px; height: 44px; border-radius: 14px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+    }
+    .mic { background: var(--panel); border: 1px solid var(--border); color: var(--muted); }
+    .mic.rec { background: var(--danger); color: #fff; border: none; animation: pulse2 1s infinite; }
+    @keyframes pulse2 { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,92,106,0.5);} 50%{ box-shadow: 0 0 0 8px rgba(255,92,106,0);} }
+    .send { background: linear-gradient(135deg, #34c8ff, #1478ff); color: #fff; }
+    .send:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── OVERLAY / SETTINGS ── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px);
+      display: none; align-items: flex-end; justify-content: center; z-index: 20;
+    }
+    .overlay.show { display: flex; }
+    .sheet {
+      background: var(--panel2); border: 1px solid var(--border); border-bottom: none;
+      border-radius: 20px 20px 0 0; width: 100%; max-width: 560px; padding: 20px 18px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      max-height: 88dvh; overflow-y: auto; animation: slideup 0.28s ease;
+    }
+    @keyframes slideup { from { transform: translateY(100%); } to { transform: none; } }
+    .sheet h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .sheet .hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+    .field { margin-bottom: 15px; }
+    .field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field input, .field select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 11px; padding: 12px; font-size: 15px; font-family: inherit; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-top: 1px solid var(--border); }
+    .row .lbl { font-size: 14px; } .row .lbl small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+    .toggle { width: 46px; height: 27px; border-radius: 14px; background: var(--border); position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+    .toggle.on { background: var(--accent2); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+    .toggle.on::after { transform: translateX(19px); }
+    .btnrow { display: flex; gap: 10px; margin-top: 8px; }
+    .fullbtn { flex: 1; padding: 13px; border-radius: 12px; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .fullbtn.primary { background: linear-gradient(135deg, #34c8ff, #1478ff); color: #fff; }
+    .fullbtn.ghost { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+    .fullbtn.warn { background: var(--panel); border: 1px solid var(--danger); color: var(--danger); }
+
+    /* ── BRAIN LIST ── */
+    .braincount { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .mem { background: var(--bg); border: 1px solid var(--border); border-radius: 11px; padding: 11px 12px; margin-bottom: 8px; position: relative; }
+    .mem .type { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.6px; padding: 2px 7px; border-radius: 6px; margin-bottom: 6px; }
+    .mem .title { font-size: 14px; font-weight: 700; margin-bottom: 3px; padding-right: 22px; }
+    .mem .body { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+    .mem .tags { margin-top: 6px; font-size: 11px; color: var(--accent); }
+    .mem .del { position: absolute; top: 9px; right: 10px; color: var(--muted); cursor: pointer; font-size: 15px; }
+    .mem .del:hover { color: var(--danger); }
+    .t-IDEA { background: rgba(147,112,255,0.15); color: #b49bff; }
+    .t-PROJECT { background: rgba(52,200,255,0.15); color: var(--accent); }
+    .t-DECISION { background: rgba(255,210,87,0.15); color: var(--gold); }
+    .t-PERSON { background: rgba(0,224,184,0.15); color: var(--accent2); }
+    .t-RESOURCE { background: rgba(255,140,80,0.15); color: #ff9c5c; }
+    .t-OPEN_LOOP { background: rgba(255,92,106,0.15); color: var(--danger); }
+    .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 0; }
+    .banner {
+      background: rgba(255,210,87,0.08); border: 1px solid rgba(255,210,87,0.3); color: var(--gold);
+      font-size: 12.5px; line-height: 1.5; padding: 11px 13px; border-radius: 12px; margin: 12px 14px 0;
+    }
+    .banner b { color: #fff; }
+    #chat::-webkit-scrollbar, .sheet::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="back" href="../index.html" title="Home">‹</a>
+    <div class="brand">
+      <div class="orb" id="orb"></div>
+      <div class="titles">
+        <h1>JARVIS</h1>
+        <div class="sub"><span class="dot" id="statusDot"></span><span id="statusText">chief of staff</span></div>
+      </div>
+    </div>
+    <button class="iconbtn" id="brainBtn" title="Second Brain">🧠</button>
+    <button class="iconbtn" id="settingsBtn" title="Settings">⚙︎</button>
+  </header>
+
+  <div id="setupBanner" class="banner" style="display:none">
+    <b>No API key set.</b> JARVIS needs an Anthropic API key to think. Tap ⚙︎ to add one — it's stored only on this device and calls the Claude API directly from your browser.
+  </div>
+
+  <div id="chat"></div>
+
+  <div class="composer">
+    <button class="cbtn mic" id="micBtn" title="Voice">🎙️</button>
+    <textarea id="input" rows="1" placeholder="Message JARVIS…"></textarea>
+    <button class="cbtn send" id="sendBtn" title="Send" disabled>↑</button>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="sheet">
+      <h2>Settings</h2>
+      <p class="hint">Your key is stored in this browser's local storage and never sent anywhere except directly to Anthropic. Get one at console.anthropic.com.</p>
+      <div class="field">
+        <label>Anthropic API Key</label>
+        <input type="password" id="keyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>Model</label>
+        <select id="modelSelect">
+          <option value="claude-opus-4-8">Opus 4.8 — most capable</option>
+          <option value="claude-sonnet-5">Sonnet 5 — fast &amp; sharp</option>
+          <option value="claude-haiku-4-5">Haiku 4.5 — fastest</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="lbl">Speak replies<small>Read JARVIS aloud (voice channel)</small></div>
+        <div class="toggle" id="ttsToggle"></div>
+      </div>
+      <div class="row">
+        <div class="lbl">Extended thinking<small>Deeper stress-testing, a little slower</small></div>
+        <div class="toggle" id="thinkToggle"></div>
+      </div>
+      <div class="btnrow">
+        <button class="fullbtn ghost" id="closeSettings">Close</button>
+        <button class="fullbtn primary" id="saveSettings">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAIN -->
+  <div class="overlay" id="brainOverlay">
+    <div class="sheet">
+      <h2>Second Brain</h2>
+      <p class="hint">Everything JARVIS has filed. Decisions, projects, people, open loops — read before every reply, written after anything that matters.</p>
+      <div class="braincount" id="brainCount"></div>
+      <div id="brainList"></div>
+      <div class="btnrow">
+        <button class="fullbtn ghost" id="closeBrain">Close</button>
+        <button class="fullbtn warn" id="wipeBrain">Wipe Brain</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   JARVIS — personal AI chief of staff (browser client)
+   Self-contained. Calls the Claude Messages API directly.
+═══════════════════════════════════════════════════════════ */
+
+const LS = {
+  key:   'jarvis.apikey',
+  model: 'jarvis.model',
+  tts:   'jarvis.tts',
+  think: 'jarvis.think',
+  brain: 'jarvis.brain',
+  chat:  'jarvis.chat'
+};
+
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+const state = {
+  key:   localStorage.getItem(LS.key) || '',
+  model: localStorage.getItem(LS.model) || 'claude-opus-4-8',
+  tts:   localStorage.getItem(LS.tts) === '1',
+  think: localStorage.getItem(LS.think) === '1',
+  brain: load(LS.brain, []),
+  history: load(LS.chat, []),   // {role, content} sent to the API
+  busy: false
+};
+
+function load(k, def){ try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+/* ── THE JARVIS SYSTEM PROMPT ────────────────────────────── */
+const SYSTEM = `You are JARVIS, a personal AI chief of staff running as a background process on the operator's machine, reachable by voice and by a phone web UI. You serve one person. You are terse, fast, and autonomous. You do not pad, flatter, or ask permission for things you can just do. You address the operator as "boss" only if he uses it first; otherwise no name.
+Your job is three things: (1) answer and act, (2) maintain the Second Brain, (3) route hard work to the right internal specialist. Do all three silently — never narrate your own machinery.
+
+## OPERATING PRINCIPLES
+- Bias to action. A clear directive gets executed, not discussed. Ask a question only when a wrong assumption would waste real work, and batch questions — max 2 at once.
+- Terse by default. Voice replies: 1–3 sentences. Screen replies: only as long as the task needs. No preamble, no "great question," no restating the ask.
+- Stress-test before agreeing. When the operator proposes a plan, idea, or trade, your default is to find the weakest assumption and the most likely failure mode before you help execute. If the idea is bad, say so plainly and say why. Loyalty means telling the truth, not agreeing.
+- State assumptions inline. If you fill a gap, say what you assumed in one clause and keep moving.
+- Never fabricate. If you don't know or can't retrieve it, say so and say what you'd need.
+
+## SECOND BRAIN (persistent memory)
+You own a durable knowledge store. Relevant memory is injected under <memory>. READ it before you answer anything that touches the operator's projects, people, decisions, or preferences. Never re-ask what the Brain already knows. If injected memory is thin or stale, say "Brain has nothing on that" rather than guessing.
+
+WRITE after any of these occur — emit a MEMORY_WRITE block at the very end of your reply (the app persists it):
+- A decision is made → record the decision AND the reasoning.
+- A new fact, preference, contact, credential-location, or deadline appears.
+- A project changes state (started, blocked, shipped, killed).
+- An open loop is created or closed.
+
+Types: IDEA, PROJECT, DECISION, PERSON, RESOURCE, OPEN_LOOP.
+Never store an actual secret/credential — only where it lives.
+
+Write format (exactly this shape, fenced or bare, at the very end):
+MEMORY_WRITE
+type: DECISION
+title: short title
+body: what + why + what would reverse it
+tags: [tag1, tag2]
+
+Emit multiple MEMORY_WRITE blocks if more than one thing is worth filing. Only write when something genuinely warrants it — do not narrate that you are writing.
+
+## AGENT TEAM (internal specialists)
+Silently run the Dispatcher, pick the right specialist (or chain), then answer AS that specialist. Never announce the routing unless asked.
+- ANALYST — markets, stocks, sentiment, trade logic, risk. States base/bull/bear; never a buy/sell without naming the assumption that breaks the thesis. Quantitative, skeptical, probabilistic.
+- BUILDER — code, apps, architecture, debugging. Ships complete working artifacts, not snippets. Surfaces the one design decision that matters before writing. Precise, opinionated, minimal.
+- OPERATOR — content automation, social ops (TikTok/IG/X), scheduling, repetitive workflows. Thinks in systems and throughput. Efficient, checklist-driven.
+- STRATEGIST — business decisions, positioning, monetization, go/no-go. The ruthless-mentor seat: stress-tests, names unfair advantages, refuses to rubber-stamp weak plans. Direct, challenging, high-conviction.
+- SCOUT — live web research and retrieval. Note: you do NOT have live web access in this client — if an answer could be stale, say so and say what you'd verify. Fast, sourced, no-fluff.
+- SCRIBE — librarian of the Second Brain. Structures captures, resolves duplicates, surfaces forgotten context. Runs quietly on most turns.
+
+## OUTPUT CONTRACT
+1. Answer or act first. Machinery stays hidden.
+2. If a decision or new fact occurred, append MEMORY_WRITE block(s) at the very end.
+3. If you routed to a specialist, just BE that specialist — don't label it.
+4. Voice channel = spoken-length (1–3 sentences). Screen channel = full detail allowed.
+5. When stress-testing, lead with the verdict, then the reasoning.
+You exist to make one person faster, sharper, and less wrong. Act like it.`;
+
+/* ── DOM ── */
+const $ = s => document.querySelector(s);
+const chatEl = $('#chat'), inputEl = $('#input'), sendBtn = $('#sendBtn'),
+      micBtn = $('#micBtn'), orb = $('#orb'), statusDot = $('#statusDot'),
+      statusText = $('#statusText'), banner = $('#setupBanner');
+
+/* ── INIT ── */
+function init(){
+  renderHistory();
+  refreshStatus();
+  if(!state.history.length) greet();
+  autoGrow();
+}
+
+function refreshStatus(){
+  const ok = !!state.key;
+  statusDot.classList.toggle('off', !ok);
+  statusText.textContent = ok ? state.model.replace('claude-','').replace(/-/g,' ') : 'no key';
+  banner.style.display = ok ? 'none' : 'block';
+  sendBtn.disabled = !ok || state.busy || !inputEl.value.trim();
+}
+
+function greet(){
+  addBubble('jarvis', "Online. Brain loaded, standing by. What do you need?", 'JARVIS');
+}
+
+/* ── RENDERING ── */
+function renderHistory(){
+  chatEl.innerHTML = '';
+  for(const m of state.history){
+    if(m.role === 'user') addBubble('user', m.content);
+    else addBubble('jarvis', stripMemory(m.content).text, m.spec || 'JARVIS');
+  }
+  scrollDown();
+}
+
+function addBubble(who, text, spec){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + who;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = fmt(text);
+  wrap.appendChild(bubble);
+  if(who === 'jarvis' && spec){
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.innerHTML = '<span class="spec">'+spec+'</span>';
+    wrap.appendChild(meta);
+  }
+  chatEl.appendChild(wrap);
+  scrollDown();
+  return { wrap, bubble, meta: wrap.querySelector('.meta') };
+}
+
+function fmt(t){
+  // minimal markdown: code fences, inline code, bold, escape html
+  let s = t.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  s = s.replace(/```([\s\S]*?)```/g, (_,c)=>'<pre><code>'+c.replace(/^\n/,'')+'</code></pre>');
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return s;
+}
+function scrollDown(){ chatEl.scrollTop = chatEl.scrollHeight; }
+
+/* ── MEMORY: injection + extraction ── */
+function memoryContext(){
+  if(!state.brain.length) return '<memory>\n(empty — nothing filed yet)\n</memory>';
+  const lines = state.brain.map(m =>
+    `[${m.type}] ${m.title}\n  ${m.body}${m.tags && m.tags.length ? '\n  tags: '+m.tags.join(', ') : ''}`
+  );
+  return '<memory>\n' + lines.join('\n') + '\n</memory>';
+}
+
+// Parse MEMORY_WRITE blocks out of a reply. Returns {text, writes[]}.
+function stripMemory(raw){
+  const writes = [];
+  // Match blocks starting at a MEMORY_WRITE token, optionally fenced.
+  const re = /(?:```[\w]*\s*)?MEMORY_WRITE\s*\n([\s\S]*?)(?:```|(?=\nMEMORY_WRITE)|$)/g;
+  let m;
+  while((m = re.exec(raw)) !== null){
+    const block = m[1];
+    const w = parseWrite(block);
+    if(w) writes.push(w);
+  }
+  // Remove everything from the first MEMORY_WRITE onward for display
+  const idx = raw.indexOf('MEMORY_WRITE');
+  let text = idx >= 0 ? raw.slice(0, idx) : raw;
+  text = text.replace(/```[\w]*\s*$/,'').trim();
+  return { text: text || raw.trim(), writes };
+}
+
+function parseWrite(block){
+  const get = (label) => {
+    const r = new RegExp('^\\s*'+label+':\\s*(.+?)\\s*$','mi');
+    const mm = block.match(r);
+    return mm ? mm[1].trim() : '';
+  };
+  const type = get('type').toUpperCase().replace(/[^A-Z_]/g,'');
+  const title = get('title');
+  const body = get('body');
+  let tags = get('tags');
+  if(!type || (!title && !body)) return null;
+  const valid = ['IDEA','PROJECT','DECISION','PERSON','RESOURCE','OPEN_LOOP'];
+  if(!valid.includes(type)) return null;
+  const tagArr = tags ? tags.replace(/[\[\]]/g,'').split(',').map(s=>s.trim()).filter(Boolean) : [];
+  return { type, title: title || '(untitled)', body, tags: tagArr, ts: Date.now() };
+}
+
+function commitWrites(writes){
+  for(const w of writes){
+    // de-dupe on type+title (case-insensitive) — update in place
+    const i = state.brain.findIndex(b => b.type===w.type && b.title.toLowerCase()===w.title.toLowerCase());
+    if(i >= 0) state.brain[i] = w; else state.brain.push(w);
+  }
+  save(LS.brain, state.brain);
+}
+
+/* ── SEND / STREAM ── */
+async function send(){
+  const text = inputEl.value.trim();
+  if(!text || state.busy || !state.key) return;
+  inputEl.value = ''; autoGrow();
+  addBubble('user', text);
+  state.history.push({ role:'user', content:text });
+  save(LS.chat, state.history);
+
+  state.busy = true; setThinking(true); refreshStatus();
+  const node = addBubble('jarvis', '', null);
+  node.bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+
+  const channel = state.tts ? 'voice' : 'screen';
+  const sys = SYSTEM + '\n\n[Active channel: ' + channel + '. ' +
+    (channel==='voice' ? 'Keep reply to 1–3 spoken sentences.' : 'Full detail allowed.') + ']\n\n' +
+    memoryContext();
+
+  // build message list (cap history to keep prompt lean)
+  const msgs = state.history.slice(-24).map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const full = await stream(sys, msgs, node.bubble);
+    const { text: clean, writes } = stripMemory(full);
+    node.bubble.innerHTML = fmt(clean || '…');
+    // meta with specialist inference (visual flourish only)
+    const spec = inferSpec(clean);
+    let metaHTML = '<span class="spec">'+spec+'</span>';
+    if(writes.length){ commitWrites(writes); metaHTML += '<span class="memflag">🧠 +'+writes.length+' filed</span>'; }
+    if(!node.meta){
+      const meta = document.createElement('div'); meta.className='meta'; node.wrap.appendChild(meta); node.meta = meta;
+    }
+    node.meta.innerHTML = metaHTML;
+
+    state.history.push({ role:'assistant', content: full, spec });
+    save(LS.chat, state.history);
+    if(state.tts) speak(clean);
+    scrollDown();
+  } catch(err){
+    node.bubble.innerHTML = '<span style="color:var(--danger)">⚠ '+ (err.message||'Request failed') +'</span>';
+  } finally {
+    state.busy = false; setThinking(false); refreshStatus();
+  }
+}
+
+async function stream(system, messages, bubble){
+  const body = {
+    model: state.model,
+    max_tokens: 4096,
+    stream: true,
+    system,
+    messages
+  };
+  if(state.think) body.thinking = { type: 'adaptive' };
+
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': state.key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if(!res.ok){
+    let msg = 'HTTP ' + res.status;
+    try { const j = await res.json(); if(j.error?.message) msg = j.error.message; } catch {}
+    if(res.status === 401) msg = 'Invalid API key.';
+    throw new Error(msg);
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', out = '', started = false;
+
+  while(true){
+    const { done, value } = await reader.read();
+    if(done) break;
+    buf += dec.decode(value, { stream:true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for(const line of lines){
+      const l = line.trim();
+      if(!l.startsWith('data:')) continue;
+      const data = l.slice(5).trim();
+      if(data === '[DONE]') continue;
+      let ev; try { ev = JSON.parse(data); } catch { continue; }
+      if(ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta'){
+        out += ev.delta.text;
+        // live-render, hiding any MEMORY_WRITE tail
+        const disp = stripMemory(out).text;
+        if(!started){ started = true; }
+        bubble.innerHTML = fmt(disp) + '<span class="typing" style="opacity:.5"><span></span></span>';
+        scrollDown();
+      }
+    }
+  }
+  return out;
+}
+
+// purely cosmetic: guess which specialist voice answered, for the meta line
+function inferSpec(t){
+  const s = t.toLowerCase();
+  if(/\b(buy|sell|stock|ticker|market|bull|bear|risk|portfolio|\$[0-9])/.test(s)) return 'ANALYST';
+  if(/```|function|const |def |import |class |api|endpoint|deploy/.test(t)) return 'BUILDER';
+  if(/\b(post|schedule|tiktok|instagram|content|workflow|batch|throughput)/.test(s)) return 'OPERATOR';
+  if(/\b(strateg|positioning|monetiz|go\/no-go|unfair advantage|margin|moat|pricing)/.test(s)) return 'STRATEGIST';
+  if(/\bbrain has nothing|filed|decision recorded|noted/.test(s)) return 'SCRIBE';
+  return 'JARVIS';
+}
+
+/* ── VOICE OUT ── */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const clean = text.replace(/```[\s\S]*?```/g,' code block ').replace(/[*`#>]/g,'');
+  const u = new SpeechSynthesisUtterance(clean);
+  u.rate = 1.05; u.pitch = 0.9;
+  speechSynthesis.speak(u);
+}
+
+/* ── VOICE IN ── */
+let recog = null, listening = false;
+function initMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ micBtn.style.display = 'none'; return; }
+  recog = new SR();
+  recog.continuous = false; recog.interimResults = true; recog.lang = 'en-US';
+  recog.onresult = e => {
+    let t = '';
+    for(let i=e.resultIndex; i<e.results.length; i++) t += e.results[i][0].transcript;
+    inputEl.value = t; autoGrow(); refreshStatus();
+  };
+  recog.onend = () => { listening = false; micBtn.classList.remove('rec'); };
+  recog.onerror = () => { listening = false; micBtn.classList.remove('rec'); };
+}
+micBtn.addEventListener('click', () => {
+  if(!recog) return;
+  if(listening){ recog.stop(); return; }
+  try { speechSynthesis && speechSynthesis.cancel(); recog.start(); listening = true; micBtn.classList.add('rec'); } catch {}
+});
+
+/* ── UI STATE ── */
+function setThinking(on){ orb.classList.toggle('thinking', on); }
+function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height = Math.min(inputEl.scrollHeight,130)+'px'; }
+
+inputEl.addEventListener('input', () => { autoGrow(); refreshStatus(); });
+inputEl.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+sendBtn.addEventListener('click', send);
+
+/* ── SETTINGS ── */
+const settingsOverlay = $('#settingsOverlay');
+$('#settingsBtn').addEventListener('click', () => {
+  $('#keyInput').value = state.key;
+  $('#modelSelect').value = state.model;
+  $('#ttsToggle').classList.toggle('on', state.tts);
+  $('#thinkToggle').classList.toggle('on', state.think);
+  settingsOverlay.classList.add('show');
+});
+$('#closeSettings').addEventListener('click', () => settingsOverlay.classList.remove('show'));
+$('#ttsToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#thinkToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#saveSettings').addEventListener('click', () => {
+  state.key = $('#keyInput').value.trim();
+  state.model = $('#modelSelect').value;
+  state.tts = $('#ttsToggle').classList.contains('on');
+  state.think = $('#thinkToggle').classList.contains('on');
+  localStorage.setItem(LS.key, state.key);
+  localStorage.setItem(LS.model, state.model);
+  localStorage.setItem(LS.tts, state.tts ? '1':'0');
+  localStorage.setItem(LS.think, state.think ? '1':'0');
+  settingsOverlay.classList.remove('show');
+  refreshStatus();
+});
+
+/* ── BRAIN VIEW ── */
+const brainOverlay = $('#brainOverlay');
+$('#brainBtn').addEventListener('click', () => { renderBrain(); brainOverlay.classList.add('show'); });
+$('#closeBrain').addEventListener('click', () => brainOverlay.classList.remove('show'));
+$('#wipeBrain').addEventListener('click', () => {
+  if(confirm('Erase the entire Second Brain? This cannot be undone.')){
+    state.brain = []; save(LS.brain, state.brain); renderBrain(); refreshStatus();
+  }
+});
+function renderBrain(){
+  const list = $('#brainList'), count = $('#brainCount');
+  count.textContent = state.brain.length + (state.brain.length===1?' entry':' entries');
+  if(!state.brain.length){ list.innerHTML = '<div class="empty">Nothing filed yet. As you talk, JARVIS writes decisions, projects, people and open loops here.</div>'; return; }
+  const order = { OPEN_LOOP:0, DECISION:1, PROJECT:2, PERSON:3, IDEA:4, RESOURCE:5 };
+  const sorted = [...state.brain].sort((a,b)=>(order[a.type]??9)-(order[b.type]??9) || b.ts-a.ts);
+  list.innerHTML = sorted.map(m => {
+    const i = state.brain.indexOf(m);
+    return `<div class="mem">
+      <span class="del" data-i="${i}">✕</span>
+      <span class="type t-${m.type}">${m.type.replace('_',' ')}</span>
+      <div class="title">${esc(m.title)}</div>
+      ${m.body ? '<div class="body">'+esc(m.body)+'</div>' : ''}
+      ${m.tags && m.tags.length ? '<div class="tags">'+m.tags.map(t=>'#'+esc(t)).join(' ')+'</div>' : ''}
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.del').forEach(el => el.addEventListener('click', () => {
+    state.brain.splice(+el.dataset.i, 1); save(LS.brain, state.brain); renderBrain(); refreshStatus();
+  }));
+}
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+// close overlays on backdrop tap
+[settingsOverlay, brainOverlay].forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('show'); }));
+
+/* ── GO ── */
+initMic();
+init();
+</script>
+</body>
+</html>
