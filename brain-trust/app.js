@@ -123,6 +123,134 @@ function esc(s) {
     .replace(/'/g, "&#39;");
 }
 
+/* Tickers we recognize when they appear in expert prose. Each entry
+   defines how to fetch its current price + how to render it. */
+const KNOWN_TICKERS = {
+  // Crypto (CoinGecko IDs)
+  BTC:   { kind: "crypto", id: "bitcoin",   label: "BTC" },
+  ETH:   { kind: "crypto", id: "ethereum",  label: "ETH" },
+  DOGE:  { kind: "crypto", id: "dogecoin",  label: "DOGE" },
+  WLFI:  { kind: "crypto", id: "world-liberty-financial-wlfi", label: "WLFI" },
+  // Stocks (Stooq symbols; .us for US listings)
+  AAPL:  { kind: "stock", stooq: "aapl.us" }, TSLA: { kind: "stock", stooq: "tsla.us" },
+  NVDA:  { kind: "stock", stooq: "nvda.us" }, MSFT: { kind: "stock", stooq: "msft.us" },
+  GOOGL: { kind: "stock", stooq: "googl.us" }, META: { kind: "stock", stooq: "meta.us" },
+  AMZN:  { kind: "stock", stooq: "amzn.us" }, COIN: { kind: "stock", stooq: "coin.us" },
+  UBER:  { kind: "stock", stooq: "uber.us" }, DJT:  { kind: "stock", stooq: "djt.us" },
+  BAC:   { kind: "stock", stooq: "bac.us" }, AXP:  { kind: "stock", stooq: "axp.us" },
+  KO:    { kind: "stock", stooq: "ko.us"  }, CVX:  { kind: "stock", stooq: "cvx.us" },
+  OXY:   { kind: "stock", stooq: "oxy.us" }, MCO:  { kind: "stock", stooq: "mco.us" },
+  KHC:   { kind: "stock", stooq: "khc.us" }, XOM:  { kind: "stock", stooq: "xom.us" },
+  JPM:   { kind: "stock", stooq: "jpm.us" }, GS:   { kind: "stock", stooq: "gs.us"  },
+  VOO:   { kind: "stock", stooq: "voo.us" }, SPY:  { kind: "stock", stooq: "spy.us" },
+  VTI:   { kind: "stock", stooq: "vti.us" }, QQQ:  { kind: "stock", stooq: "qqq.us" },
+  IBIT:  { kind: "stock", stooq: "ibit.us"}, FBTC: { kind: "stock", stooq: "fbtc.us"},
+  GLD:   { kind: "stock", stooq: "gld.us" }, SLV:  { kind: "stock", stooq: "slv.us" },
+  TLT:   { kind: "stock", stooq: "tlt.us" }, EDV:  { kind: "stock", stooq: "edv.us" },
+  IEF:   { kind: "stock", stooq: "ief.us" }, DBC:  { kind: "stock", stooq: "dbc.us" },
+  SGOV:  { kind: "stock", stooq: "sgov.us"}, VTSAX:{ kind: "stock", stooq: "vtsax.us"}
+};
+
+const PRICE_CACHE = {}; // ticker -> { price, ts }
+const PRICE_TTL_MS = 5 * 60 * 1000;
+
+/* formatBody: safe HTML with **bold** support + ticker tag placeholders.
+   Placeholders resolve to live prices when the DOM paints. */
+function formatBody(s) {
+  const raw = String(s ?? "");
+  // Escape first, then apply markup on the escaped string.
+  let out = esc(raw);
+  // Bold: **word** → <strong>word</strong>
+  out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // Tickers: match word-boundary ticker names, wrap with a placeholder
+  // that we'll hydrate later. Case-sensitive, only within <strong>...</strong>
+  // or as standalone caps to avoid false positives in common English.
+  const tickerRe = /\b([A-Z]{2,5}[A-Z0-9]?)\b/g;
+  out = out.replace(tickerRe, (m, sym) => {
+    if (!KNOWN_TICKERS[sym]) return m;
+    return `<span class="tk" data-tk="${sym}">${sym}<span class="tk-px" data-px="${sym}"></span></span>`;
+  });
+  // Kick off price hydration after paint
+  queueMicrotask(() => hydratePrices());
+  return out;
+}
+
+async function hydratePrices() {
+  const spans = document.querySelectorAll(".tk-px[data-px]");
+  const needed = new Set();
+  spans.forEach(s => {
+    const sym = s.dataset.px;
+    if (!sym || s.dataset.done) return;
+    const cached = PRICE_CACHE[sym];
+    if (cached && Date.now() - cached.ts < PRICE_TTL_MS) {
+      applyPrice(s, cached.price);
+    } else {
+      needed.add(sym);
+    }
+  });
+  if (!needed.size) return;
+
+  // Batch crypto via CoinGecko simple price (single request)
+  const cryptoIds = [];
+  const cryptoBySym = {};
+  needed.forEach(sym => {
+    const info = KNOWN_TICKERS[sym];
+    if (info && info.kind === "crypto") {
+      cryptoIds.push(info.id);
+      cryptoBySym[sym] = info.id;
+    }
+  });
+  if (cryptoIds.length) {
+    try {
+      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=" + cryptoIds.join(",") + "&vs_currencies=usd&include_24hr_change=true");
+      const data = await r.json();
+      Object.entries(cryptoBySym).forEach(([sym, id]) => {
+        const rec = data[id];
+        if (rec && rec.usd) {
+          const px = { value: rec.usd, change: rec.usd_24h_change || 0 };
+          PRICE_CACHE[sym] = { price: px, ts: Date.now() };
+          document.querySelectorAll(`.tk-px[data-px="${sym}"]`).forEach(el => applyPrice(el, px));
+        }
+      });
+    } catch (e) { /* silent */ }
+  }
+
+  // Stocks via Stooq CSV — one call per symbol (parallel)
+  const stockSyms = [...needed].filter(s => KNOWN_TICKERS[s] && KNOWN_TICKERS[s].kind === "stock");
+  await Promise.all(stockSyms.map(async sym => {
+    const stooq = KNOWN_TICKERS[sym].stooq;
+    try {
+      const r = await fetch("https://stooq.com/q/l/?s=" + encodeURIComponent(stooq) + "&f=sd2t2ohlcv&h&e=csv");
+      if (!r.ok) return;
+      const txt = await r.text();
+      // Format: Symbol,Date,Time,Open,High,Low,Close,Volume
+      const lines = txt.trim().split(/\r?\n/);
+      if (lines.length < 2) return;
+      const cols = lines[1].split(",");
+      const close = parseFloat(cols[6]);
+      const open = parseFloat(cols[3]);
+      if (!close || !open) return;
+      const change = ((close - open) / open) * 100;
+      const px = { value: close, change };
+      PRICE_CACHE[sym] = { price: px, ts: Date.now() };
+      document.querySelectorAll(`.tk-px[data-px="${sym}"]`).forEach(el => applyPrice(el, px));
+    } catch (e) { /* silent */ }
+  }));
+}
+
+function applyPrice(el, px) {
+  if (!el || el.dataset.done) return;
+  const v = px.value;
+  const c = px.change;
+  const dir = c >= 0 ? "up" : "down";
+  const sign = c >= 0 ? "+" : "";
+  const fmt = v >= 1000 ? "$" + v.toLocaleString(undefined, { maximumFractionDigits: 0 }) :
+              v >= 1 ? "$" + v.toFixed(2) :
+              "$" + v.toFixed(4);
+  el.dataset.done = "1";
+  el.innerHTML = ` <span class="tk-val ${dir}">${fmt} <span class="tk-chg">${sign}${c.toFixed(1)}%</span></span>`;
+}
+
 function save() {
   localStorage.setItem("brainTrustHistory", JSON.stringify(state.history));
   localStorage.setItem("brainTrustTags", JSON.stringify(state.tags));
@@ -276,20 +404,20 @@ const VOICES = {
 };
 
 const STOCK_VOICES = {
-  hormozi: { sev:"MEDIUM", diag:"Stocks are not a business. You are buying a piece of someone else's compounding. Build the business — the multiple is yours, not the market's.", yes:"If it cashflows and beats your CAC payback, yes. Otherwise build the business.", no:"Stocks are not where wealth is created — they store it. No.", advice:"Look — personally I'm in private equity through Acquisition.com (Skool, Prestige Labs, Allied Wellness, several SaaS), some BTC, and broad index funds for storage. If you want a SINGLE pick to buy right now: **VOO** (Vanguard S&P 500 ETF). Buy it monthly, hold forever. That's the boring answer that beats 90 percent of active traders. Real wealth comes from owning the offer — build a business that prints money. That is the play." },
-  cardone: { sev:"HIGH", diag:"STOCKS WILL NOT MAKE YOU RICH. You need cash flow. You need real estate. The market is a SLOW LANE.", yes:"10X positions only. Massive action.", no:"Stocks are middle-class thinking. NO.", advice:"Listen — I own over 12,000 multifamily apartment units through Cardone Capital. If you HAVE to buy a stock, here are my picks in order: **TSLA** (Tesla — long-term), **BTC** (Bitcoin — inflation hedge), **DJT** if you believe in the Trump brand. Skip everything else. The REAL play is cashflow real estate — buy a small multifamily property with FHA financing and let the TENANT pay your mortgage. 10X your income FIRST, then stack apartments. That is how the rich get richer." },
-  andrewtate: { sev:"MEDIUM", diag:"Brother, the stock market is rigged. The whales know before you do. You are playing their game in their casino.", yes:"Crypto, gold, real estate — yes. Stocks? Slow.", no:"Matrix paper. No.", advice:"G, forget stocks. The buy list, in order: 1) **Bitcoin (BTC)** — at least 10 percent of your net worth, self-custody in a hardware wallet (Trezor or Ledger). 2) **Physical gold** — coins or bars you can hold. 3) Romanian or Dubai real estate when you have cash. If you want stock-market exposure, buy **TSLA** because Musk is fighting the matrix. That's it, brother. The matrix prints money to inflate paper assets. Stack hard assets, build an income stream, escape." },
+  hormozi: { sev:"MEDIUM", diag:"Stocks are not a business. You are buying a piece of someone else's compounding. Build the business — the multiple is yours, not the market's.", yes:"If it cashflows and beats your CAC payback, yes. Otherwise build the business.", no:"Stocks are not where wealth is created — they store it. No.", advice:"Look — my net worth sits around $95M liquid, $200M+ if you count the illiquid Acquisition.com portfolio (Skool, Prestige Labs, ALAN, our SaaS holdings — over $200M in annual portfolio sales). My public-markets play is dead simple: **VOO** (Vanguard S&P 500) on auto-buy every month, some BTC, done. If you want a single pick TODAY, buy VOO. That's what I tell everyone. But real wealth? Build the business. That is the play." },
+  cardone: { sev:"HIGH", diag:"STOCKS WILL NOT MAKE YOU RICH. You need cash flow. You need real estate. And you need BITCOIN. Get in the FAST LANE.", yes:"10X positions. Real estate + BTC. YES.", no:"Stocks are middle-class thinking. NO.", advice:"Listen — I am BUYING BITCOIN LIKE CRAZY. Cardone Capital now holds over $200M in BTC — we bought 1,000 Bitcoin in 2025 and added another $100M at Consensus Miami this year. I am predicting Bitcoin hits $189,425 by year-end 2026. We are launching six hybrid Bitcoin + real estate funds and taking the whole thing public in a 2026 IPO — the world's largest BTC + real estate company. Buy list: 1) **BTC** (Bitcoin, spot — buy IBIT or FBTC if you need an ETF). 2) Cashflowing multifamily real estate. 3) **TSLA** for tech. Skip 401ks — that is a 40-year LOSER plan. 10X EVERYTHING." },
+  andrewtate: { sev:"MEDIUM", diag:"Brother, the stock market is a casino for slaves. The whales know before you do. You are their exit liquidity.", yes:"Crypto, gold, real estate. Yes.", no:"Matrix paper. No.", advice:"G, forget the matrix. My real portfolio: ~$21M in Bitcoin, 40x leveraged BTC positions on Hyperliquid (57 BTC notional, worth $3.7M), Romanian real estate, casinos, The Real World cashflow. Buy list: 1) **Bitcoin (BTC)** — self-custody, hardware wallet (Trezor or Ledger). 2) **Physical gold** — real metal, not paper. 3) Real estate in low-tax jurisdictions. 4) If you must own a stock, buy **TSLA** — Musk is fighting the matrix. Speed matters, brother. While cowards research, winners stack." },
   tristantate: { sev:"MEDIUM", diag:"You are buying into a position with no leverage. Retail is the exit liquidity for someone else's plan. Know your role.", yes:"If it serves a long-term strategic position — yes.", no:"Tactical retail trading is for losers. No.", advice:"If you must play the public markets, here is the strategic position: **VWRA** (Vanguard FTSE All-World) or **VTI** for total US — buy monthly, hold 20 years, forget. Then **BTC** for asymmetric upside. Skip individual stocks unless you have insider knowledge. My real wealth is Bitcoin, Eastern European casinos, Romanian property — assets I control. Position, not prediction. Quiet money outlasts loud money." },
-  buffett: { sev:"LOW", diag:"Most investors lose by trying to be clever. Buy a low-cost S&P 500 index fund. Hold it for fifty years. Charlie agrees.", yes:"If the moat is wide and the price is fair, yes. Hold forever.", no:"I cannot value it. No.", advice:"At Berkshire our biggest position is **Apple (AAPL)** — well over $170 billion worth. We also hold **Bank of America (BAC)**, **American Express (AXP)**, **Coca-Cola (KO)** since 1988, **Chevron (CVX)**, **Occidental Petroleum (OXY)**, **Moody's (MCO)**, **Kraft Heinz (KHC)**. For 95 percent of people though, the single best buy is a low-cost S&P 500 index fund — I tell my wife to put 90 percent in **VOO** or **SPY** and 10 percent in short-term Treasuries. Buy monthly, hold for decades. Rule No. 1: never lose money." },
-  musk: { sev:"MEDIUM", diag:"Most stock picking is gambling with extra steps. Index funds are the rational default unless you have informational edge.", yes:"If the technology compounds at 10x, yes. Long.", no:"Probability of being right is too low. No.", advice:"My net worth is mostly **Tesla (TSLA)**, SpaceX, xAI, and X. I'm long **Dogecoin**. Tesla holds Bitcoin. If you want my picks: 1) **TSLA** for energy + autonomy + robotics — long-term, 10+ years. 2) **NVDA** for AI compute. 3) **VOO** or **VTI** as the boring base layer. From first principles: unless you have informational edge, buy the index. If you want concentrated upside, pick companies with exponentially improving technology — energy, AI, robotics. Sub-10-year horizons are noise." },
-  trump: { sev:"MEDIUM", diag:"The market is HUGE. Tremendous. But you need to buy WINNERS. Losers stay losers. Believe me.", yes:"Big winner. Tremendous. Yes.", no:"Total loser. Walk away.", advice:"Look — buy WINNERS. The picks: 1) **DJT (Trump Media)** — tremendous, going to be huge. 2) **The big American banks** — JPM (JPMorgan), GS (Goldman Sachs). 3) **XOM (Exxon)** and **CVX (Chevron)** for energy — America needs oil, believe me. 4) Real estate, always — they are not making any more land. Buy strong American brands. Buy the dominant names. Now we have Trump crypto coming — going to be huge. Believe me." },
-  garyv: { sev:"MEDIUM", diag:"You are putting money into Apple instead of building YOUR brand. Your attention is the asset. Bet on yourself.", yes:"If you understand the business — yes.", no:"You don't even use the product. No.", advice:"Listen — my long-term plays: **Apple (AAPL)** for decades, **VTI** as the boring base layer, and angel positions in Facebook, Snap, Uber, Coinbase. If you want a single pick, buy **VTI** (Vanguard Total Stock Market) monthly and stop checking the price. Then add **AAPL** for a tech tilt. But the BEST investment for most people in their 20s and 30s is yourself — your audience, your distribution. Index for the long game, bet on YOU for the upside. That compounds 100x faster." },
-  belfort: { sev:"HIGH", diag:"Retail traders lose because they have no system. They chase, they panic, they sell at the bottom. Get a system or get out.", yes:"With a system and discipline — yes.", no:"You are emotional. You will lose. No.", advice:"Look — buy boring things: 1) **VOO** (S&P 500 ETF) — 60 percent of your portfolio, dollar-cost average monthly. 2) **AAPL**, **MSFT**, **JPM** — conservative blue chips, 20 percent. 3) **GLD** (gold ETF) — 10 percent hedge. 4) Cash — 10 percent. SKIP CRYPTO — most of it is a scam. I sold penny stocks at Stratton Oakmont, I know how this game really works. The real money is mastering SALES — that is the close rate you can actually control." },
-  robbins: { sev:"LOW", diag:"Most retail investors lose because of state. Fear sells the bottom, greed buys the top. Master your psychology first.", yes:"With the right strategy, yes.", no:"Not in this emotional state. No.", advice:"The All-Weather portfolio from Ray Dalio — designed to handle every economic season. Buy these ETFs in these proportions: 30 percent **VTI** (Total Stock), 40 percent **EDV** or **TLT** (long-term Treasuries), 15 percent **IEF** (intermediate Treasuries), 7.5 percent **GLD** (gold), 7.5 percent **DBC** (commodities). Auto-rebalance once a year. That mix has positive returns in every economic environment — growth, recession, inflation, deflation. Master your emotions, automate, focus on producing." },
-  goggins: { sev:"MEDIUM", diag:"You are looking for an easy way out. There isn't one. Stock picking is a shortcut and shortcuts make you soft.", yes:"If you accept you might lose it all — yes.", no:"You want the gain without the work. No.", advice:"My approach is simple — buy one thing: **VTSAX** or **VTI** (Vanguard Total Stock Market Index). Buy it every month, never sell, ZERO debt. That's it. No crypto. No options. No stock picking. Just relentless DCA into the broad market. The stock market is not your savior — the hard work is. Make so much income that the market is irrelevant. Stay hard." },
+  buffett: { sev:"LOW", diag:"Most investors lose by trying to be clever. Buy a low-cost S&P 500 index fund. Hold it for fifty years. Charlie agreed with me.", yes:"If the moat is wide and the price is fair, yes. Hold forever.", no:"I cannot value it. No.", advice:"At Berkshire our top positions today are **Apple (AAPL)** at about 22% of the portfolio, **American Express (AXP)** at 17%, **Coca-Cola (KO)** at 11.5% (we've owned it since 1988), **Bank of America (BAC)**, **Chevron (CVX)**, **Occidental Petroleum (OXY)**, and now **Alphabet (GOOGL)** — we quietly added $10 billion in June bringing our GOOGL stake to about $41 billion, bigger than Coke. We exited Amazon, Domino's, and UnitedHealth in Q1. For 95 percent of people though: put 90 percent in **VOO** or **SPY** and 10 percent in short-term Treasuries. Buy monthly. Hold for decades. Rule No. 1: never lose money." },
+  musk: { sev:"MEDIUM", diag:"Most stock picking is gambling with extra steps. Index funds are the rational default unless you have informational edge.", yes:"If the technology compounds at 10x, yes. Long.", no:"Probability of being right is too low. No.", advice:"I became the world's first trillionaire on June 12 when SpaceX went public as **SPCX** at $135 a share — $1.77T valuation, largest IPO in history. My net worth is 42% SpaceX, 20% Tesla (TSLA), the SpaceX-xAI merger closed in February at $1.25T combined. I'm still long Dogecoin. If you want my picks: 1) **SPCX** (SpaceX) — you can actually buy a piece of the future now. 2) **TSLA** — energy, autonomy, Optimus. 3) **NVDA** for AI compute. 4) **VOO** as the boring base. From first principles: unless you have informational edge, buy the index. Concentrated upside comes from companies with exponentially improving technology. Sub-10-year horizons are noise." },
+  trump: { sev:"MEDIUM", diag:"The market is HUGE. Tremendous. But you need to buy WINNERS. Losers stay losers. Believe me.", yes:"Big winner. Tremendous. Yes.", no:"Total loser. Walk away.", advice:"Look — I made over $1.2 BILLION in crypto income last year alone, tremendous, believe me. Trump Media (**DJT**) is a comeback stock — down from the peak but we're holding 9,500 Bitcoin in the treasury and buying more. World Liberty Financial (**WLFI**) and the **USD1** stablecoin — those are gonna be huge. The picks: 1) **DJT** and Bitcoin. 2) **JPM**, **GS**, **XOM**, **CVX** — strong American brands. 3) **Real estate**, always — they are not making any more land. Buy winners. Believe me." },
+  garyv: { sev:"MEDIUM", diag:"You are putting money into Apple instead of building YOUR brand. Your attention is the asset. Bet on yourself. And bet on AI.", yes:"If it's AI or brand — yes.", no:"You don't even use the product. No.", advice:"Listen — AI is the biggest opportunity since electricity. Bigger than the internet. My latest bets: I invested in **Deeptune** in March and partnered with **District** (AI commerce) in May as an advisor. My long-term public picks: **AAPL** for decades, **VTI** as the boring base, angel positions in **META**, **UBER**, **COIN**. But the REAL play in 2026 is your BRAND. 'Brand over everything because everything else is a commodity.' Build a personal brand and layer AI on top of it. That compounds 100x faster than any stock. Macro patience, micro speed." },
+  belfort: { sev:"HIGH", diag:"Retail traders lose because they have no system. They chase, they panic, they sell at the bottom. Get a system or get out.", yes:"With a system and discipline — yes.", no:"You are emotional. You will lose. No.", advice:"Look — the bulk of my money sits in **VOO** or **SPY** (S&P 500). Any 10-year window on that chart beats 99.9% of hedge funds with virtually zero fees. My allocation: 60% VOO, 20% blue chips (**AAPL**, **MSFT**, **JPM**), 10% gold (**GLD**), 10% cash. On crypto — I called it mass delusion for years, but I have come around on Bitcoin specifically. Hold **BTC** three to five years minimum. EVERY OTHER coin? Assume every dollar goes to zero. Explicit inactivity is your friend. Stop trading. Master sales instead." },
+  robbins: { sev:"LOW", diag:"Most retail investors lose because of state. Fear sells the bottom, greed buys the top. Master your psychology first.", yes:"With the right strategy, yes.", no:"Not in this emotional state. No.", advice:"Ray Dalio's All-Weather portfolio — the exact allocation from my book MONEY: 30% **VTI** (Total Stock), 40% **TLT** or **EDV** (long-term Treasuries), 15% **IEF** (intermediate Treasuries), 7.5% **GLD** (gold), 7.5% **DBC** (commodities). Rebalance once a year. Historically half the volatility of the S&P with much shallower drawdowns. YTD 2026 it is up about 4.4 percent, 10-year annualized around 5.4 percent — boring but positive in every economic season. Master your state, automate the investing, focus your time on PRODUCING. That is where real wealth is created." },
+  goggins: { sev:"MEDIUM", diag:"You are looking for an easy way out. There isn't one. Stock picking is a shortcut and shortcuts make you soft.", yes:"If you accept you might lose it all — yes.", no:"You want the gain without the work. No.", advice:"I just RE-ENLISTED in the Air Force to become a pararescueman — at my age. That's the mindset. My approach to money is the same: **VTSAX** or **VTI** (Vanguard Total Stock Market Index). One fund. Every month. Never sell. ZERO debt. No crypto. No options. No stock picking. Just relentless DCA. The stock market is not your savior — the hard work is. Make so much income that the market is irrelevant. Stay hard. Who's gonna carry the boats." },
   martell: { sev:"LOW", diag:"You are trading time for stock charts instead of building systems that compound. Wrong leverage point.", yes:"Index it, automate it, ignore it. Yes.", no:"Active trading is the opposite of buyback. No.", advice:"My setup is systematized: 1) **VOO** and **VTI** on auto-purchase every month, 70 percent of portfolio. 2) **MSFT** and **GOOGL** for SaaS exposure, 20 percent. 3) Cash buffer (T-bills via SGOV), 10 percent. Plus angel positions in early SaaS — but those are illiquid. The buyback principle applies to investing: automate so it doesn't consume attention. Most founders I coach who beat the market did it by 10x-ing their business income, not picking stocks." },
   andyelliott: { sev:"MEDIUM", diag:"BROTHER. Stocks are not going to change your life. SALES will. Your sales skill compounds 100x faster than NVDA.", yes:"If you have stable income and zero debt — yes.", no:"Your sales game is not at a 10 yet. NO.", advice:"BROTHER, if you have to buy something, buy **VOO** (S&P 500) and forget it for 30 years. Boring, but it works. My real money is in The Elliott Group, commercial real estate, luxury real estate. I don't day-trade because that's not where the money is — your INCOME is. Make $200K-$500K a year as a closer, THEN park profits in **VOO** and **VTI**. Skill first. Index second. Real estate third." },
-  kiyosaki: { sev:"HIGH", diag:"The stock market is a paper asset. The rich don't trust paper — they own real estate, businesses, and precious metals. WAKE UP.", yes:"If it is a cashflow asset — yes.", no:"Paper. Fake. No.", advice:"My buy list — three things only: 1) **SILVER** — physical American Silver Eagles or junk silver. 2) **GOLD** — physical coins, gold ETF (GLD) if you must use paper. 3) **BITCOIN (BTC)** — self-custody in a hardware wallet. Then put real money into apartment real estate and oil/gas. Stocks are PAPER — controlled by Wall Street, taxed, inflated by the Fed. Own assets you can TOUCH. The B and I quadrant builds real wealth." },
+  kiyosaki: { sev:"HIGH", diag:"The Everything Bubble is about to burst. The giant crash of 2026-27 is coming — the greatest depression in world history. Paper is going to zero. WAKE UP.", yes:"Silver, gold, Bitcoin, real estate. YES.", no:"Paper. Fake. No.", advice:"My 2026 targets — I have said this publicly: **Silver $200/oz**, **Gold $27,000/oz** (from Jim Rickards), **Bitcoin $250,000**. Buy list, in order: 1) **SILVER** — physical American Silver Eagles or junk silver. Even the paper SLV works. 2) **GOLD** — physical coins, GLD if you must. I own two goldmines. 3) **BITCOIN (BTC)** — I bought at $67K, still buying, self-custody. 4) **Ethereum (ETH)** too. Then apartment real estate and oil/gas royalties. Skip stocks — the Everything Bubble bursts and paper goes to zero. Own assets you can TOUCH." },
   rogan: { sev:"MEDIUM", diag:"It is wild how confident people are about stocks they don't understand. Have you ever talked to a real fund manager? It humbles you.", yes:"I mean, sure — if you believe in the company. Yeah.", no:"That's wild. No.", advice:"I'm not a finance guy. My picks? **Bitcoin (BTC)** — I bought a lot. Then **VTI** (Vanguard Total Market) for the boring portfolio piece. Then real estate in Texas. That's it, man. The smart investors I've had on the podcast — Ray Dalio, Cliff Asness — all say the same thing: diversify, index funds, long time horizon, don't try to time it. And honestly? Take a chunk and bet on yourself, your skill, your business. That's the real edge." }
 };
 
@@ -604,7 +732,7 @@ function renderMessage(h, idx) {
             <div class="expert-card-title">${exp ? exp.title : ""}</div>
           </div>
         </div>
-        <div class="expert-card-body">${esc(h.text)}</div>
+        <div class="expert-card-body">${formatBody(h.text)}</div>
       </div>
     `;
   }
@@ -634,7 +762,7 @@ function renderHotSeat(data) {
           </div>
           <div class="severity severity-${sev}">${sev}</div>
         </div>
-        <div class="expert-card-body">${esc(d.diagnosis || "")}</div>
+        <div class="expert-card-body">${formatBody(d.diagnosis || "")}</div>
       </div>
     `;
   }).join("")}</div>`;
@@ -657,7 +785,7 @@ function renderDecision(data) {
           <div class="vote-emoji">${exp.emoji}</div>
           <div class="vote-name">${exp.name}</div>
           <div class="vote-badge vote-${v.vote}">${v.vote}</div>
-          <div class="vote-reason">${esc(v.reason || "")}</div>
+          <div class="vote-reason">${formatBody(v.reason || "")}</div>
         </div>
       `;
     }).join("")}
@@ -673,7 +801,7 @@ function renderMixtape(data) {
         <div class="mixtape-emoji">${exp.emoji}</div>
         <div class="mixtape-content">
           <div class="mixtape-name">${exp.name}</div>
-          <div class="mixtape-text">${esc(d.text || "")}</div>
+          <div class="mixtape-text">${formatBody(d.text || "")}</div>
         </div>
       </div>
     `;
