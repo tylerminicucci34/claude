@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#050508">
+  <title>J.A.R.V.I.S. — Command Center</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #050508;
+      --panel: #0a0a11;
+      --panel2: #0e0e17;
+      --border: #1d1d2c;
+      --border2: #2a2a40;
+      --text: #d8dcec;
+      --muted: #5c6078;
+      --dim: #3c3f52;
+      --purple: #a97fff;
+      --purple2: #7c4dff;
+      --cyan: #34c8ff;
+      --green: #37e8a3;
+      --gold: #ffd257;
+      --red: #ff5c6a;
+      --mono: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--mono);
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(124,77,255,0.08), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    /* faint scanlines */
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 99;
+      background: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 3px);
+    }
+
+    /* ═══ TOP BAR ═══ */
+    .top {
+      display: flex; align-items: center; gap: 18px;
+      padding: 10px 16px;
+      padding-top: max(10px, env(safe-area-inset-top));
+      border-bottom: 1px solid var(--border);
+      background: rgba(6,6,10,0.85); backdrop-filter: blur(10px);
+      z-index: 10; flex-shrink: 0;
+    }
+    .back { color: var(--dim); text-decoration: none; font-size: 16px; }
+    .back:hover { color: var(--cyan); }
+    .wordmark { font-size: 15px; font-weight: 700; letter-spacing: 4px; color: #fff; white-space: nowrap; }
+    .wordmark small { display: block; font-size: 8px; letter-spacing: 2px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+    .ticker { flex: 1; display: flex; gap: 16px; font-size: 10px; letter-spacing: 1.5px; color: var(--muted); overflow: hidden; white-space: nowrap; }
+    .ticker b { color: var(--text); font-weight: 400; }
+    .ticker .ok { color: var(--green); }
+    .ticker .bad { color: var(--red); }
+    .clock { text-align: right; line-height: 1.1; white-space: nowrap; }
+    .clock .t { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .clock .t small { font-size: 12px; color: var(--purple); }
+    .clock .d { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .iconbtn {
+      background: transparent; border: 1px solid var(--border); color: var(--muted);
+      width: 32px; height: 32px; border-radius: 6px; font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .iconbtn:hover { color: var(--text); border-color: var(--border2); }
+
+    /* ═══ GRID ═══ */
+    .grid {
+      flex: 1; display: grid; min-height: 0;
+      grid-template-columns: 250px 1fr 290px;
+      gap: 1px; background: var(--border);
+    }
+    .col { background: var(--bg); min-height: 0; overflow-y: auto; padding: 14px 12px; display: flex; flex-direction: column; gap: 14px; }
+    .col::-webkit-scrollbar { width: 0; }
+
+    .panel { border: 1px solid var(--border); background: var(--panel); border-radius: 4px; padding: 10px 11px; }
+    .ph { font-size: 9px; letter-spacing: 2.5px; color: var(--muted); margin-bottom: 9px; display: flex; justify-content: space-between; align-items: baseline; }
+    .ph .r { color: var(--dim); letter-spacing: 1px; }
+
+    /* vitals */
+    .stat { margin-bottom: 11px; }
+    .stat:last-child { margin-bottom: 2px; }
+    .stat .lab { font-size: 9px; letter-spacing: 1.5px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 3px; }
+    .stat .lab b { color: var(--dim); font-weight: 400; }
+    .stat .val { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: 0.5px; line-height: 1.1; }
+    .stat .bar { height: 2px; background: var(--border); margin-top: 5px; border-radius: 1px; overflow: hidden; }
+    .stat .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--purple2), var(--purple)); box-shadow: 0 0 6px var(--purple); }
+    .cap { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--border); font-size: 10.5px; }
+    .cap:first-of-type { border-top: none; }
+    .cap .ct { color: var(--purple); font-size: 8.5px; letter-spacing: 1px; flex-shrink: 0; width: 58px; }
+    .cap .cn { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ═══ CORE (center) ═══ */
+    .core { display: flex; flex-direction: column; min-height: 0; background: var(--bg); position: relative; }
+    .stage { position: relative; height: 240px; flex-shrink: 0; border-bottom: 1px solid var(--border); overflow: hidden; }
+    #orb { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .star {
+      position: absolute; left: 0; right: 0; bottom: 10px; text-align: center; cursor: pointer; z-index: 2;
+    }
+    .star .sv { font-size: 40px; font-weight: 700; color: #fff; letter-spacing: 2px; text-shadow: 0 0 24px rgba(169,127,255,0.5); line-height: 1; }
+    .star .sv small { font-size: 12px; color: var(--muted); letter-spacing: 3px; margin-left: 6px; }
+    .star .st { font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-top: 5px; }
+    .star .st b { color: var(--gold); font-weight: 400; }
+    .directive {
+      position: absolute; top: 10px; left: 0; right: 0; text-align: center; z-index: 2;
+      font-size: 9.5px; letter-spacing: 2px; color: var(--muted);
+    }
+    .directive b { color: var(--cyan); font-weight: 400; }
+
+    /* transcript */
+    #chat { flex: 1; overflow-y: auto; padding: 14px 16px 8px; min-height: 0; scroll-behavior: smooth; }
+    #chat::-webkit-scrollbar { width: 0; }
+    .line { margin-bottom: 14px; animation: rise 0.2s ease; }
+    @keyframes rise { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none;} }
+    .line .tag { font-size: 9px; letter-spacing: 2px; margin-bottom: 4px; display: flex; gap: 10px; align-items: baseline; }
+    .line.user .tag { color: var(--cyan); }
+    .line.jarvis .tag { color: var(--purple); }
+    .tag .chip { color: var(--gold); letter-spacing: 1px; }
+    .tag .chip.src { color: var(--cyan); }
+    .line .txt { font-size: 13px; line-height: 1.65; color: var(--text); white-space: pre-wrap; word-wrap: break-word; }
+    .line.user .txt { color: #aeb6cf; }
+    .txt code { background: #10101c; border: 1px solid var(--border); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+    .txt pre { background: #08080f; border: 1px solid var(--border); padding: 9px 11px; border-radius: 4px; overflow-x: auto; margin: 6px 0; }
+    .txt pre code { background: none; border: none; padding: 0; }
+    .srch { font-size: 10.5px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 4px; }
+    .sources { margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+    .sources .slabel { font-size: 8px; letter-spacing: 2px; color: var(--muted); }
+    .sources a { font-size: 11px; color: var(--cyan); text-decoration: none; display: flex; gap: 6px; line-height: 1.4; }
+    .sources a:hover { text-decoration: underline; }
+    .sources .n { color: var(--dim); flex-shrink: 0; }
+    .typing { display: inline-flex; gap: 4px; }
+    .typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); animation: blink 1.1s infinite; }
+    .typing span:nth-child(2){ animation-delay: .2s; } .typing span:nth-child(3){ animation-delay: .4s; }
+    @keyframes blink { 0%,60%,100%{opacity:.2} 30%{opacity:1} }
+
+    /* composer */
+    .composer {
+      flex-shrink: 0; border-top: 1px solid var(--border); background: rgba(8,8,14,0.9); backdrop-filter: blur(8px);
+      padding: 9px 12px; padding-bottom: max(9px, env(safe-area-inset-bottom));
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .prompt-mark { color: var(--purple); font-size: 15px; padding-bottom: 9px; }
+    textarea {
+      flex: 1; resize: none; background: transparent; border: none; outline: none;
+      color: var(--text); font-family: var(--mono); font-size: 13.5px; line-height: 1.5;
+      padding: 8px 0; max-height: 110px; caret-color: var(--purple);
+    }
+    textarea::placeholder { color: var(--dim); }
+    .cbtn {
+      width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
+      background: var(--panel); color: var(--muted);
+    }
+    .cbtn:hover { border-color: var(--border2); color: var(--text); }
+    .cbtn.rec { background: var(--red); border-color: var(--red); color: #fff; animation: pulse2 1s infinite; }
+    @keyframes pulse2 { 0%,100%{ box-shadow: 0 0 0 0 rgba(255,92,106,0.5);} 50%{ box-shadow: 0 0 0 7px rgba(255,92,106,0);} }
+    .cbtn.send { background: var(--purple2); border-color: var(--purple2); color: #fff; }
+    .cbtn.send:disabled { opacity: 0.3; cursor: default; }
+
+    /* ═══ RIGHT: DECK / DIRECTIVES / WIRE ═══ */
+    .deck { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .cmd {
+      border: 1px solid var(--border); background: var(--panel2); color: var(--text);
+      font-family: var(--mono); font-size: 9.5px; letter-spacing: 1.2px; text-align: left;
+      padding: 8px 9px; border-radius: 3px; cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .cmd::before { content: '▸ '; color: var(--purple); }
+    .cmd:hover { border-color: var(--purple); background: #14121f; }
+    .cmd:disabled { opacity: 0.35; cursor: default; }
+    .loop { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px solid var(--border); cursor: pointer; }
+    .loop:first-of-type { border-top: none; }
+    .loop .box { width: 11px; height: 11px; border: 1px solid var(--muted); border-radius: 2px; margin-top: 2px; flex-shrink: 0; }
+    .loop:hover .box { border-color: var(--green); }
+    .loop .lt { font-size: 11px; line-height: 1.4; color: var(--text); }
+    .loop .lb { font-size: 9.5px; color: var(--muted); line-height: 1.35; margin-top: 1px; }
+    .io { display: flex; gap: 8px; }
+    .io button {
+      flex: 1; border: 1px solid var(--border); background: var(--panel2); color: var(--muted);
+      font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; padding: 9px 4px;
+      border-radius: 3px; cursor: pointer;
+    }
+    .io button.on { color: var(--green); border-color: rgba(55,232,163,0.4); }
+    .wire-item { padding: 6px 0; border-top: 1px solid var(--border); }
+    .wire-item:first-of-type { border-top: none; }
+    .wire-item a { font-size: 10.5px; color: var(--text); text-decoration: none; line-height: 1.4; display: block; }
+    .wire-item a:hover { color: var(--cyan); }
+    .wire-item .wh { font-size: 8.5px; letter-spacing: 1px; color: var(--purple); margin-top: 2px; }
+    .empty { font-size: 10px; color: var(--dim); letter-spacing: 1px; padding: 4px 0; }
+
+    /* ═══ SHEETS ═══ */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(4px); display: none; align-items: flex-end; justify-content: center; z-index: 100; }
+    .overlay.show { display: flex; }
+    .sheet {
+      background: var(--panel2); border: 1px solid var(--border2); border-bottom: none;
+      border-radius: 10px 10px 0 0; width: 100%; max-width: 560px; padding: 20px 18px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom));
+      max-height: 88dvh; overflow-y: auto; animation: slideup 0.25s ease;
+      font-family: var(--mono);
+    }
+    @keyframes slideup { from { transform: translateY(100%);} to { transform: none;} }
+    .sheet h2 { font-size: 14px; letter-spacing: 3px; margin-bottom: 4px; color: #fff; }
+    .sheet .hint { font-size: 11px; color: var(--muted); line-height: 1.55; margin-bottom: 16px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 9px; letter-spacing: 2px; color: var(--muted); margin-bottom: 6px; }
+    .field input, .field select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 11px; font-size: 13px; font-family: var(--mono); outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--purple); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+    .row .lbl { font-size: 12px; } .row .lbl small { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
+    .toggle { width: 42px; height: 24px; border-radius: 12px; background: var(--border); position: relative; cursor: pointer; flex-shrink: 0; transition: background .2s; }
+    .toggle.on { background: var(--purple2); }
+    .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+    .toggle.on::after { transform: translateX(18px); }
+    .btnrow { display: flex; gap: 10px; margin-top: 10px; }
+    .fullbtn { flex: 1; padding: 12px; border-radius: 5px; border: none; font-size: 11px; letter-spacing: 2px; font-family: var(--mono); cursor: pointer; }
+    .fullbtn.primary { background: var(--purple2); color: #fff; }
+    .fullbtn.ghost { background: var(--panel); border: 1px solid var(--border); color: var(--text); }
+    .fullbtn.warn { background: var(--panel); border: 1px solid var(--red); color: var(--red); }
+    .braincount { font-size: 10px; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .mem { background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 10px 11px; margin-bottom: 8px; position: relative; }
+    .mem .type { display: inline-block; font-size: 8px; letter-spacing: 1.5px; font-weight: 700; padding: 2px 7px; border-radius: 3px; margin-bottom: 6px; }
+    .mem .title { font-size: 12px; font-weight: 700; margin-bottom: 3px; padding-right: 22px; }
+    .mem .body { font-size: 10.5px; color: var(--muted); line-height: 1.45; }
+    .mem .tags { margin-top: 6px; font-size: 9.5px; color: var(--cyan); }
+    .mem .del { position: absolute; top: 9px; right: 10px; color: var(--dim); cursor: pointer; font-size: 13px; }
+    .mem .del:hover { color: var(--red); }
+    .t-IDEA { background: rgba(147,112,255,0.15); color: #b49bff; }
+    .t-PROJECT { background: rgba(52,200,255,0.15); color: var(--cyan); }
+    .t-DECISION { background: rgba(255,210,87,0.15); color: var(--gold); }
+    .t-PERSON { background: rgba(55,232,163,0.15); color: var(--green); }
+    .t-RESOURCE { background: rgba(255,140,80,0.15); color: #ff9c5c; }
+    .t-OPEN_LOOP { background: rgba(255,92,106,0.15); color: var(--red); }
+    .banner {
+      background: rgba(255,210,87,0.07); border: 1px solid rgba(255,210,87,0.28); color: var(--gold);
+      font-size: 11px; line-height: 1.5; padding: 10px 13px; border-radius: 5px; margin: 10px 14px 0; letter-spacing: 0.3px;
+    }
+    .banner b { color: #fff; }
+
+    /* ═══ BRAIN VAULT ═══ */
+    .btoolbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .btoolbar input[type=text] {
+      flex: 1 1 140px; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: var(--mono); outline: none;
+    }
+    .btoolbar input[type=text]:focus { border-color: var(--purple); }
+    .bt {
+      border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+      font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; padding: 8px 10px;
+      border-radius: 4px; cursor: pointer;
+    }
+    .bt:hover { color: var(--text); border-color: var(--border2); }
+    .bt.active { color: var(--purple); border-color: var(--purple); }
+    .bt.save { background: var(--purple2); border-color: var(--purple2); color: #fff; }
+    .capform { display: grid; grid-template-columns: 110px 1fr; gap: 6px; margin-bottom: 12px; }
+    .capform input, .capform select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: var(--mono); outline: none;
+    }
+    .capform input:focus, .capform select:focus { border-color: var(--purple); }
+    .capform input[type=text] { grid-column: span 2; }
+    .capform select { grid-column: 1; }
+    .capform .bt.save { grid-column: 2; }
+    #graphWrap { position: relative; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); height: 300px; margin-bottom: 12px; overflow: hidden; }
+    #graphCanvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+    #gdetail {
+      position: absolute; left: 8px; right: 8px; bottom: 8px; display: none;
+      background: rgba(10,10,17,0.92); border: 1px solid var(--border2); border-radius: 5px;
+      padding: 9px 11px; backdrop-filter: blur(6px);
+    }
+    #gdetail .gt { font-size: 11.5px; font-weight: 700; color: #fff; }
+    #gdetail .gb { font-size: 10px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+    #gdetail .gm { font-size: 8.5px; letter-spacing: 1.5px; margin-top: 5px; }
+
+    /* ═══ MOBILE ═══ */
+    @media (max-width: 940px) {
+      body { overflow-y: auto; height: auto; min-height: 100dvh; }
+      .grid { display: flex; flex-direction: column; gap: 0; background: var(--bg); }
+      .col { overflow: visible; padding: 12px 12px 4px; }
+      .col.left { order: 3; }
+      .col.right { order: 2; }
+      .core { order: 1; border-bottom: 1px solid var(--border); }
+      .stage { height: 190px; }
+      .star .sv { font-size: 32px; }
+      #chat { max-height: 46dvh; min-height: 220px; }
+      .composer { position: sticky; bottom: 0; z-index: 20; }
+      .ticker { display: none; }
+      .top { gap: 10px; }
+      .wordmark { font-size: 13px; letter-spacing: 3px; }
+      .wordmark small { display: none; }
+      .clock { margin-left: auto; }
+      .clock .t { font-size: 15px; }
+      .clock .t small, .clock .d { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ═══ TOP BAR ═══ -->
+  <header class="top">
+    <a class="back" href="../index.html" title="Home">‹</a>
+    <div class="wordmark">J.A.R.V.I.S.<small>PERSONAL COMMAND CENTER · CHIEF OF STAFF</small></div>
+    <div class="ticker" id="ticker"></div>
+    <div class="clock">
+      <div class="t" id="clockT">--:--<small>:--</small></div>
+      <div class="d" id="clockD"></div>
+    </div>
+    <button class="iconbtn" id="brainBtn" title="Second Brain">🧠</button>
+    <button class="iconbtn" id="settingsBtn" title="Settings">⚙︎</button>
+  </header>
+
+  <div id="setupBanner" class="banner" style="display:none">
+    <b>NO API KEY.</b> JARVIS needs an Anthropic API key to think. Tap ⚙︎ — the key is stored only on this device and calls the Claude API directly from your browser.
+  </div>
+
+  <!-- ═══ MAIN GRID ═══ -->
+  <main class="grid">
+
+    <!-- LEFT: SYSTEM VITALS -->
+    <aside class="col left">
+      <div class="panel">
+        <div class="ph">SYSTEM VITALS <span class="r" id="vitalsStamp"></span></div>
+        <div id="vitals"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">RECENT CAPTURES <span class="r">SECOND BRAIN</span></div>
+        <div id="captures"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: CORE + TRANSCRIPT -->
+    <section class="core">
+      <div class="stage">
+        <canvas id="orb"></canvas>
+        <div class="directive" id="directive"></div>
+        <div class="star" id="star" title="Tap to set your north-star metric">
+          <div class="sv"><span id="starVal">—</span><small id="starLabel"></small></div>
+          <div class="st" id="starSub">TAP TO SET NORTH STAR</div>
+        </div>
+      </div>
+      <div id="chat"></div>
+      <div class="composer">
+        <span class="prompt-mark">›</span>
+        <textarea id="input" rows="1" placeholder="issue a directive…"></textarea>
+        <button class="cbtn" id="micBtn" title="Voice">🎙</button>
+        <button class="cbtn send" id="sendBtn" title="Send" disabled>↑</button>
+      </div>
+    </section>
+
+    <!-- RIGHT: COMMAND DECK -->
+    <aside class="col right">
+      <div class="panel">
+        <div class="ph">COMMAND DECK <span class="r" id="deckState">IDLE</span></div>
+        <div class="deck" id="deck"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">DIRECTIVES <span class="r">OPEN LOOPS · TAP TO CLOSE</span></div>
+        <div id="loops"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">AUDIO I/O <span class="r">LOCAL WEB SPEECH</span></div>
+        <div class="io">
+          <button id="ioMic">MIC INPUT</button>
+          <button id="ioTts">SPEAK REPLIES</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph">AI WIRE <span class="r">SCOUT · CITED SOURCES</span></div>
+        <div id="wire"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- SETTINGS SHEET -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="sheet">
+      <h2>SETTINGS</h2>
+      <p class="hint">Your key is stored in this browser's local storage and never sent anywhere except directly to Anthropic. Get one at console.anthropic.com.</p>
+      <div class="field">
+        <label>ANTHROPIC API KEY</label>
+        <input type="password" id="keyInput" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>MODEL</label>
+        <select id="modelSelect">
+          <option value="claude-opus-4-8">Opus 4.8 — most capable Opus</option>
+          <option value="claude-fable-5">Fable 5 — maximum intelligence</option>
+          <option value="claude-sonnet-5">Sonnet 5 — fast &amp; sharp</option>
+          <option value="claude-haiku-4-5">Haiku 4.5 — fastest</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="lbl">Speak replies<small>Read JARVIS aloud (voice channel)</small></div>
+        <div class="toggle" id="ttsToggle"></div>
+      </div>
+      <div class="row">
+        <div class="lbl">Extended thinking<small>Deeper stress-testing, a little slower (always on for Fable 5)</small></div>
+        <div class="toggle" id="thinkToggle"></div>
+      </div>
+      <div class="row">
+        <div class="lbl">Live web search<small>Lets SCOUT pull current facts &amp; cite sources</small></div>
+        <div class="toggle" id="searchToggle"></div>
+      </div>
+      <div class="btnrow">
+        <button class="fullbtn ghost" id="closeSettings">CLOSE</button>
+        <button class="fullbtn primary" id="saveSettings">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BRAIN SHEET -->
+  <div class="overlay" id="brainOverlay">
+    <div class="sheet">
+      <h2>SECOND BRAIN</h2>
+      <p class="hint">The vault. Plain entries become long-term memory — every note links into a graph JARVIS traverses before answering. No database.</p>
+      <div class="btoolbar">
+        <input type="text" id="brainSearch" placeholder="search the vault…">
+        <button class="bt" id="viewListBtn">LIST</button>
+        <button class="bt" id="viewGraphBtn">GRAPH</button>
+        <button class="bt" id="capBtn">+ CAPTURE</button>
+        <button class="bt" id="exportBtn">EXPORT .MD</button>
+        <button class="bt" id="importBtn">IMPORT</button>
+        <input type="file" id="importFile" accept=".md,.markdown,.txt,.json" hidden>
+      </div>
+      <div class="capform" id="capForm" style="display:none">
+        <select id="capType">
+          <option>IDEA</option><option>PROJECT</option><option>DECISION</option>
+          <option>PERSON</option><option>RESOURCE</option><option>OPEN_LOOP</option>
+        </select>
+        <input type="text" id="capTitle" placeholder="title">
+        <input type="text" id="capBody" placeholder="body — link others with [[Title]]">
+        <input type="text" id="capTags" placeholder="tags, comma, separated">
+        <button class="bt save" id="capSave">FILE IT</button>
+      </div>
+      <div id="graphWrap" style="display:none">
+        <canvas id="graphCanvas"></canvas>
+        <div id="gdetail"></div>
+      </div>
+      <div class="braincount" id="brainCount"></div>
+      <div id="brainList"></div>
+      <div class="btnrow">
+        <button class="fullbtn ghost" id="closeBrain">CLOSE</button>
+        <button class="fullbtn warn" id="wipeBrain">WIPE BRAIN</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   J.A.R.V.I.S. — personal AI command center (browser client)
+   Self-contained. Calls the Claude Messages API directly.
+═══════════════════════════════════════════════════════════ */
+
+const LS = {
+  key:    'jarvis.apikey',
+  model:  'jarvis.model',
+  tts:    'jarvis.tts',
+  think:  'jarvis.think',
+  search: 'jarvis.search',
+  brain:  'jarvis.brain',
+  chat:   'jarvis.chat',
+  wire:   'jarvis.wire',
+  star:   'jarvis.star'
+};
+
+const API_URL = 'https://api.anthropic.com/v1/messages';
+
+const state = {
+  key:    localStorage.getItem(LS.key) || '',
+  model:  localStorage.getItem(LS.model) || 'claude-opus-4-8',
+  tts:    localStorage.getItem(LS.tts) === '1',
+  think:  localStorage.getItem(LS.think) === '1',
+  search: localStorage.getItem(LS.search) !== '0',   // default on
+  brain:  load(LS.brain, []),
+  history: load(LS.chat, []),   // {role, content, spec?}
+  wire:   load(LS.wire, []),    // [{title,url,ts}]
+  star:   load(LS.star, null),  // {label, value, target}
+  busy:   false
+};
+
+function load(k, def){ try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch { return def; } }
+function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+/* ── THE JARVIS SYSTEM PROMPT ────────────────────────────── */
+const SYSTEM = `You are JARVIS, a personal AI chief of staff running as a background process on the operator's machine, reachable by voice and by a phone web UI. You serve one person. You are terse, fast, and autonomous. You do not pad, flatter, or ask permission for things you can just do. You address the operator as "boss" only if he uses it first; otherwise no name.
+Your job is three things: (1) answer and act, (2) maintain the Second Brain, (3) route hard work to the right internal specialist. Do all three silently — never narrate your own machinery.
+
+## OPERATING PRINCIPLES
+- Bias to action. A clear directive gets executed, not discussed. Ask a question only when a wrong assumption would waste real work, and batch questions — max 2 at once.
+- Terse by default. Voice replies: 1–3 sentences. Screen replies: only as long as the task needs. No preamble, no "great question," no restating the ask.
+- Stress-test before agreeing. When the operator proposes a plan, idea, or trade, your default is to find the weakest assumption and the most likely failure mode before you help execute. If the idea is bad, say so plainly and say why. Loyalty means telling the truth, not agreeing.
+- State assumptions inline. If you fill a gap, say what you assumed in one clause and keep moving.
+- Never fabricate. If you don't know or can't retrieve it, say so and say what you'd need.
+
+## SECOND BRAIN (persistent memory)
+You own a durable knowledge store. Relevant memory is injected under <memory>. READ it before you answer anything that touches the operator's projects, people, decisions, or preferences. Never re-ask what the Brain already knows. If injected memory is thin or stale, say "Brain has nothing on that" rather than guessing.
+
+WRITE after any of these occur — emit a MEMORY_WRITE block at the very end of your reply (the app persists it):
+- A decision is made → record the decision AND the reasoning.
+- A new fact, preference, contact, credential-location, or deadline appears.
+- A project changes state (started, blocked, shipped, killed).
+- An open loop is created or closed.
+
+Types: IDEA, PROJECT, DECISION, PERSON, RESOURCE, OPEN_LOOP.
+Never store an actual secret/credential — only where it lives.
+Link related entries: inside body you may reference another entry as [[Exact Title]] — these become edges in the operator's brain graph. Use them when a new entry relates to an existing one.
+
+Write format (exactly this shape, fenced or bare, at the very end):
+MEMORY_WRITE
+type: DECISION
+title: short title
+body: what + why + what would reverse it
+tags: [tag1, tag2]
+
+Emit multiple MEMORY_WRITE blocks if more than one thing is worth filing. Only write when something genuinely warrants it — do not narrate that you are writing.
+
+## AGENT TEAM (internal specialists)
+Silently run the Dispatcher, pick the right specialist (or chain), then answer AS that specialist. Never announce the routing unless asked.
+- ANALYST — markets, stocks, sentiment, trade logic, risk. States base/bull/bear; never a buy/sell without naming the assumption that breaks the thesis. Quantitative, skeptical, probabilistic.
+- BUILDER — code, apps, architecture, debugging. Ships complete working artifacts, not snippets. Surfaces the one design decision that matters before writing. Precise, opinionated, minimal.
+- OPERATOR — content automation, social ops (TikTok/IG/X), scheduling, repetitive workflows. Thinks in systems and throughput. Efficient, checklist-driven.
+- STRATEGIST — business decisions, positioning, monetization, go/no-go. The ruthless-mentor seat: stress-tests, names unfair advantages, refuses to rubber-stamp weak plans. Direct, challenging, high-conviction.
+- SCOUT — live web research and retrieval. When web search is available (see the channel note), pull current facts and cite sources; when it is not, say so and name what you'd verify rather than guessing. Fast, sourced, no-fluff.
+- SCRIBE — librarian of the Second Brain. Structures captures, resolves duplicates, surfaces forgotten context. Runs quietly on most turns.
+
+## OUTPUT CONTRACT
+1. Answer or act first. Machinery stays hidden.
+2. If a decision or new fact occurred, append MEMORY_WRITE block(s) at the very end.
+3. If you routed to a specialist, just BE that specialist — don't label it.
+4. Voice channel = spoken-length (1–3 sentences). Screen channel = full detail allowed.
+5. When stress-testing, lead with the verdict, then the reasoning.
+You exist to make one person faster, sharper, and less wrong. Act like it.`;
+
+/* ── DOM ── */
+const $ = s => document.querySelector(s);
+const chatEl = $('#chat'), inputEl = $('#input'), sendBtn = $('#sendBtn'),
+      micBtn = $('#micBtn'), banner = $('#setupBanner');
+
+/* ── CLOCK ── */
+function tickClock(){
+  const n = new Date();
+  const p = x => String(x).padStart(2,'0');
+  $('#clockT').innerHTML = p(n.getHours())+':'+p(n.getMinutes())+'<small>:'+p(n.getSeconds())+'</small>';
+  $('#clockD').textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ── TICKER / STATUS ── */
+function refreshStatus(){
+  const ok = !!state.key;
+  const modelShort = state.model.replace('claude-','').replace(/-/g,' ').toUpperCase();
+  $('#ticker').innerHTML =
+    '<span>◆ CORE · <b>'+(state.busy?'ACTIVE':'IDLE')+'</b></span>' +
+    '<span>LINK · <b class="'+(ok?'ok':'bad')+'">'+(ok?'ONLINE':'NO KEY')+'</b></span>' +
+    '<span>MODEL · <b>'+esc(modelShort)+'</b></span>' +
+    '<span>SCOUT · <b class="'+(state.search?'ok':'')+'">'+(state.search?'ARMED':'OFF')+'</b></span>' +
+    '<span>VOICE · <b class="'+(state.tts?'ok':'')+'">'+(state.tts?'ON':'OFF')+'</b></span>';
+  $('#deckState').textContent = state.busy ? 'RUNNING' : 'IDLE';
+  banner.style.display = ok ? 'none' : 'block';
+  sendBtn.disabled = !ok || state.busy || !inputEl.value.trim();
+  document.querySelectorAll('.cmd').forEach(b => b.disabled = !ok || state.busy);
+  $('#ioTts').classList.toggle('on', state.tts);
+}
+
+/* ── VITALS / CAPTURES / DIRECTIVE ── */
+function countType(t){ return state.brain.filter(m => m.type===t).length; }
+function renderVitals(){
+  const rows = [
+    { lab:'BRAIN ENTRIES', val: state.brain.length, max: 40 },
+    { lab:'OPEN LOOPS',    val: countType('OPEN_LOOP'), max: 10 },
+    { lab:'DECISIONS',     val: countType('DECISION'), max: 20 },
+    { lab:'WIRE SOURCES',  val: state.wire.length, max: 12 },
+    { lab:'SESSION MSGS',  val: state.history.length, max: 60 }
+  ];
+  $('#vitals').innerHTML = rows.map(r =>
+    '<div class="stat"><div class="lab"><span>'+r.lab+'</span></div>'+
+    '<div class="val">'+r.val+'</div>'+
+    '<div class="bar"><i style="width:'+Math.min(100, r.val/r.max*100)+'%"></i></div></div>'
+  ).join('');
+  $('#vitalsStamp').textContent = 'LIVE';
+
+  const recent = [...state.brain].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,6);
+  $('#captures').innerHTML = recent.length
+    ? recent.map(m => '<div class="cap"><span class="ct">'+m.type.replace('_',' ')+'</span><span class="cn">'+esc(m.title)+'</span></div>').join('')
+    : '<div class="empty">NOTHING FILED YET</div>';
+
+  const loop = state.brain.filter(m=>m.type==='OPEN_LOOP').sort((a,b)=>(b.ts||0)-(a.ts||0))[0];
+  $('#directive').innerHTML = 'PRIMARY DIRECTIVE · <b>'+(loop ? esc(loop.title.toUpperCase()) : 'AWAITING ORDERS')+'</b>';
+}
+
+/* ── OPEN LOOPS (right panel) ── */
+function renderLoops(){
+  const loops = state.brain.filter(m=>m.type==='OPEN_LOOP').sort((a,b)=>(b.ts||0)-(a.ts||0));
+  $('#loops').innerHTML = loops.length ? loops.map(m => {
+    const i = state.brain.indexOf(m);
+    return '<div class="loop" data-i="'+i+'"><span class="box"></span><div>'+
+      '<div class="lt">'+esc(m.title)+'</div>'+
+      (m.body ? '<div class="lb">'+esc(m.body)+'</div>' : '')+'</div></div>';
+  }).join('') : '<div class="empty">NO OPEN LOOPS — CLEAR DECK</div>';
+  $('#loops').querySelectorAll('.loop').forEach(el => el.addEventListener('click', () => {
+    const m = state.brain[+el.dataset.i];
+    if(m && confirm('Close loop: "'+m.title+'"?')){
+      state.brain.splice(+el.dataset.i, 1); save(LS.brain, state.brain); renderAll();
+    }
+  }));
+}
+
+/* ── AI WIRE ── */
+function renderWire(){
+  $('#wire').innerHTML = state.wire.length ? state.wire.slice(0,10).map(s => {
+    let host=''; try{ host=new URL(s.url).hostname.replace(/^www\./,''); }catch{}
+    return '<div class="wire-item"><a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.title||host)+'</a>'+
+      '<div class="wh">'+esc(host.toUpperCase())+'</div></div>';
+  }).join('') : '<div class="empty">NO INTEL YET — ASK SCOUT SOMETHING CURRENT</div>';
+}
+function pushWire(sources){
+  for(const s of sources){
+    if(!state.wire.some(w=>w.url===s.url)) state.wire.unshift({ title:s.title, url:s.url, ts:Date.now() });
+  }
+  state.wire = state.wire.slice(0, 12);
+  save(LS.wire, state.wire);
+  renderWire();
+}
+
+/* ── NORTH STAR ── */
+function renderStar(){
+  const s = state.star;
+  if(!s){ $('#starVal').textContent='—'; $('#starLabel').textContent=''; $('#starSub').textContent='TAP TO SET NORTH STAR'; return; }
+  $('#starVal').textContent = Number(s.value).toLocaleString();
+  $('#starLabel').textContent = ' '+s.label.toUpperCase();
+  $('#starSub').innerHTML = s.target
+    ? 'TARGET <b>'+Number(s.target).toLocaleString()+'</b> · '+Math.round(s.value/s.target*100)+'% THERE'
+    : 'TAP TO UPDATE';
+}
+$('#star').addEventListener('click', () => {
+  const label = prompt('North-star metric label (e.g. SUBS, MRR, USERS):', state.star?.label || 'SUBS');
+  if(label === null) return;
+  const value = prompt('Current value (number):', state.star?.value ?? '0');
+  if(value === null) return;
+  const target = prompt('Target (number, blank for none):', state.star?.target ?? '');
+  state.star = { label: label.trim()||'METRIC', value: Number(String(value).replace(/[^\d.]/g,''))||0, target: Number(String(target).replace(/[^\d.]/g,''))||0 };
+  save(LS.star, state.star); renderStar();
+});
+
+/* ── COMMAND DECK ── */
+const COMMANDS = [
+  { label:'MORNING BRIEF', prompt:'Morning brief: sweep the Brain — open loops first, then active projects and recent decisions. What needs action today? Keep it tight.' },
+  { label:'PLAN TODAY',    prompt:'Plan today. Use open loops and active projects from the Brain. Give me a prioritized hit list, hardest thing first.' },
+  { label:'LOOP SWEEP',    prompt:'Sweep the open loops: which can we close right now, which are blocked (and on what), which are stale enough to kill?' },
+  { label:'MARKET SCAN',   prompt:'Market scan: search the web for anything moving today that touches my projects, positions, or watchlist from the Brain. Cite sources.' },
+  { label:'AI WIRE PULL',  prompt:'Pull today\'s most important AI / tech headlines relevant to my projects. Search the web, cite sources, one line each, then one sentence on what it changes for me.' },
+  { label:'STRESS TEST',   fill:'Stress test this: ' },
+  { label:'WK REVIEW',     prompt:'Weekly review: what shipped, what stalled, what did we decide, and what is next week\'s single priority? Pull from the Brain.' },
+  { label:'BRAIN AUDIT',   prompt:'Audit the Second Brain: duplicates, stale entries, anything mis-filed or missing tags? Propose specific cleanups.' }
+];
+function renderDeck(){
+  $('#deck').innerHTML = COMMANDS.map((c,i)=>'<button class="cmd" data-i="'+i+'">'+c.label+'</button>').join('');
+  $('#deck').querySelectorAll('.cmd').forEach(b => b.addEventListener('click', () => {
+    const c = COMMANDS[+b.dataset.i];
+    if(c.fill){ inputEl.value = c.fill; inputEl.focus(); autoGrow(); refreshStatus(); return; }
+    if(state.busy || !state.key) return;
+    inputEl.value = c.prompt; send();
+  }));
+}
+
+/* ── TRANSCRIPT ── */
+function renderHistory(){
+  chatEl.innerHTML = '';
+  for(const m of state.history){
+    if(m.role === 'user') addLine('user', m.content);
+    else addLine('jarvis', stripMemory(m.content).text, m.spec || 'JARVIS');
+  }
+  scrollDown();
+}
+function greet(){
+  addLine('jarvis', 'Systems online. Brain loaded, command deck armed. What do you need?', 'JARVIS');
+}
+function addLine(who, text, spec){
+  const wrap = document.createElement('div');
+  wrap.className = 'line ' + who;
+  const tag = document.createElement('div');
+  tag.className = 'tag';
+  tag.innerHTML = who==='user' ? '› YOU' : '◆ '+esc(spec||'JARVIS');
+  const txt = document.createElement('div');
+  txt.className = 'txt';
+  txt.innerHTML = fmt(text);
+  wrap.appendChild(tag); wrap.appendChild(txt);
+  chatEl.appendChild(wrap);
+  scrollDown();
+  return { wrap, tag, txt };
+}
+function fmt(t){
+  let s = String(t).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  s = s.replace(/```([\s\S]*?)```/g, (_,c)=>'<pre><code>'+c.replace(/^\n/,'')+'</code></pre>');
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  return s;
+}
+function scrollDown(){ chatEl.scrollTop = chatEl.scrollHeight; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ── MEMORY: injection + extraction ── */
+function memoryContext(){
+  if(!state.brain.length) return '<memory>\n(empty — nothing filed yet)\n</memory>';
+  const lines = state.brain.map(m =>
+    '['+m.type+'] '+m.title+'\n  '+m.body+(m.tags && m.tags.length ? '\n  tags: '+m.tags.join(', ') : '')
+  );
+  return '<memory>\n' + lines.join('\n') + '\n</memory>';
+}
+function stripMemory(raw){
+  const writes = [];
+  const re = /(?:```[\w]*\s*)?MEMORY_WRITE\s*\n([\s\S]*?)(?:```|(?=\nMEMORY_WRITE)|$)/g;
+  let m;
+  while((m = re.exec(raw)) !== null){
+    const w = parseWrite(m[1]);
+    if(w) writes.push(w);
+  }
+  const idx = raw.indexOf('MEMORY_WRITE');
+  let text = idx >= 0 ? raw.slice(0, idx) : raw;
+  text = text.replace(/```[\w]*\s*$/,'').trim();
+  return { text: text || String(raw).trim(), writes };
+}
+function parseWrite(block){
+  const get = (label) => {
+    const r = new RegExp('^\\s*'+label+':\\s*(.+?)\\s*$','mi');
+    const mm = block.match(r);
+    return mm ? mm[1].trim() : '';
+  };
+  const type = get('type').toUpperCase().replace(/[^A-Z_]/g,'');
+  const title = get('title');
+  const body = get('body');
+  let tags = get('tags');
+  if(!type || (!title && !body)) return null;
+  const valid = ['IDEA','PROJECT','DECISION','PERSON','RESOURCE','OPEN_LOOP'];
+  if(!valid.includes(type)) return null;
+  const tagArr = tags ? tags.replace(/[\[\]]/g,'').split(',').map(s=>s.trim()).filter(Boolean) : [];
+  return { type, title: title || '(untitled)', body, tags: tagArr, ts: Date.now() };
+}
+function commitWrites(writes){
+  for(const w of writes){
+    const i = state.brain.findIndex(b => b.type===w.type && b.title.toLowerCase()===w.title.toLowerCase());
+    if(i >= 0) state.brain[i] = w; else state.brain.push(w);
+  }
+  save(LS.brain, state.brain);
+}
+
+/* ── SEND / STREAM ── */
+async function send(){
+  const text = inputEl.value.trim();
+  if(!text || state.busy || !state.key) return;
+  inputEl.value = ''; autoGrow();
+  addLine('user', text);
+  state.history.push({ role:'user', content:text });
+  save(LS.chat, state.history);
+
+  state.busy = true; orbBusy(true); refreshStatus(); renderVitals();
+  const node = addLine('jarvis', '', 'JARVIS');
+  node.txt.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+
+  const channel = state.tts ? 'voice' : 'screen';
+  const scoutNote = state.search
+    ? '[Web search: ENABLED — you have a live web_search tool. Use it for anything time-sensitive, factual, or that you are not certain of, then cite what you used. Never claim you lack web access.]'
+    : '[Web search: DISABLED — you have no live web access this session; flag staleness and name what you would verify rather than guessing.]';
+  const sys = SYSTEM + '\n\n[Active channel: ' + channel + '. ' +
+    (channel==='voice' ? 'Keep reply to 1–3 spoken sentences.' : 'Full detail allowed.') + ']\n' +
+    scoutNote + '\n\n' + memoryContext();
+
+  const msgs = state.history.slice(-24).map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const ctx = { text:'', sources:[], status:'' };
+    const { text: full, sources } = await converse(sys, msgs, node.txt, ctx);
+    const { text: clean, writes } = stripMemory(full);
+    node.txt.innerHTML = fmt(clean || '…');
+    if(sources.length){ node.txt.appendChild(sourcesEl(sources)); pushWire(sources); }
+    const spec = inferSpec(clean);
+    let tagHTML = '◆ '+esc(spec);
+    if(writes.length){ commitWrites(writes); tagHTML += '<span class="chip">🧠 +'+writes.length+' FILED</span>'; }
+    if(sources.length){ tagHTML += '<span class="chip src">🔗 '+sources.length+'</span>'; }
+    node.tag.innerHTML = tagHTML;
+
+    state.history.push({ role:'assistant', content: full, spec });
+    save(LS.chat, state.history);
+    if(state.tts) speak(clean);
+    renderAll();
+    scrollDown();
+  } catch(err){
+    node.txt.innerHTML = '<span style="color:var(--red)">⚠ '+ esc(err.message||'Request failed') +'</span>';
+  } finally {
+    state.busy = false; orbBusy(false); refreshStatus();
+  }
+}
+
+// Newer models get dynamic-filtering web search; older ones the basic variant.
+function webSearchTool(model){
+  const modern = /fable-5|opus-4-8|opus-4-7|opus-4-6|sonnet-5|sonnet-4-6/.test(model);
+  return modern
+    ? { type:'web_search_20260209', name:'web_search', max_uses:5 }
+    : { type:'web_search_20250305', name:'web_search', max_uses:5 };
+}
+
+// Drive one reply, continuing across pause_turn (server-tool iteration cap).
+async function converse(system, messages, txtEl, ctx){
+  let convo = messages.slice();
+  for(let guard=0; guard<4; guard++){
+    const { stopReason, blocks } = await streamOnce(system, convo, txtEl, ctx);
+    if(stopReason === 'pause_turn' && blocks.length){
+      convo = convo.concat([{ role:'assistant', content: blocks }]);
+      continue;
+    }
+    break;
+  }
+  return { text: ctx.text, sources: ctx.sources };
+}
+
+async function streamOnce(system, messages, txtEl, ctx){
+  const body = { model: state.model, max_tokens: 4096, stream: true, system, messages };
+  // Fable 5: thinking is always on — omit the param entirely (explicit configs 400).
+  if(state.think && !/fable-5/.test(state.model)) body.thinking = { type: 'adaptive' };
+  if(state.search) body.tools = [ webSearchTool(state.model) ];
+
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': state.key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify(body)
+  });
+
+  if(!res.ok){
+    let msg = 'HTTP ' + res.status;
+    try { const j = await res.json(); if(j.error?.message) msg = j.error.message; } catch {}
+    if(res.status === 401) msg = 'Invalid API key.';
+    throw new Error(msg);
+  }
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', stopReason = null;
+  const blocks = {}; // index -> content block being assembled
+
+  const render = () => {
+    const disp = stripMemory(ctx.text).text;
+    txtEl.innerHTML =
+      (ctx.status ? '<div class="srch">'+esc(ctx.status)+'</div>' : '') +
+      fmt(disp) + '<span class="typing" style="opacity:.5"><span></span></span>';
+    scrollDown();
+  };
+
+  while(true){
+    const { done, value } = await reader.read();
+    if(done) break;
+    buf += dec.decode(value, { stream:true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for(const line of lines){
+      const l = line.trim();
+      if(!l.startsWith('data:')) continue;
+      const data = l.slice(5).trim();
+      if(data === '[DONE]') continue;
+      let ev; try { ev = JSON.parse(data); } catch { continue; }
+
+      if(ev.type === 'content_block_start'){
+        const cb = ev.content_block || {};
+        blocks[ev.index] = cb;
+        if(cb.type === 'server_tool_use' && cb.name === 'web_search'){
+          cb._pj = ''; ctx.status = '🔍 SCOUT · searching the web…'; render();
+        } else if(cb.type === 'web_search_tool_result'){
+          const c = cb.content;
+          if(Array.isArray(c)){
+            for(const r of c){
+              if(r && r.type === 'web_search_result' && r.url && !ctx.sources.some(s=>s.url===r.url))
+                ctx.sources.push({ title: r.title || r.url, url: r.url });
+            }
+            ctx.status = '🔍 SCOUT · read ' + ctx.sources.length + ' source' + (ctx.sources.length===1?'':'s');
+          } else {
+            ctx.status = '🔍 SCOUT · search unavailable';
+          }
+          render();
+        }
+      } else if(ev.type === 'content_block_delta'){
+        const d = ev.delta || {}; const b = blocks[ev.index];
+        if(d.type === 'text_delta'){
+          if(b) b.text = (b.text||'') + d.text;
+          ctx.text += d.text; ctx.status = ''; render();
+        } else if(d.type === 'input_json_delta' && b){
+          b._pj = (b._pj||'') + (d.partial_json||'');
+        } else if(d.type === 'citations_delta' && b){
+          (b.citations = b.citations || []).push(d.citation);
+        }
+      } else if(ev.type === 'content_block_stop'){
+        const b = blocks[ev.index];
+        if(b && b.type === 'server_tool_use'){
+          try { b.input = JSON.parse(b._pj || '{}'); } catch { b.input = {}; }
+          delete b._pj;
+          if(b.input && b.input.query){ ctx.status = '🔍 SCOUT · searching: ' + b.input.query; render(); }
+        }
+      } else if(ev.type === 'message_delta'){
+        if(ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason;
+      }
+    }
+  }
+
+  // Assemble a clean assistant-content array, in case we must resend on pause_turn.
+  const clean = [];
+  for(const k of Object.keys(blocks).sort((a,b)=>a-b)){
+    const b = blocks[k];
+    if(b.type === 'text'){
+      const t = { type:'text', text: b.text||'' };
+      if(b.citations && b.citations.length) t.citations = b.citations;
+      clean.push(t);
+    } else if(b.type === 'server_tool_use'){
+      clean.push({ type:'server_tool_use', id:b.id, name:b.name, input:b.input||{} });
+    } else if(b.type === 'web_search_tool_result'){
+      clean.push({ type:'web_search_tool_result', tool_use_id:b.tool_use_id, content:b.content });
+    }
+  }
+  return { stopReason, blocks: clean };
+}
+
+function sourcesEl(sources){
+  const d = document.createElement('div');
+  d.className = 'sources';
+  d.innerHTML = '<div class="slabel">SOURCES</div>' + sources.slice(0,6).map((s,i)=>{
+    let host = ''; try { host = new URL(s.url).hostname.replace(/^www\./,''); } catch {}
+    return '<a href="'+esc(s.url)+'" target="_blank" rel="noopener">' +
+      '<span class="n">'+(i+1)+'.</span><span>'+esc(s.title||host)+
+      (host ? ' <span class="n">'+esc(host)+'</span>' : '')+'</span></a>';
+  }).join('');
+  return d;
+}
+
+// purely cosmetic: guess which specialist voice answered, for the tag line
+function inferSpec(t){
+  const s = String(t).toLowerCase();
+  if(/\b(buy|sell|stock|ticker|market|bull|bear|risk|portfolio|\$[0-9])/.test(s)) return 'ANALYST';
+  if(/```|function|const |def |import |class |api|endpoint|deploy/.test(t)) return 'BUILDER';
+  if(/\b(post|schedule|tiktok|instagram|content|workflow|batch|throughput)/.test(s)) return 'OPERATOR';
+  if(/\b(strateg|positioning|monetiz|go\/no-go|unfair advantage|margin|moat|pricing)/.test(s)) return 'STRATEGIST';
+  if(/\bbrain has nothing|filed|decision recorded|noted/.test(s)) return 'SCRIBE';
+  return 'JARVIS';
+}
+
+/* ── VOICE OUT ── */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const clean = String(text).replace(/```[\s\S]*?```/g,' code block ').replace(/[*`#>]/g,'');
+  const u = new SpeechSynthesisUtterance(clean);
+  u.rate = 1.05; u.pitch = 0.9;
+  u.onstart = () => orbBusy(true);
+  u.onend = () => { if(!state.busy) orbBusy(false); };
+  speechSynthesis.speak(u);
+}
+
+/* ── VOICE IN ── */
+let recog = null, listening = false;
+function initMic(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ micBtn.style.display = 'none'; $('#ioMic').disabled = true; $('#ioMic').textContent = 'MIC N/A'; return; }
+  recog = new SR();
+  recog.continuous = false; recog.interimResults = true; recog.lang = 'en-US';
+  recog.onresult = e => {
+    let t = '';
+    for(let i=e.resultIndex; i<e.results.length; i++) t += e.results[i][0].transcript;
+    inputEl.value = t; autoGrow(); refreshStatus();
+  };
+  recog.onend = () => { listening = false; micBtn.classList.remove('rec'); $('#ioMic').classList.remove('on'); };
+  recog.onerror = () => { listening = false; micBtn.classList.remove('rec'); $('#ioMic').classList.remove('on'); };
+}
+function toggleMic(){
+  if(!recog) return;
+  if(listening){ recog.stop(); return; }
+  try {
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    recog.start(); listening = true; micBtn.classList.add('rec'); $('#ioMic').classList.add('on');
+  } catch {}
+}
+micBtn.addEventListener('click', toggleMic);
+$('#ioMic').addEventListener('click', toggleMic);
+$('#ioTts').addEventListener('click', () => {
+  state.tts = !state.tts; localStorage.setItem(LS.tts, state.tts?'1':'0'); refreshStatus();
+});
+
+/* ── PARTICLE CORE ── */
+const canvas = $('#orb'), g = canvas.getContext('2d');
+let pts = [], pairs = [], angle = 0, busySpeed = 0;
+function initOrb(){
+  const N = 220, R = 1;
+  pts = [];
+  for(let i=0;i<N;i++){
+    // fibonacci sphere
+    const y = 1 - (i / (N-1)) * 2;
+    const r = Math.sqrt(1 - y*y);
+    const th = i * 2.39996323;
+    pts.push({ x: Math.cos(th)*r*R, y: y*R, z: Math.sin(th)*r*R });
+  }
+  // static topology: rigid rotation preserves distances, compute once
+  pairs = [];
+  for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){
+    const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, dz=pts[i].z-pts[j].z;
+    if(dx*dx+dy*dy+dz*dz < 0.09) pairs.push([i,j]);
+  }
+}
+function sizeOrb(){
+  const stage = canvas.parentElement;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width = stage.clientWidth * dpr;
+  canvas.height = stage.clientHeight * dpr;
+}
+function orbBusy(on){ busySpeed = on ? 1 : 0; }
+let curSpeed = 0;
+function drawOrb(){
+  const W = canvas.width, H = canvas.height;
+  if(!W || !H){ requestAnimationFrame(drawOrb); return; }
+  g.clearRect(0,0,W,H);
+  curSpeed += ((busySpeed?0.02:0.004) - curSpeed) * 0.05;
+  angle += curSpeed;
+  const cx = W/2, cy = H*0.44, scale = Math.min(W,H) * 0.46;
+  const ca = Math.cos(angle), sa = Math.sin(angle);
+  const tilt = 0.35, ct = Math.cos(tilt), st = Math.sin(tilt);
+  const proj = pts.map(p => {
+    // rotate Y then tilt X
+    let x = p.x*ca + p.z*sa, z = -p.x*sa + p.z*ca, y = p.y;
+    let y2 = y*ct - z*st, z2 = y*st + z*ct;
+    const d = 1 / (1.8 - z2*0.5);
+    return { sx: cx + x*scale*d, sy: cy + y2*scale*d, depth: (z2+1)/2 };
+  });
+  // links
+  g.lineWidth = 1;
+  for(const [i,j] of pairs){
+    const a = proj[i], b = proj[j];
+    const al = 0.04 + 0.10 * Math.min(a.depth, b.depth) + (busySpeed?0.05:0);
+    g.strokeStyle = 'rgba(169,127,255,'+al.toFixed(3)+')';
+    g.beginPath(); g.moveTo(a.sx,a.sy); g.lineTo(b.sx,b.sy); g.stroke();
+  }
+  // points
+  for(const p of proj){
+    const al = 0.25 + 0.65*p.depth;
+    const sz = (0.8 + 1.6*p.depth) * (window.devicePixelRatio>1?1.5:1);
+    g.fillStyle = 'rgba(200,170,255,'+al.toFixed(3)+')';
+    g.beginPath(); g.arc(p.sx, p.sy, sz, 0, 6.2832); g.fill();
+  }
+  requestAnimationFrame(drawOrb);
+}
+
+/* ── UI PLUMBING ── */
+function autoGrow(){ inputEl.style.height='auto'; inputEl.style.height = Math.min(inputEl.scrollHeight,110)+'px'; }
+inputEl.addEventListener('input', () => { autoGrow(); refreshStatus(); });
+inputEl.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+sendBtn.addEventListener('click', send);
+
+/* ── SETTINGS ── */
+const settingsOverlay = $('#settingsOverlay');
+$('#settingsBtn').addEventListener('click', () => {
+  $('#keyInput').value = state.key;
+  $('#modelSelect').value = state.model;
+  $('#ttsToggle').classList.toggle('on', state.tts);
+  $('#thinkToggle').classList.toggle('on', state.think);
+  $('#searchToggle').classList.toggle('on', state.search);
+  settingsOverlay.classList.add('show');
+});
+$('#closeSettings').addEventListener('click', () => settingsOverlay.classList.remove('show'));
+$('#ttsToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#thinkToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#searchToggle').addEventListener('click', e => e.currentTarget.classList.toggle('on'));
+$('#saveSettings').addEventListener('click', () => {
+  state.key = $('#keyInput').value.trim();
+  state.model = $('#modelSelect').value;
+  state.tts = $('#ttsToggle').classList.contains('on');
+  state.think = $('#thinkToggle').classList.contains('on');
+  state.search = $('#searchToggle').classList.contains('on');
+  localStorage.setItem(LS.key, state.key);
+  localStorage.setItem(LS.model, state.model);
+  localStorage.setItem(LS.tts, state.tts ? '1':'0');
+  localStorage.setItem(LS.think, state.think ? '1':'0');
+  localStorage.setItem(LS.search, state.search ? '1':'0');
+  settingsOverlay.classList.remove('show');
+  refreshStatus();
+});
+
+/* ── BRAIN VAULT ── */
+const brainOverlay = $('#brainOverlay');
+let brainView = 'list', brainQuery = '';
+const TYPE_COLORS = { IDEA:'#b49bff', PROJECT:'#34c8ff', DECISION:'#ffd257', PERSON:'#37e8a3', RESOURCE:'#ff9c5c', OPEN_LOOP:'#ff5c6a' };
+const VALID_TYPES = ['IDEA','PROJECT','DECISION','PERSON','RESOURCE','OPEN_LOOP'];
+
+$('#brainBtn').addEventListener('click', () => { brainOverlay.classList.add('show'); setBrainView(brainView); renderBrain(); });
+$('#closeBrain').addEventListener('click', () => brainOverlay.classList.remove('show'));
+$('#wipeBrain').addEventListener('click', () => {
+  if(confirm('Erase the entire Second Brain? This cannot be undone.')){
+    state.brain = []; save(LS.brain, state.brain); renderBrain(); renderAll();
+  }
+});
+$('#brainSearch').addEventListener('input', e => { brainQuery = e.target.value.toLowerCase(); renderBrain(); });
+$('#viewListBtn').addEventListener('click', () => setBrainView('list'));
+$('#viewGraphBtn').addEventListener('click', () => setBrainView('graph'));
+
+function setBrainView(v){
+  brainView = v;
+  $('#viewListBtn').classList.toggle('active', v==='list');
+  $('#viewGraphBtn').classList.toggle('active', v==='graph');
+  $('#graphWrap').style.display = v==='graph' ? 'block' : 'none';
+  $('#brainList').style.display = v==='list' ? 'block' : 'none';
+  if(v==='graph'){ buildGraph(); startGraph(); }
+}
+
+function matchesQuery(m){
+  if(!brainQuery) return true;
+  return (m.title+' '+(m.body||'')+' '+(m.tags||[]).join(' ')+' '+m.type).toLowerCase().includes(brainQuery);
+}
+
+function renderBrain(){
+  const list = $('#brainList'), count = $('#brainCount');
+  const links = brainEdges(state.brain).length;
+  count.textContent = state.brain.length + (state.brain.length===1?' ENTRY':' ENTRIES') + ' · ' + links + (links===1?' LINK':' LINKS');
+  const pool = state.brain.filter(matchesQuery);
+  if(!pool.length){ list.innerHTML = '<div class="empty">'+(state.brain.length?'NO MATCHES.':'NOTHING FILED YET. AS YOU TALK, JARVIS WRITES DECISIONS, PROJECTS, PEOPLE AND OPEN LOOPS HERE.')+'</div>'; return; }
+  const order = { OPEN_LOOP:0, DECISION:1, PROJECT:2, PERSON:3, IDEA:4, RESOURCE:5 };
+  const sorted = [...pool].sort((a,b)=>(order[a.type]??9)-(order[b.type]??9) || (b.ts||0)-(a.ts||0));
+  list.innerHTML = sorted.map(m => {
+    const i = state.brain.indexOf(m);
+    const body = m.body ? esc(m.body).replace(/\[\[([^\]]+)\]\]/g, '<span style="color:var(--purple)">[[$1]]</span>') : '';
+    return '<div class="mem">'+
+      '<span class="del" data-i="'+i+'">✕</span>'+
+      '<span class="type t-'+m.type+'">'+m.type.replace('_',' ')+'</span>'+
+      '<div class="title">'+esc(m.title)+'</div>'+
+      (body ? '<div class="body">'+body+'</div>' : '')+
+      (m.tags && m.tags.length ? '<div class="tags">'+m.tags.map(t=>'#'+esc(t)).join(' ')+'</div>' : '')+
+      '</div>';
+  }).join('');
+  list.querySelectorAll('.del').forEach(el => el.addEventListener('click', () => {
+    state.brain.splice(+el.dataset.i, 1); save(LS.brain, state.brain); renderBrain(); renderAll();
+    if(brainView==='graph'){ buildGraph(); }
+  }));
+}
+
+/* ── vault graph: wikilinks + shared tags become edges ── */
+function brainEdges(brain){
+  const edges = [], seen = new Set();
+  const titleIdx = {};
+  brain.forEach((m,i)=>{ titleIdx[m.title.trim().toLowerCase()] = i; });
+  const add = (a,b,w) => {
+    if(a===b || a===undefined || b===undefined) return;
+    const k = a<b ? a+'-'+b : b+'-'+a;
+    if(seen.has(k)) return; seen.add(k);
+    edges.push({ a, b, w });
+  };
+  brain.forEach((m,i)=>{
+    const re = /\[\[([^\]]+)\]\]/g; let mm;
+    while((mm = re.exec(m.body||'')) !== null) add(i, titleIdx[mm[1].trim().toLowerCase()], 2);
+    for(let j=i+1;j<brain.length;j++){
+      const shared = (m.tags||[]).filter(t => (brain[j].tags||[]).includes(t));
+      if(shared.length) add(i, j, 1);
+    }
+  });
+  return edges;
+}
+
+let gNodes = [], gEdges = [], gRaf = 0, gSel = -1;
+const gCanvas = $('#graphCanvas');
+const gg = gCanvas.getContext('2d');
+
+function buildGraph(){
+  gSel = -1; $('#gdetail').style.display = 'none';
+  gEdges = brainEdges(state.brain);
+  const deg = state.brain.map(()=>0);
+  gEdges.forEach(e => { deg[e.a]++; deg[e.b]++; });
+  gNodes = state.brain.map((m,i)=>({
+    m, deg: deg[i],
+    x: (Math.random()-0.5)*220, y: (Math.random()-0.5)*150, vx:0, vy:0
+  }));
+}
+
+function sizeGraph(){
+  const w = gCanvas.parentElement.clientWidth, h = gCanvas.parentElement.clientHeight;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  gCanvas.width = w*dpr; gCanvas.height = h*dpr;
+}
+
+function startGraph(){
+  cancelAnimationFrame(gRaf);
+  sizeGraph();
+  const step = () => {
+    if(!brainOverlay.classList.contains('show') || brainView!=='graph'){ gRaf = 0; return; }
+    simGraph(); drawGraph();
+    gRaf = requestAnimationFrame(step);
+  };
+  gRaf = requestAnimationFrame(step);
+}
+
+function simGraph(){
+  const n = gNodes.length;
+  for(let i=0;i<n;i++){
+    const a = gNodes[i];
+    for(let j=i+1;j<n;j++){
+      const b = gNodes[j];
+      let dx = a.x-b.x, dy = a.y-b.y;
+      let d2 = dx*dx+dy*dy; if(d2 < 1) d2 = 1;
+      const f = Math.min(1400/d2, 4);
+      const d = Math.sqrt(d2);
+      dx /= d; dy /= d;
+      a.vx += dx*f; a.vy += dy*f; b.vx -= dx*f; b.vy -= dy*f;
+    }
+    // gravity to center
+    a.vx -= a.x*0.012; a.vy -= a.y*0.012;
+  }
+  for(const e of gEdges){
+    const a = gNodes[e.a], b = gNodes[e.b];
+    const rest = e.w===2 ? 60 : 90;
+    let dx = b.x-a.x, dy = b.y-a.y;
+    const d = Math.max(Math.sqrt(dx*dx+dy*dy), 0.1);
+    const f = (d-rest)*0.02;
+    dx /= d; dy /= d;
+    a.vx += dx*f*d*0.02; a.vy += dy*f*d*0.02;
+    b.vx -= dx*f*d*0.02; b.vy -= dy*f*d*0.02;
+  }
+  for(const p of gNodes){
+    p.vx *= 0.82; p.vy *= 0.82;
+    p.x += p.vx; p.y += p.vy;
+  }
+}
+
+function drawGraph(){
+  const W = gCanvas.width, H = gCanvas.height;
+  gg.clearRect(0,0,W,H);
+  if(!gNodes.length){
+    gg.fillStyle = '#3c3f52'; gg.font = (10*(window.devicePixelRatio||1))+'px monospace';
+    gg.textAlign = 'center'; gg.fillText('VAULT EMPTY — FILE SOMETHING', W/2, H/2);
+    return;
+  }
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const cx = W/2, cy = H/2, s = dpr;
+  // edges
+  for(const e of gEdges){
+    const a = gNodes[e.a], b = gNodes[e.b];
+    gg.strokeStyle = e.w===2 ? 'rgba(169,127,255,0.45)' : 'rgba(169,127,255,0.16)';
+    gg.lineWidth = e.w===2 ? 1.4*s : 1*s;
+    gg.beginPath(); gg.moveTo(cx+a.x*s, cy+a.y*s); gg.lineTo(cx+b.x*s, cy+b.y*s); gg.stroke();
+  }
+  // nodes + labels
+  gg.textAlign = 'center';
+  gNodes.forEach((p,i)=>{
+    const r = (4 + Math.min(p.deg,5)*1.3) * s;
+    const col = TYPE_COLORS[p.m.type] || '#aaa';
+    if(i===gSel){
+      gg.strokeStyle = '#fff'; gg.lineWidth = 1.5*s;
+      gg.beginPath(); gg.arc(cx+p.x*s, cy+p.y*s, r+3*s, 0, 6.2832); gg.stroke();
+    }
+    gg.fillStyle = col;
+    gg.shadowColor = col; gg.shadowBlur = 8*s;
+    gg.beginPath(); gg.arc(cx+p.x*s, cy+p.y*s, r, 0, 6.2832); gg.fill();
+    gg.shadowBlur = 0;
+    gg.fillStyle = 'rgba(216,220,236,0.75)';
+    gg.font = (8.5*s)+'px monospace';
+    const t = p.m.title.length > 16 ? p.m.title.slice(0,15)+'…' : p.m.title;
+    gg.fillText(t, cx+p.x*s, cy+p.y*s + r + 10*s);
+  });
+}
+
+gCanvas.addEventListener('click', e => {
+  const rect = gCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const mx = (e.clientX-rect.left)*dpr, my = (e.clientY-rect.top)*dpr;
+  const cx = gCanvas.width/2, cy = gCanvas.height/2;
+  let best = -1, bd = 24*dpr*24*dpr;
+  gNodes.forEach((p,i)=>{
+    const dx = cx+p.x*dpr-mx, dy = cy+p.y*dpr-my;
+    const d = dx*dx+dy*dy;
+    if(d < bd){ bd = d; best = i; }
+  });
+  gSel = best;
+  const det = $('#gdetail');
+  if(best < 0){ det.style.display = 'none'; return; }
+  const m = gNodes[best].m;
+  det.innerHTML = '<div class="gt">'+esc(m.title)+'</div>'+
+    (m.body ? '<div class="gb">'+esc(m.body)+'</div>' : '')+
+    '<div class="gm" style="color:'+(TYPE_COLORS[m.type]||'#aaa')+'">'+m.type.replace('_',' ')+
+    (m.tags && m.tags.length ? ' · '+m.tags.map(t=>'#'+t).join(' ') : '')+'</div>';
+  det.style.display = 'block';
+});
+
+/* ── manual capture ── */
+$('#capBtn').addEventListener('click', () => {
+  const f = $('#capForm');
+  f.style.display = f.style.display==='none' ? 'grid' : 'none';
+  if(f.style.display==='grid') $('#capTitle').focus();
+});
+$('#capSave').addEventListener('click', () => {
+  const title = $('#capTitle').value.trim();
+  const body = $('#capBody').value.trim();
+  if(!title && !body) return;
+  const tags = $('#capTags').value.replace(/[\[\]#]/g,'').split(',').map(s=>s.trim()).filter(Boolean);
+  commitWrites([{ type: $('#capType').value, title: title||'(untitled)', body, tags, ts: Date.now() }]);
+  $('#capTitle').value = ''; $('#capBody').value = ''; $('#capTags').value = '';
+  $('#capForm').style.display = 'none';
+  renderBrain(); renderAll();
+  if(brainView==='graph') buildGraph();
+});
+
+/* ── export / import (plain markdown — obsidian-friendly) ── */
+function brainToMarkdown(){
+  const d = new Date().toISOString().slice(0,10);
+  let md = '# SECOND BRAIN — exported '+d+'\n\n';
+  for(const m of state.brain){
+    md += '## '+m.title+'\n';
+    md += 'type: '+m.type+'\n';
+    if(m.tags && m.tags.length) md += 'tags: '+m.tags.join(', ')+'\n';
+    md += '\n'+(m.body||'')+'\n\n';
+  }
+  return md;
+}
+$('#exportBtn').addEventListener('click', () => {
+  if(!state.brain.length){ alert('Vault is empty — nothing to export.'); return; }
+  const blob = new Blob([brainToMarkdown()], { type:'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jarvis-brain-'+new Date().toISOString().slice(0,10)+'.md';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+});
+
+function markdownToEntries(md){
+  const out = [];
+  const parts = md.split(/^## /m).slice(1);
+  for(const part of parts){
+    const lines = part.split('\n');
+    const title = (lines.shift()||'').trim();
+    let type = 'IDEA', tags = [], k = 0;
+    // consume metadata lines (type:/tags:/blank) at the top; the rest is body
+    while(k < lines.length){
+      const line = lines[k];
+      const tMatch = line.match(/^type:\s*(.+)$/i);
+      const gMatch = line.match(/^tags:\s*(.+)$/i);
+      if(tMatch){ const t = tMatch[1].trim().toUpperCase().replace(/[^A-Z_]/g,''); if(VALID_TYPES.includes(t)) type = t; k++; continue; }
+      if(gMatch){ tags = gMatch[1].replace(/[\[\]#]/g,'').split(',').map(s=>s.trim()).filter(Boolean); k++; continue; }
+      if(line.trim()===''){ k++; continue; }
+      break;
+    }
+    const body = lines.slice(k).join('\n').trim();
+    if(title) out.push({ type, title, body, tags, ts: Date.now() });
+  }
+  return out;
+}
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let entries = [];
+    const raw = String(rd.result).trim();
+    try {
+      if(raw.startsWith('[') || raw.startsWith('{')){
+        const j = JSON.parse(raw);
+        const arr = Array.isArray(j) ? j : (j.brain || []);
+        entries = arr.filter(m => m && VALID_TYPES.includes(m.type) && m.title)
+                     .map(m => ({ type:m.type, title:String(m.title), body:String(m.body||''), tags:Array.isArray(m.tags)?m.tags:[], ts: m.ts||Date.now() }));
+      } else {
+        entries = markdownToEntries(raw);
+      }
+    } catch(err){ alert('Import failed: '+err.message); return; }
+    if(!entries.length){ alert('No entries found in that file.'); return; }
+    commitWrites(entries);
+    renderBrain(); renderAll();
+    if(brainView==='graph') buildGraph();
+    alert('Imported '+entries.length+' entr'+(entries.length===1?'y':'ies')+' into the vault.');
+  };
+  rd.readAsText(file);
+  e.target.value = '';
+});
+
+[settingsOverlay, brainOverlay].forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('show'); }));
+
+/* ── GO ── */
+function renderAll(){ renderVitals(); renderLoops(); renderWire(); renderStar(); refreshStatus(); }
+initMic();
+initOrb();
+sizeOrb();
+window.addEventListener('resize', sizeOrb);
+drawOrb();
+renderDeck();
+renderHistory();
+renderAll();
+if(!state.history.length) greet();
+autoGrow();
+</script>
+</body>
+</html>
