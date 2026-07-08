@@ -244,6 +244,41 @@
     }
     .banner b { color: #fff; }
 
+    /* ═══ BRAIN VAULT ═══ */
+    .btoolbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .btoolbar input[type=text] {
+      flex: 1 1 140px; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: var(--mono); outline: none;
+    }
+    .btoolbar input[type=text]:focus { border-color: var(--purple); }
+    .bt {
+      border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+      font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; padding: 8px 10px;
+      border-radius: 4px; cursor: pointer;
+    }
+    .bt:hover { color: var(--text); border-color: var(--border2); }
+    .bt.active { color: var(--purple); border-color: var(--purple); }
+    .bt.save { background: var(--purple2); border-color: var(--purple2); color: #fff; }
+    .capform { display: grid; grid-template-columns: 110px 1fr; gap: 6px; margin-bottom: 12px; }
+    .capform input, .capform select {
+      background: var(--bg); border: 1px solid var(--border); color: var(--text);
+      border-radius: 4px; padding: 8px 10px; font-size: 11px; font-family: var(--mono); outline: none;
+    }
+    .capform input:focus, .capform select:focus { border-color: var(--purple); }
+    .capform input[type=text] { grid-column: span 2; }
+    .capform select { grid-column: 1; }
+    .capform .bt.save { grid-column: 2; }
+    #graphWrap { position: relative; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); height: 300px; margin-bottom: 12px; overflow: hidden; }
+    #graphCanvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+    #gdetail {
+      position: absolute; left: 8px; right: 8px; bottom: 8px; display: none;
+      background: rgba(10,10,17,0.92); border: 1px solid var(--border2); border-radius: 5px;
+      padding: 9px 11px; backdrop-filter: blur(6px);
+    }
+    #gdetail .gt { font-size: 11.5px; font-weight: 700; color: #fff; }
+    #gdetail .gb { font-size: 10px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+    #gdetail .gm { font-size: 8.5px; letter-spacing: 1.5px; margin-top: 5px; }
+
     /* ═══ MOBILE ═══ */
     @media (max-width: 940px) {
       body { overflow-y: auto; height: auto; min-height: 100dvh; }
@@ -383,7 +418,30 @@
   <div class="overlay" id="brainOverlay">
     <div class="sheet">
       <h2>SECOND BRAIN</h2>
-      <p class="hint">Everything JARVIS has filed. Decisions, projects, people, open loops — read before every reply, written after anything that matters.</p>
+      <p class="hint">The vault. Plain entries become long-term memory — every note links into a graph JARVIS traverses before answering. No database.</p>
+      <div class="btoolbar">
+        <input type="text" id="brainSearch" placeholder="search the vault…">
+        <button class="bt" id="viewListBtn">LIST</button>
+        <button class="bt" id="viewGraphBtn">GRAPH</button>
+        <button class="bt" id="capBtn">+ CAPTURE</button>
+        <button class="bt" id="exportBtn">EXPORT .MD</button>
+        <button class="bt" id="importBtn">IMPORT</button>
+        <input type="file" id="importFile" accept=".md,.markdown,.txt,.json" hidden>
+      </div>
+      <div class="capform" id="capForm" style="display:none">
+        <select id="capType">
+          <option>IDEA</option><option>PROJECT</option><option>DECISION</option>
+          <option>PERSON</option><option>RESOURCE</option><option>OPEN_LOOP</option>
+        </select>
+        <input type="text" id="capTitle" placeholder="title">
+        <input type="text" id="capBody" placeholder="body — link others with [[Title]]">
+        <input type="text" id="capTags" placeholder="tags, comma, separated">
+        <button class="bt save" id="capSave">FILE IT</button>
+      </div>
+      <div id="graphWrap" style="display:none">
+        <canvas id="graphCanvas"></canvas>
+        <div id="gdetail"></div>
+      </div>
       <div class="braincount" id="brainCount"></div>
       <div id="brainList"></div>
       <div class="btnrow">
@@ -451,6 +509,7 @@ WRITE after any of these occur — emit a MEMORY_WRITE block at the very end of 
 
 Types: IDEA, PROJECT, DECISION, PERSON, RESOURCE, OPEN_LOOP.
 Never store an actual secret/credential — only where it lives.
+Link related entries: inside body you may reference another entry as [[Exact Title]] — these become edges in the operator's brain graph. Use them when a new entry relates to an existing one.
 
 Write format (exactly this shape, fenced or bare, at the very end):
 MEMORY_WRITE
@@ -1031,35 +1090,296 @@ $('#saveSettings').addEventListener('click', () => {
   refreshStatus();
 });
 
-/* ── BRAIN SHEET ── */
+/* ── BRAIN VAULT ── */
 const brainOverlay = $('#brainOverlay');
-$('#brainBtn').addEventListener('click', () => { renderBrain(); brainOverlay.classList.add('show'); });
+let brainView = 'list', brainQuery = '';
+const TYPE_COLORS = { IDEA:'#b49bff', PROJECT:'#34c8ff', DECISION:'#ffd257', PERSON:'#37e8a3', RESOURCE:'#ff9c5c', OPEN_LOOP:'#ff5c6a' };
+const VALID_TYPES = ['IDEA','PROJECT','DECISION','PERSON','RESOURCE','OPEN_LOOP'];
+
+$('#brainBtn').addEventListener('click', () => { brainOverlay.classList.add('show'); setBrainView(brainView); renderBrain(); });
 $('#closeBrain').addEventListener('click', () => brainOverlay.classList.remove('show'));
 $('#wipeBrain').addEventListener('click', () => {
   if(confirm('Erase the entire Second Brain? This cannot be undone.')){
     state.brain = []; save(LS.brain, state.brain); renderBrain(); renderAll();
   }
 });
+$('#brainSearch').addEventListener('input', e => { brainQuery = e.target.value.toLowerCase(); renderBrain(); });
+$('#viewListBtn').addEventListener('click', () => setBrainView('list'));
+$('#viewGraphBtn').addEventListener('click', () => setBrainView('graph'));
+
+function setBrainView(v){
+  brainView = v;
+  $('#viewListBtn').classList.toggle('active', v==='list');
+  $('#viewGraphBtn').classList.toggle('active', v==='graph');
+  $('#graphWrap').style.display = v==='graph' ? 'block' : 'none';
+  $('#brainList').style.display = v==='list' ? 'block' : 'none';
+  if(v==='graph'){ buildGraph(); startGraph(); }
+}
+
+function matchesQuery(m){
+  if(!brainQuery) return true;
+  return (m.title+' '+(m.body||'')+' '+(m.tags||[]).join(' ')+' '+m.type).toLowerCase().includes(brainQuery);
+}
+
 function renderBrain(){
   const list = $('#brainList'), count = $('#brainCount');
-  count.textContent = state.brain.length + (state.brain.length===1?' ENTRY':' ENTRIES');
-  if(!state.brain.length){ list.innerHTML = '<div class="empty">NOTHING FILED YET. AS YOU TALK, JARVIS WRITES DECISIONS, PROJECTS, PEOPLE AND OPEN LOOPS HERE.</div>'; return; }
+  const links = brainEdges(state.brain).length;
+  count.textContent = state.brain.length + (state.brain.length===1?' ENTRY':' ENTRIES') + ' · ' + links + (links===1?' LINK':' LINKS');
+  const pool = state.brain.filter(matchesQuery);
+  if(!pool.length){ list.innerHTML = '<div class="empty">'+(state.brain.length?'NO MATCHES.':'NOTHING FILED YET. AS YOU TALK, JARVIS WRITES DECISIONS, PROJECTS, PEOPLE AND OPEN LOOPS HERE.')+'</div>'; return; }
   const order = { OPEN_LOOP:0, DECISION:1, PROJECT:2, PERSON:3, IDEA:4, RESOURCE:5 };
-  const sorted = [...state.brain].sort((a,b)=>(order[a.type]??9)-(order[b.type]??9) || (b.ts||0)-(a.ts||0));
+  const sorted = [...pool].sort((a,b)=>(order[a.type]??9)-(order[b.type]??9) || (b.ts||0)-(a.ts||0));
   list.innerHTML = sorted.map(m => {
     const i = state.brain.indexOf(m);
+    const body = m.body ? esc(m.body).replace(/\[\[([^\]]+)\]\]/g, '<span style="color:var(--purple)">[[$1]]</span>') : '';
     return '<div class="mem">'+
       '<span class="del" data-i="'+i+'">✕</span>'+
       '<span class="type t-'+m.type+'">'+m.type.replace('_',' ')+'</span>'+
       '<div class="title">'+esc(m.title)+'</div>'+
-      (m.body ? '<div class="body">'+esc(m.body)+'</div>' : '')+
+      (body ? '<div class="body">'+body+'</div>' : '')+
       (m.tags && m.tags.length ? '<div class="tags">'+m.tags.map(t=>'#'+esc(t)).join(' ')+'</div>' : '')+
       '</div>';
   }).join('');
   list.querySelectorAll('.del').forEach(el => el.addEventListener('click', () => {
     state.brain.splice(+el.dataset.i, 1); save(LS.brain, state.brain); renderBrain(); renderAll();
+    if(brainView==='graph'){ buildGraph(); }
   }));
 }
+
+/* ── vault graph: wikilinks + shared tags become edges ── */
+function brainEdges(brain){
+  const edges = [], seen = new Set();
+  const titleIdx = {};
+  brain.forEach((m,i)=>{ titleIdx[m.title.trim().toLowerCase()] = i; });
+  const add = (a,b,w) => {
+    if(a===b || a===undefined || b===undefined) return;
+    const k = a<b ? a+'-'+b : b+'-'+a;
+    if(seen.has(k)) return; seen.add(k);
+    edges.push({ a, b, w });
+  };
+  brain.forEach((m,i)=>{
+    const re = /\[\[([^\]]+)\]\]/g; let mm;
+    while((mm = re.exec(m.body||'')) !== null) add(i, titleIdx[mm[1].trim().toLowerCase()], 2);
+    for(let j=i+1;j<brain.length;j++){
+      const shared = (m.tags||[]).filter(t => (brain[j].tags||[]).includes(t));
+      if(shared.length) add(i, j, 1);
+    }
+  });
+  return edges;
+}
+
+let gNodes = [], gEdges = [], gRaf = 0, gSel = -1;
+const gCanvas = $('#graphCanvas');
+const gg = gCanvas.getContext('2d');
+
+function buildGraph(){
+  gSel = -1; $('#gdetail').style.display = 'none';
+  gEdges = brainEdges(state.brain);
+  const deg = state.brain.map(()=>0);
+  gEdges.forEach(e => { deg[e.a]++; deg[e.b]++; });
+  gNodes = state.brain.map((m,i)=>({
+    m, deg: deg[i],
+    x: (Math.random()-0.5)*220, y: (Math.random()-0.5)*150, vx:0, vy:0
+  }));
+}
+
+function sizeGraph(){
+  const w = gCanvas.parentElement.clientWidth, h = gCanvas.parentElement.clientHeight;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  gCanvas.width = w*dpr; gCanvas.height = h*dpr;
+}
+
+function startGraph(){
+  cancelAnimationFrame(gRaf);
+  sizeGraph();
+  const step = () => {
+    if(!brainOverlay.classList.contains('show') || brainView!=='graph'){ gRaf = 0; return; }
+    simGraph(); drawGraph();
+    gRaf = requestAnimationFrame(step);
+  };
+  gRaf = requestAnimationFrame(step);
+}
+
+function simGraph(){
+  const n = gNodes.length;
+  for(let i=0;i<n;i++){
+    const a = gNodes[i];
+    for(let j=i+1;j<n;j++){
+      const b = gNodes[j];
+      let dx = a.x-b.x, dy = a.y-b.y;
+      let d2 = dx*dx+dy*dy; if(d2 < 1) d2 = 1;
+      const f = Math.min(1400/d2, 4);
+      const d = Math.sqrt(d2);
+      dx /= d; dy /= d;
+      a.vx += dx*f; a.vy += dy*f; b.vx -= dx*f; b.vy -= dy*f;
+    }
+    // gravity to center
+    a.vx -= a.x*0.012; a.vy -= a.y*0.012;
+  }
+  for(const e of gEdges){
+    const a = gNodes[e.a], b = gNodes[e.b];
+    const rest = e.w===2 ? 60 : 90;
+    let dx = b.x-a.x, dy = b.y-a.y;
+    const d = Math.max(Math.sqrt(dx*dx+dy*dy), 0.1);
+    const f = (d-rest)*0.02;
+    dx /= d; dy /= d;
+    a.vx += dx*f*d*0.02; a.vy += dy*f*d*0.02;
+    b.vx -= dx*f*d*0.02; b.vy -= dy*f*d*0.02;
+  }
+  for(const p of gNodes){
+    p.vx *= 0.82; p.vy *= 0.82;
+    p.x += p.vx; p.y += p.vy;
+  }
+}
+
+function drawGraph(){
+  const W = gCanvas.width, H = gCanvas.height;
+  gg.clearRect(0,0,W,H);
+  if(!gNodes.length){
+    gg.fillStyle = '#3c3f52'; gg.font = (10*(window.devicePixelRatio||1))+'px monospace';
+    gg.textAlign = 'center'; gg.fillText('VAULT EMPTY — FILE SOMETHING', W/2, H/2);
+    return;
+  }
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const cx = W/2, cy = H/2, s = dpr;
+  // edges
+  for(const e of gEdges){
+    const a = gNodes[e.a], b = gNodes[e.b];
+    gg.strokeStyle = e.w===2 ? 'rgba(169,127,255,0.45)' : 'rgba(169,127,255,0.16)';
+    gg.lineWidth = e.w===2 ? 1.4*s : 1*s;
+    gg.beginPath(); gg.moveTo(cx+a.x*s, cy+a.y*s); gg.lineTo(cx+b.x*s, cy+b.y*s); gg.stroke();
+  }
+  // nodes + labels
+  gg.textAlign = 'center';
+  gNodes.forEach((p,i)=>{
+    const r = (4 + Math.min(p.deg,5)*1.3) * s;
+    const col = TYPE_COLORS[p.m.type] || '#aaa';
+    if(i===gSel){
+      gg.strokeStyle = '#fff'; gg.lineWidth = 1.5*s;
+      gg.beginPath(); gg.arc(cx+p.x*s, cy+p.y*s, r+3*s, 0, 6.2832); gg.stroke();
+    }
+    gg.fillStyle = col;
+    gg.shadowColor = col; gg.shadowBlur = 8*s;
+    gg.beginPath(); gg.arc(cx+p.x*s, cy+p.y*s, r, 0, 6.2832); gg.fill();
+    gg.shadowBlur = 0;
+    gg.fillStyle = 'rgba(216,220,236,0.75)';
+    gg.font = (8.5*s)+'px monospace';
+    const t = p.m.title.length > 16 ? p.m.title.slice(0,15)+'…' : p.m.title;
+    gg.fillText(t, cx+p.x*s, cy+p.y*s + r + 10*s);
+  });
+}
+
+gCanvas.addEventListener('click', e => {
+  const rect = gCanvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const mx = (e.clientX-rect.left)*dpr, my = (e.clientY-rect.top)*dpr;
+  const cx = gCanvas.width/2, cy = gCanvas.height/2;
+  let best = -1, bd = 24*dpr*24*dpr;
+  gNodes.forEach((p,i)=>{
+    const dx = cx+p.x*dpr-mx, dy = cy+p.y*dpr-my;
+    const d = dx*dx+dy*dy;
+    if(d < bd){ bd = d; best = i; }
+  });
+  gSel = best;
+  const det = $('#gdetail');
+  if(best < 0){ det.style.display = 'none'; return; }
+  const m = gNodes[best].m;
+  det.innerHTML = '<div class="gt">'+esc(m.title)+'</div>'+
+    (m.body ? '<div class="gb">'+esc(m.body)+'</div>' : '')+
+    '<div class="gm" style="color:'+(TYPE_COLORS[m.type]||'#aaa')+'">'+m.type.replace('_',' ')+
+    (m.tags && m.tags.length ? ' · '+m.tags.map(t=>'#'+t).join(' ') : '')+'</div>';
+  det.style.display = 'block';
+});
+
+/* ── manual capture ── */
+$('#capBtn').addEventListener('click', () => {
+  const f = $('#capForm');
+  f.style.display = f.style.display==='none' ? 'grid' : 'none';
+  if(f.style.display==='grid') $('#capTitle').focus();
+});
+$('#capSave').addEventListener('click', () => {
+  const title = $('#capTitle').value.trim();
+  const body = $('#capBody').value.trim();
+  if(!title && !body) return;
+  const tags = $('#capTags').value.replace(/[\[\]#]/g,'').split(',').map(s=>s.trim()).filter(Boolean);
+  commitWrites([{ type: $('#capType').value, title: title||'(untitled)', body, tags, ts: Date.now() }]);
+  $('#capTitle').value = ''; $('#capBody').value = ''; $('#capTags').value = '';
+  $('#capForm').style.display = 'none';
+  renderBrain(); renderAll();
+  if(brainView==='graph') buildGraph();
+});
+
+/* ── export / import (plain markdown — obsidian-friendly) ── */
+function brainToMarkdown(){
+  const d = new Date().toISOString().slice(0,10);
+  let md = '# SECOND BRAIN — exported '+d+'\n\n';
+  for(const m of state.brain){
+    md += '## '+m.title+'\n';
+    md += 'type: '+m.type+'\n';
+    if(m.tags && m.tags.length) md += 'tags: '+m.tags.join(', ')+'\n';
+    md += '\n'+(m.body||'')+'\n\n';
+  }
+  return md;
+}
+$('#exportBtn').addEventListener('click', () => {
+  if(!state.brain.length){ alert('Vault is empty — nothing to export.'); return; }
+  const blob = new Blob([brainToMarkdown()], { type:'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jarvis-brain-'+new Date().toISOString().slice(0,10)+'.md';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+});
+
+function markdownToEntries(md){
+  const out = [];
+  const parts = md.split(/^## /m).slice(1);
+  for(const part of parts){
+    const lines = part.split('\n');
+    const title = (lines.shift()||'').trim();
+    let type = 'IDEA', tags = [], k = 0;
+    // consume metadata lines (type:/tags:/blank) at the top; the rest is body
+    while(k < lines.length){
+      const line = lines[k];
+      const tMatch = line.match(/^type:\s*(.+)$/i);
+      const gMatch = line.match(/^tags:\s*(.+)$/i);
+      if(tMatch){ const t = tMatch[1].trim().toUpperCase().replace(/[^A-Z_]/g,''); if(VALID_TYPES.includes(t)) type = t; k++; continue; }
+      if(gMatch){ tags = gMatch[1].replace(/[\[\]#]/g,'').split(',').map(s=>s.trim()).filter(Boolean); k++; continue; }
+      if(line.trim()===''){ k++; continue; }
+      break;
+    }
+    const body = lines.slice(k).join('\n').trim();
+    if(title) out.push({ type, title, body, tags, ts: Date.now() });
+  }
+  return out;
+}
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let entries = [];
+    const raw = String(rd.result).trim();
+    try {
+      if(raw.startsWith('[') || raw.startsWith('{')){
+        const j = JSON.parse(raw);
+        const arr = Array.isArray(j) ? j : (j.brain || []);
+        entries = arr.filter(m => m && VALID_TYPES.includes(m.type) && m.title)
+                     .map(m => ({ type:m.type, title:String(m.title), body:String(m.body||''), tags:Array.isArray(m.tags)?m.tags:[], ts: m.ts||Date.now() }));
+      } else {
+        entries = markdownToEntries(raw);
+      }
+    } catch(err){ alert('Import failed: '+err.message); return; }
+    if(!entries.length){ alert('No entries found in that file.'); return; }
+    commitWrites(entries);
+    renderBrain(); renderAll();
+    if(brainView==='graph') buildGraph();
+    alert('Imported '+entries.length+' entr'+(entries.length===1?'y':'ies')+' into the vault.');
+  };
+  rd.readAsText(file);
+  e.target.value = '';
+});
 
 [settingsOverlay, brainOverlay].forEach(o => o.addEventListener('click', e => { if(e.target===o) o.classList.remove('show'); }));
 
