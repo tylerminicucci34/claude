@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Stock Analysis</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: radial-gradient(ellipse at top, #101812 0%, #08080d 70%);
+      color: #f0f0f0;
+      min-height: 100dvh;
+      padding: 24px 16px 64px;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    .back { display: inline-block; color: #666; text-decoration: none; font-size: 14px; margin-bottom: 20px; }
+    .back:hover { color: #2ecc71; }
+    header { text-align: center; margin-bottom: 32px; }
+    header .icon { font-size: 56px; }
+    header h1 {
+      font-size: 34px; font-weight: 900; letter-spacing: -1px; margin-top: 8px;
+      background: linear-gradient(135deg, #2ecc71, #a8e6c1);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    header p { color: #888; font-size: 15px; margin-top: 8px; line-height: 1.5; }
+    .card {
+      background: linear-gradient(135deg, #131a15 0%, #0e0e14 100%);
+      border: 1px solid #223328; border-radius: 18px;
+      padding: 24px; margin-bottom: 20px;
+    }
+    .card h2 { font-size: 16px; font-weight: 800; margin-bottom: 14px; color: #a8e6c1; }
+    .modes { display: flex; gap: 10px; margin-bottom: 16px; }
+    .modes button {
+      flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #26263a;
+      background: #14141c; color: #999; font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .modes button.active { background: rgba(46,204,113,0.13); border-color: rgba(46,204,113,0.5); color: #2ecc71; }
+    label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
+    input[type="text"] {
+      width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #26263a;
+      background: #0c0c12; color: #f0f0f0; font-size: 16px; text-transform: uppercase;
+    }
+    input[type="text"]::placeholder { text-transform: none; color: #555; }
+    input[type="text"]:focus { outline: none; border-color: rgba(46,204,113,0.6); }
+    .go {
+      width: 100%; margin-top: 14px; padding: 14px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #2ecc71, #1f9d55); color: #06130a;
+      font-size: 16px; font-weight: 800; cursor: pointer;
+    }
+    .go:active { transform: scale(0.99); }
+    .hint { font-size: 12.5px; color: #666; margin-top: 10px; line-height: 1.5; }
+    #output { display: none; }
+    #output textarea {
+      width: 100%; height: 220px; resize: vertical; padding: 14px; border-radius: 12px;
+      border: 1px solid #26263a; background: #0c0c12; color: #bbb;
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .row { display: flex; gap: 10px; margin-top: 12px; }
+    .row button, .row a {
+      flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(46,204,113,0.4);
+      background: rgba(46,204,113,0.1); color: #2ecc71; font-size: 14px; font-weight: 700;
+      cursor: pointer; text-align: center; text-decoration: none;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid #1d2b22; }
+    th { color: #7aa88b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td.max { color: #2ecc71; font-weight: 700; white-space: nowrap; }
+    .bands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .band { border-radius: 12px; padding: 12px; text-align: center; font-size: 13px; font-weight: 700; }
+    .band span { display: block; font-size: 11.5px; font-weight: 500; margin-top: 4px; opacity: 0.75; }
+    .band.buy   { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35); }
+    .band.watch { background: rgba(241,196,15,0.10); color: #f1c40f; border: 1px solid rgba(241,196,15,0.3); }
+    .band.avoid { background: rgba(231,76,60,0.10);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+    ul.rules { list-style: none; }
+    ul.rules li { font-size: 13.5px; color: #aaa; line-height: 1.6; padding-left: 20px; position: relative; margin-bottom: 8px; }
+    ul.rules li::before { content: "▸"; position: absolute; left: 4px; color: #2ecc71; }
+    .footer { text-align: center; color: #555; font-size: 12px; margin-top: 36px; line-height: 1.6; }
+    @media (max-width: 560px) { .bands { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="../index.html">← My Apps</a>
+
+    <header>
+      <div class="icon">📊</div>
+      <h1>Stock Analysis</h1>
+      <p>Think like a business owner buying a piece of a company to hold 5–10 years.<br>
+         Price is what the market assigns; value is what the business is worth.</p>
+    </header>
+
+    <div class="card">
+      <h2>Run an analysis</h2>
+      <div class="modes">
+        <button id="mode-single" class="active" onclick="setMode('single')">Single Ticker</button>
+        <button id="mode-watchlist" onclick="setMode('watchlist')">Watchlist Rank</button>
+      </div>
+      <label id="input-label" for="tickers">Ticker</label>
+      <input type="text" id="tickers" placeholder="e.g. RKLB" autocomplete="off">
+      <button class="go" onclick="generate()">Build Analysis Prompt</button>
+      <p class="hint">This builds the full analyst prompt — framework, data rules, scoring rubric, and your
+         ticker(s). Copy it into Claude (with web search on) to run the analysis against current filings and prices.</p>
+    </div>
+
+    <div class="card" id="output">
+      <h2 id="output-title">Your analysis prompt</h2>
+      <textarea id="prompt-text" readonly></textarea>
+      <div class="row">
+        <button onclick="copyPrompt()" id="copy-btn">Copy Prompt</button>
+        <a href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Scoring rubric — 0 to 100</h2>
+      <table>
+        <tr><th>Component</th><th>Max</th><th>What it measures</th></tr>
+        <tr><td>Business Quality</td><td class="max">25</td><td>Moat, competitive position, revenue durability, unit economics trend</td></tr>
+        <tr><td>Financial Health</td><td class="max">25</td><td>Cash vs. debt, FCF trajectory, burn rate, survivability without dilution</td></tr>
+        <tr><td>Valuation</td><td class="max">20</td><td>Price vs. reasonable value range; what growth is already priced in</td></tr>
+        <tr><td>Hype vs. Reality</td><td class="max">15</td><td>Fundamentals or narrative? Does the thesis survive a 40% drop?</td></tr>
+        <tr><td>Risk Profile</td><td class="max">15</td><td>Severity and probability of the 3–6 biggest real risks</td></tr>
+      </table>
+      <div class="bands">
+        <div class="band buy">75–100 · BUY-CASE<span>Strong business, reasonable price, clear 5-year thesis</span></div>
+        <div class="band watch">50–74 · WATCH-CASE<span>Good business, but too expensive or something needs proving</span></div>
+        <div class="band avoid">0–49 · AVOID-CASE<span>Broken business, unreasonable valuation, or risk outweighs reward</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Data rules — non-negotiable</h2>
+      <ul class="rules">
+        <li>All financial figures come from the company's own filings, earnings releases, and IR pages — never news articles.</li>
+        <li>Every number gets a source and period label (e.g. "Q1 FY26, 10-Q filed 2026-05-08").</li>
+        <li>Anything unverifiable is marked <strong>[UNVERIFIED]</strong> and excluded from scoring.</li>
+        <li>Every risk ends with a concrete, checkable sell trigger — never "if things deteriorate."</li>
+        <li>A falling price is not a sell signal; if the business isn't broken, it may be a reason to buy more.</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      Analysis framework, not personalized financial advice.<br>
+      Full system prompt lives in <code>stock-analyst/SYSTEM_PROMPT.md</code>.
+    </div>
+  </div>
+
+  <script>
+    let mode = 'single';
+
+    const FRAMEWORK_URL = './SYSTEM_PROMPT.md';
+    let frameworkText = null;
+
+    fetch(FRAMEWORK_URL)
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then(t => { frameworkText = t; })
+      .catch(() => { frameworkText = null; });
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('mode-single').classList.toggle('active', m === 'single');
+      document.getElementById('mode-watchlist').classList.toggle('active', m === 'watchlist');
+      document.getElementById('input-label').textContent = m === 'single' ? 'Ticker' : 'Watchlist (comma-separated)';
+      document.getElementById('tickers').placeholder = m === 'single' ? 'e.g. RKLB' : 'e.g. RKLB, ASTS, IONQ, NVDA';
+    }
+
+    function generate() {
+      const raw = document.getElementById('tickers').value.trim();
+      if (!raw) { document.getElementById('tickers').focus(); return; }
+      const tickers = raw.split(/[,\s]+/).filter(Boolean).map(t => t.toUpperCase());
+
+      const request = mode === 'single'
+        ? `Analyze ${tickers[0]} using the full single-ticker output format.`
+        : `Rank my watchlist: ${tickers.join(', ')}. Use the watchlist-rank output format, then the full deep-dive on the #1 name.`;
+
+      const framework = frameworkText ||
+        'Load the Long-Term Owner Stock Analyst framework from stock-analyst/SYSTEM_PROMPT.md in my repo and follow it exactly.';
+
+      document.getElementById('prompt-text').value =
+        framework + '\n\n---\n\nToday’s request: ' + request +
+        '\nUse web search to pull the current price, market cap, and latest official filings before scoring.';
+      document.getElementById('output').style.display = 'block';
+      document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyPrompt() {
+      const ta = document.getElementById('prompt-text');
+      ta.select();
+      navigator.clipboard.writeText(ta.value).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => { btn.textContent = 'Copy Prompt'; }, 1500);
+      });
+    }
+  </script>
+</body>
+</html>
