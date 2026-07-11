@@ -191,10 +191,11 @@
     <h2 style="margin-top:18px">Key numbers (Finnhub, TTM / latest quarter)</h2>
     <table id="r-metrics"></table>
 
-    <button class="primary" id="deep" style="width:100%;margin-top:12px" onclick="runDeepDive()">Full deep-dive analysis →</button>
+    <button class="primary" id="deep" style="width:100%;margin-top:12px" onclick="showDeepDive()">Deep dive — explain this in detail →</button>
     <div id="deepout" class="md" style="display:none"></div>
     <p class="status" id="deepstatus"></p>
-    <p class="hint" style="text-align:center"><a href="#" onclick="copyDeepDive();return false" style="color:#557">or copy the prompt to run it in a Claude chat instead</a></p>
+    <button class="ghost" id="aideep" style="width:100%;display:none;margin-top:10px" onclick="runDeepDive()">Ask Claude for a second opinion →</button>
+    <div id="aiout" class="md" style="display:none"></div>
   </div>
 
   <div class="card" id="rankcard" style="display:none">
@@ -473,6 +474,9 @@ function renderSingle(d) {
 
   document.getElementById('deepout').style.display = 'none';
   document.getElementById('deepout').innerHTML = '';
+  document.getElementById('aiout').style.display = 'none';
+  document.getElementById('aiout').innerHTML = '';
+  document.getElementById('aideep').style.display = 'none';
   document.getElementById('deepstatus').textContent = '';
   document.getElementById('result').style.display = 'block';
   document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
@@ -506,7 +510,118 @@ function renderRank(rows) {
   rc.scrollIntoView({ behavior: 'smooth' });
 }
 
-/* ---------- in-app Claude deep dive ---------- */
+/* ---------- instant in-app deep dive (no key needed) ---------- */
+function showDeepDive() {
+  if (!lastAnalysis) return;
+  const d = lastAnalysis;
+  const res = scoreStock(d.m, d.quote);
+  const out = document.getElementById('deepout');
+  out.innerHTML = mdLite(buildDeepReport(d, res));
+  out.style.display = 'block';
+  if (localStorage.getItem(AKEY)) document.getElementById('aideep').style.display = 'block';
+  out.scrollIntoView({ behavior: 'smooth' });
+}
+
+function buildDeepReport(d, res) {
+  const m = d.m, q = d.quote, p = d.profile;
+  const gm = num(m.grossMarginTTM), om = num(m.operatingMarginTTM), nm = num(m.netProfitMarginTTM);
+  const roe = num(m.roeTTM), grow = num(m.revenueGrowthTTMYoy);
+  const de = num(m['totalDebt/totalEquityQuarterly']), cr = num(m.currentRatioQuarterly);
+  const pe = num(m.peTTM), ps = num(m.psTTM), pfcf = num(m.pfcfShareTTM);
+  const beta = num(m.beta), hi = num(m['52WeekHigh']), lo = num(m['52WeekLow']);
+  const v = verdictOf(res.total);
+  const name = p.name || d.t;
+  const off = (hi && q.c) ? ((hi - q.c) / hi * 100) : null;
+  const S = i => res.parts[i].score != null ? `${res.parts[i].score}/${res.parts[i].max}` : 'not scored (missing data)';
+  const lines = [];
+
+  lines.push(`# ${name} (${d.t}) — Deep Dive`);
+  lines.push(`**${v.label} · ${res.total != null ? res.total + '/100' : 'insufficient data'} · ${v.band}**`);
+
+  lines.push(`## What you own here`);
+  lines.push(`${name} is a ${p.finnhubIndustry ? p.finnhubIndustry.toLowerCase() : ''} company` +
+    (p.marketCapitalization ? ` valued at ${fmtB(p.marketCapitalization)}` : '') +
+    (p.ipo ? `, public since ${p.ipo}` : '') +
+    `. At $${q.c.toFixed(2)}, the stock is ` +
+    (off == null ? 'trading without 52-week context available.' :
+     off < 5 ? `right at its 52-week high of $${hi.toFixed(2)} — expectations are running hot.` :
+     off <= 35 ? `${off.toFixed(0)}% below its 52-week high of $${hi.toFixed(2)} — off the peak but not distressed.` :
+     `${off.toFixed(0)}% below its 52-week high of $${hi.toFixed(2)} — the market has seriously repriced this business. The question is whether the business broke or just the mood.`));
+
+  lines.push(`## Business quality — ${S(0)}`);
+  const gmTxt = gm == null ? 'Gross margin is not reported, which itself is a caution flag.' :
+    gm > 60 ? `A ${gm.toFixed(0)}% gross margin is elite — customers pay far above cost, which usually signals genuine pricing power or a moat.` :
+    gm > 40 ? `A ${gm.toFixed(0)}% gross margin is healthy — solid pricing power, though not monopoly-grade.` :
+    gm > 25 ? `A ${gm.toFixed(0)}% gross margin says this is a competitive business — differentiation is limited and price wars hurt.` :
+    `A ${gm.toFixed(0)}% gross margin is commodity territory — this company largely sells what others also sell.`;
+  const growTxt = grow == null ? '' :
+    grow > 25 ? ` Revenue growing ${grow.toFixed(0)}% a year is genuine hypergrowth — the key question is durability.` :
+    grow > 10 ? ` Revenue growth of ${grow.toFixed(0)}% is solid — compounding, not exploding.` :
+    grow > 0 ? ` Revenue growth of ${grow.toFixed(1)}% is slow — this is a mature business; the return must come from cash generation, not expansion.` :
+    ` Revenue is shrinking (${grow.toFixed(1)}%) — a long-term owner needs a clear reason this reverses.`;
+  const roeTxt = roe == null ? '' :
+    roe > 20 ? ` Return on equity of ${roe.toFixed(0)}% means management turns retained profits into more profits at an excellent rate.` :
+    roe > 0 ? ` Return on equity of ${roe.toFixed(0)}% is acceptable but unremarkable.` :
+    ` Negative return on equity: the business currently destroys shareholder capital rather than compounding it.`;
+  lines.push(gmTxt + growTxt + roeTxt + (res.parts[0].max === 15 ?
+    ' **Note:** this score is capped at 15 because the company has no proven positive free cash flow — the framework refuses to call unproven economics high-quality, no matter how exciting the story.' : ''));
+
+  lines.push(`## Financial health — ${S(1)}`);
+  const deTxt = de == null ? 'Debt levels are unreported.' :
+    de < 0.3 ? `With debt at just ${de.toFixed(2)}x equity, this balance sheet is a fortress — the company controls its own destiny.` :
+    de < 1 ? `Debt of ${de.toFixed(2)}x equity is manageable — leverage exists but isn't in charge.` :
+    de < 2 ? `Debt of ${de.toFixed(2)}x equity is heavy — a downturn or rate spike would squeeze this company before it squeezed its lenders.` :
+    `Debt of ${de.toFixed(2)}x equity means creditors effectively own more of this business than shareholders do. Equity holders get paid last.`;
+  const fcfTxt = pfcf == null ? ' Free cash flow is unreported — treat survivability as unproven.' :
+    pfcf > 0 ? ' The company generates positive free cash flow, meaning it can fund itself without begging markets for money — the single most important survival trait.' :
+    ' Free cash flow is negative: this company consumes cash and must keep raising it through debt or dilution. You are funding the growth, one way or another.';
+  const crTxt = cr == null ? '' : cr < 1 ? ` A current ratio of ${cr.toFixed(2)} means short-term obligations exceed short-term assets — liquidity is tight.` : '';
+  lines.push(deTxt + fcfTxt + crTxt);
+
+  lines.push(`## Valuation — ${S(2)}`);
+  const peTxt = pe == null || pe <= 0 ? 'There is no meaningful P/E because the company has no profits to price — valuation rests entirely on the future.' :
+    pe < 15 ? `At ${pe.toFixed(0)}x earnings, the market expects little — decent results alone could re-rate this stock.` :
+    pe < 25 ? `At ${pe.toFixed(0)}x earnings, this is priced around market-average expectations.` :
+    pe < 45 ? `At ${pe.toFixed(0)}x earnings, the market has already paid for years of strong execution — flawless delivery is the baseline, not the upside.` :
+    `At ${pe.toFixed(0)}x earnings, perfection is priced in. Even good news may not move it; bad news definitely will.`;
+  const psg = (ps != null && grow != null && grow > 0) ? ps / grow : null;
+  const psgTxt = psg == null ? '' :
+    psg < 0.4 ? ` Relative to its growth rate, though, the multiple is actually cheap (${ps.toFixed(1)}x sales against ${grow.toFixed(0)}% growth).` :
+    psg < 1 ? ` Against its ${grow.toFixed(0)}% growth, the ${ps.toFixed(1)}x sales multiple is defensible.` :
+    ` The ${ps.toFixed(1)}x sales multiple is rich for ${grow.toFixed(0)}% growth — growth must accelerate to justify the price.`;
+  lines.push(peTxt + psgTxt);
+
+  lines.push(`## Hype vs reality — ${S(3)}`);
+  const realProfit = nm != null && nm > 0, realFcf = pfcf != null && pfcf > 0;
+  lines.push(realProfit && realFcf ?
+    'This is a real business: actual profits and actual cash flow. If nobody ever talked about this stock again, the fundamentals would still be there. The thesis survives a 40% drop — you would own the same cash machine, cheaper.' :
+    realProfit || realFcf ?
+    'Half proven: the company clears one bar (profits or cash flow) but not both. Some of today\'s price is fundamentals; some is narrative. A 40% drop would test which half you actually own.' :
+    'This is a story stock. No profits, no positive cash flow — the price is a bet on a future that hasn\'t arrived. If the stock dropped 40%, the thesis would rest entirely on your conviction in the narrative, because the numbers wouldn\'t catch you.');
+
+  lines.push(`## Risks and sell triggers — ${S(4)}`);
+  const risks = [];
+  if (de != null && de > 1.5) risks.push(`- **Leverage.** At ${de.toFixed(1)}x equity, debt is the biggest single threat. **What would make you sell:** debt/equity rising further, or any refinancing done at clearly worse terms than the last one.`);
+  if (nm != null && nm < 0) risks.push(`- **No profits.** Losses are tolerable only while shrinking. **What would make you sell:** net margin failing to improve for two consecutive quarters.`);
+  if (pfcf != null && pfcf <= 0) risks.push(`- **Cash burn.** The company needs external money to operate. **What would make you sell:** a dilutive equity raise after a big stock decline — that's funding desperation, and you pay for it.`);
+  if ((pe != null && pe > 45) || (ps != null && ps > 10)) risks.push(`- **Expectations risk.** The multiple assumes sustained excellence. **What would make you sell:** revenue growth decelerating below ${grow != null ? Math.max(5, Math.round(grow / 2)) : 10}% while the valuation stays elevated.`);
+  if (beta != null && beta > 1.8) risks.push(`- **Volatility.** Beta of ${beta.toFixed(1)} means this stock moves nearly twice the market — fine if you won't be shaken out, dangerous if you will. **What would make you sell:** nothing price-based — but don't own it with money you need soon.`);
+  if (cr != null && cr < 1.2) risks.push(`- **Liquidity.** Current ratio of ${cr.toFixed(2)} leaves little short-term cushion. **What would make you sell:** current ratio dropping below 1.0.`);
+  if (gm != null && gm < 25) risks.push(`- **No moat.** Thin gross margins invite competition forever. **What would make you sell:** gross margin compressing below ${Math.max(5, Math.round(gm - 5))}%.`);
+  if (risks.length < 3) risks.push(`- **Execution risk.** Every quarter is a referendum on management. **What would make you sell:** two consecutive quarters missing the company's own guidance.`);
+  if (risks.length < 3) risks.push(`- **Market risk.** A broad de-rating hits every multiple. **What would make you sell:** nothing — if the business stays intact, a market selloff is a buying condition, not a selling one.`);
+  lines.push(risks.join('\n'));
+
+  lines.push(`## What to watch next`);
+  lines.push(`The next quarterly report. Check three numbers against today's baseline: revenue growth (now ${grow != null ? grow.toFixed(0) + '%' : 'unreported'}), ` +
+    `${nm != null ? `net margin (now ${nm.toFixed(1)}%)` : 'whether net margin turns positive'}, and ` +
+    `${de != null ? `debt/equity (now ${de.toFixed(2)})` : 'total debt'}. Re-run this analysis after earnings — the score updates with the data.`);
+  lines.push(`---`);
+  lines.push(`Generated in-app from live Finnhub data (${new Date().toLocaleString()}). Analysis framework, not personalized financial advice.`);
+  return lines.join('\n\n');
+}
+
+/* ---------- optional Claude second opinion ---------- */
 const AKEY = 'stockAnalysisAnthropicKey';
 
 function saveAnthKey() {
@@ -552,19 +667,13 @@ let deepRunning = false;
 async function runDeepDive() {
   if (!lastAnalysis || deepRunning) return;
   const st = document.getElementById('deepstatus');
-  const out = document.getElementById('deepout');
-  const btn = document.getElementById('deep');
+  const out = document.getElementById('aiout');
+  const btn = document.getElementById('aideep');
   const ak = localStorage.getItem(AKEY);
-  if (!ak) {
-    st.textContent = 'Add your Anthropic API key (top card) to run the deep dive in-app.';
-    st.className = 'status err';
-    document.getElementById('keycard').classList.remove('collapsed');
-    document.getElementById('anthkey').focus();
-    return;
-  }
+  if (!ak) return;
 
   deepRunning = true;
-  btn.textContent = 'Analyzing… (streams in below)';
+  btn.textContent = 'Claude is analyzing… (streams in below)';
   out.style.display = 'block'; out.innerHTML = ''; st.textContent = ''; st.className = 'status';
 
   let framework = null;
@@ -629,12 +738,12 @@ async function runDeepDive() {
       }
     }
     if (!text) throw new Error('empty response — try again');
-    st.textContent = 'Analysis complete.'; st.className = 'status ok';
+    st.textContent = 'Second opinion complete.'; st.className = 'status ok';
   } catch (e) {
-    st.textContent = 'Deep dive failed: ' + e.message; st.className = 'status err';
+    st.textContent = 'Claude second opinion failed: ' + e.message; st.className = 'status err';
   } finally {
     deepRunning = false;
-    btn.textContent = 'Full deep-dive analysis →';
+    btn.textContent = 'Ask Claude for a second opinion →';
   }
 }
 
