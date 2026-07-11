@@ -10,191 +10,453 @@
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       background: radial-gradient(ellipse at top, #101812 0%, #08080d 70%);
-      color: #f0f0f0;
-      min-height: 100dvh;
-      padding: 24px 16px 64px;
+      color: #f0f0f0; min-height: 100dvh; padding: 24px 16px 64px;
     }
-    .wrap { max-width: 760px; margin: 0 auto; }
+    .wrap { max-width: 780px; margin: 0 auto; }
     .back { display: inline-block; color: #666; text-decoration: none; font-size: 14px; margin-bottom: 20px; }
     .back:hover { color: #2ecc71; }
-    header { text-align: center; margin-bottom: 32px; }
-    header .icon { font-size: 56px; }
+    header { text-align: center; margin-bottom: 28px; }
+    header .icon { font-size: 52px; }
     header h1 {
-      font-size: 34px; font-weight: 900; letter-spacing: -1px; margin-top: 8px;
+      font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-top: 6px;
       background: linear-gradient(135deg, #2ecc71, #a8e6c1);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    header p { color: #888; font-size: 15px; margin-top: 8px; line-height: 1.5; }
+    header p { color: #888; font-size: 14px; margin-top: 6px; line-height: 1.5; }
     .card {
       background: linear-gradient(135deg, #131a15 0%, #0e0e14 100%);
-      border: 1px solid #223328; border-radius: 18px;
-      padding: 24px; margin-bottom: 20px;
+      border: 1px solid #223328; border-radius: 18px; padding: 22px; margin-bottom: 18px;
     }
-    .card h2 { font-size: 16px; font-weight: 800; margin-bottom: 14px; color: #a8e6c1; }
-    .modes { display: flex; gap: 10px; margin-bottom: 16px; }
+    .card h2 { font-size: 15px; font-weight: 800; margin-bottom: 12px; color: #a8e6c1; }
+    label { display: block; font-size: 12.5px; color: #888; margin-bottom: 6px; }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 13px; border-radius: 12px; border: 1px solid #26263a;
+      background: #0c0c12; color: #f0f0f0; font-size: 15px;
+    }
+    input:focus { outline: none; border-color: rgba(46,204,113,0.6); }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    button.primary {
+      padding: 13px; border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #2ecc71, #1f9d55); color: #06130a;
+      font-size: 15px; font-weight: 800; cursor: pointer;
+    }
+    button.ghost {
+      padding: 13px; border-radius: 12px; border: 1px solid rgba(46,204,113,0.4);
+      background: rgba(46,204,113,0.08); color: #2ecc71; font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    button:active { transform: scale(0.99); }
+    .hint { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.55; }
+    .hint a { color: #2ecc71; }
+    .status { font-size: 12.5px; margin-top: 8px; min-height: 16px; }
+    .status.ok { color: #2ecc71; } .status.err { color: #e74c3c; }
+    #keycard.collapsed .keybody { display: none; }
+    #keycard .keyhead { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    #keycard .keyhead h2 { margin: 0; }
+    #keycard .keyhead .chip { font-size: 11.5px; padding: 4px 10px; border-radius: 20px; }
+    .chip.live { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .chip.missing { background: rgba(231,76,60,0.15); color: #e74c3c; }
+    #result { display: none; }
+    .quote-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+    .quote-head .nm { font-size: 20px; font-weight: 800; }
+    .quote-head .sub { color: #888; font-size: 12.5px; margin-top: 3px; }
+    .quote-head .px { font-size: 30px; font-weight: 900; text-align: right; }
+    .quote-head .chg { font-size: 14px; font-weight: 700; text-align: right; }
+    .up { color: #2ecc71; } .down { color: #e74c3c; }
+    .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #2ecc71; margin-right: 5px; animation: pulse 1.6s infinite; vertical-align: 1px; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+    .verdict {
+      margin-top: 18px; border-radius: 14px; padding: 18px; text-align: center;
+    }
+    .verdict .big { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; }
+    .verdict .score { font-size: 14px; font-weight: 700; opacity: 0.85; margin-top: 4px; }
+    .verdict .why { font-size: 13px; margin-top: 8px; opacity: 0.8; line-height: 1.5; }
+    .verdict.good  { background: rgba(46,204,113,0.13); border: 1px solid rgba(46,204,113,0.45); color: #2ecc71; }
+    .verdict.medium{ background: rgba(241,196,15,0.10); border: 1px solid rgba(241,196,15,0.4); color: #f1c40f; }
+    .verdict.bad   { background: rgba(231,76,60,0.10); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; }
+    .bar-row { margin-bottom: 12px; }
+    .bar-row .t { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+    .bar-row .t b { color: #ddd; } .bar-row .t span { color: #7aa88b; font-weight: 700; }
+    .bar { height: 8px; border-radius: 6px; background: #1a241d; overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #1f9d55, #2ecc71); }
+    .bar-row .j { font-size: 11.5px; color: #777; margin-top: 4px; line-height: 1.45; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    td, th { padding: 8px 6px; border-bottom: 1px solid #1d2b22; text-align: left; }
+    td:last-child { text-align: right; color: #cde5d5; font-variant-numeric: tabular-nums; }
+    th { color: #7aa88b; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .na { color: #665; font-style: italic; }
+    #ranktable td:first-child { font-weight: 800; }
+    .v-good { color: #2ecc71; font-weight: 700; } .v-medium { color: #f1c40f; font-weight: 700; } .v-bad { color: #e74c3c; font-weight: 700; }
+    .footer { text-align: center; color: #555; font-size: 11.5px; margin-top: 32px; line-height: 1.6; }
+    .modes { display: flex; gap: 10px; margin-bottom: 14px; }
     .modes button {
-      flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #26263a;
-      background: #14141c; color: #999; font-size: 14px; font-weight: 700; cursor: pointer;
-      transition: all 0.15s ease;
+      flex: 1; padding: 11px; border-radius: 12px; border: 1px solid #26263a;
+      background: #14141c; color: #999; font-size: 13.5px; font-weight: 700; cursor: pointer;
     }
     .modes button.active { background: rgba(46,204,113,0.13); border-color: rgba(46,204,113,0.5); color: #2ecc71; }
-    label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
-    input[type="text"] {
-      width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #26263a;
-      background: #0c0c12; color: #f0f0f0; font-size: 16px; text-transform: uppercase;
-    }
-    input[type="text"]::placeholder { text-transform: none; color: #555; }
-    input[type="text"]:focus { outline: none; border-color: rgba(46,204,113,0.6); }
-    .go {
-      width: 100%; margin-top: 14px; padding: 14px; border: none; border-radius: 12px;
-      background: linear-gradient(135deg, #2ecc71, #1f9d55); color: #06130a;
-      font-size: 16px; font-weight: 800; cursor: pointer;
-    }
-    .go:active { transform: scale(0.99); }
-    .hint { font-size: 12.5px; color: #666; margin-top: 10px; line-height: 1.5; }
-    #output { display: none; }
-    #output textarea {
-      width: 100%; height: 220px; resize: vertical; padding: 14px; border-radius: 12px;
-      border: 1px solid #26263a; background: #0c0c12; color: #bbb;
-      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-    .row { display: flex; gap: 10px; margin-top: 12px; }
-    .row button, .row a {
-      flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(46,204,113,0.4);
-      background: rgba(46,204,113,0.1); color: #2ecc71; font-size: 14px; font-weight: 700;
-      cursor: pointer; text-align: center; text-decoration: none;
-    }
-    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-    th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid #1d2b22; }
-    th { color: #7aa88b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    td.max { color: #2ecc71; font-weight: 700; white-space: nowrap; }
-    .bands { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-    .band { border-radius: 12px; padding: 12px; text-align: center; font-size: 13px; font-weight: 700; }
-    .band span { display: block; font-size: 11.5px; font-weight: 500; margin-top: 4px; opacity: 0.75; }
-    .band.buy   { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35); }
-    .band.watch { background: rgba(241,196,15,0.10); color: #f1c40f; border: 1px solid rgba(241,196,15,0.3); }
-    .band.avoid { background: rgba(231,76,60,0.10);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
-    ul.rules { list-style: none; }
-    ul.rules li { font-size: 13.5px; color: #aaa; line-height: 1.6; padding-left: 20px; position: relative; margin-bottom: 8px; }
-    ul.rules li::before { content: "▸"; position: absolute; left: 4px; color: #2ecc71; }
-    .footer { text-align: center; color: #555; font-size: 12px; margin-top: 36px; line-height: 1.6; }
-    @media (max-width: 560px) { .bands { grid-template-columns: 1fr; } }
+    #deep { margin-top: 12px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <a class="back" href="../index.html">← My Apps</a>
+<div class="wrap">
+  <a class="back" href="../index.html">← My Apps</a>
 
-    <header>
-      <div class="icon">📊</div>
-      <h1>Stock Analysis</h1>
-      <p>Think like a business owner buying a piece of a company to hold 5–10 years.<br>
-         Price is what the market assigns; value is what the business is worth.</p>
-    </header>
+  <header>
+    <div class="icon">📊</div>
+    <h1>Stock Analysis</h1>
+    <p>Live market data via Finnhub · scored 0–100 by the Long-Term Owner framework<br>
+       <b>Good</b> (75–100 · buy-case) · <b>Medium</b> (50–74 · watch-case) · <b>Bad</b> (0–49 · avoid-case)</p>
+  </header>
 
-    <div class="card">
-      <h2>Run an analysis</h2>
-      <div class="modes">
-        <button id="mode-single" class="active" onclick="setMode('single')">Single Ticker</button>
-        <button id="mode-watchlist" onclick="setMode('watchlist')">Watchlist Rank</button>
+  <div class="card collapsed" id="keycard">
+    <div class="keyhead" onclick="toggleKey()">
+      <h2>🔑 Finnhub API key</h2>
+      <span class="chip missing" id="keychip">not set</span>
+    </div>
+    <div class="keybody">
+      <div class="row" style="margin-top:12px">
+        <input type="password" id="apikey" placeholder="paste your Finnhub key" autocomplete="off">
+        <button class="ghost" style="flex:0 0 110px" onclick="saveKey()">Save & Test</button>
       </div>
-      <label id="input-label" for="tickers">Ticker</label>
-      <input type="text" id="tickers" placeholder="e.g. RKLB" autocomplete="off">
-      <button class="go" onclick="generate()">Build Analysis Prompt</button>
-      <p class="hint">This builds the full analyst prompt — framework, data rules, scoring rubric, and your
-         ticker(s). Copy it into Claude (with web search on) to run the analysis against current filings and prices.</p>
-    </div>
-
-    <div class="card" id="output">
-      <h2 id="output-title">Your analysis prompt</h2>
-      <textarea id="prompt-text" readonly></textarea>
-      <div class="row">
-        <button onclick="copyPrompt()" id="copy-btn">Copy Prompt</button>
-        <a href="https://claude.ai/new" target="_blank" rel="noopener">Open Claude →</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Scoring rubric — 0 to 100</h2>
-      <table>
-        <tr><th>Component</th><th>Max</th><th>What it measures</th></tr>
-        <tr><td>Business Quality</td><td class="max">25</td><td>Moat, competitive position, revenue durability, unit economics trend</td></tr>
-        <tr><td>Financial Health</td><td class="max">25</td><td>Cash vs. debt, FCF trajectory, burn rate, survivability without dilution</td></tr>
-        <tr><td>Valuation</td><td class="max">20</td><td>Price vs. reasonable value range; what growth is already priced in</td></tr>
-        <tr><td>Hype vs. Reality</td><td class="max">15</td><td>Fundamentals or narrative? Does the thesis survive a 40% drop?</td></tr>
-        <tr><td>Risk Profile</td><td class="max">15</td><td>Severity and probability of the 3–6 biggest real risks</td></tr>
-      </table>
-      <div class="bands">
-        <div class="band buy">75–100 · BUY-CASE<span>Strong business, reasonable price, clear 5-year thesis</span></div>
-        <div class="band watch">50–74 · WATCH-CASE<span>Good business, but too expensive or something needs proving</span></div>
-        <div class="band avoid">0–49 · AVOID-CASE<span>Broken business, unreasonable valuation, or risk outweighs reward</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Data rules — non-negotiable</h2>
-      <ul class="rules">
-        <li>All financial figures come from the company's own filings, earnings releases, and IR pages — never news articles.</li>
-        <li>Every number gets a source and period label (e.g. "Q1 FY26, 10-Q filed 2026-05-08").</li>
-        <li>Anything unverifiable is marked <strong>[UNVERIFIED]</strong> and excluded from scoring.</li>
-        <li>Every risk ends with a concrete, checkable sell trigger — never "if things deteriorate."</li>
-        <li>A falling price is not a sell signal; if the business isn't broken, it may be a reason to buy more.</li>
-      </ul>
-    </div>
-
-    <div class="footer">
-      Analysis framework, not personalized financial advice.<br>
-      Full system prompt lives in <code>stock-analyst/SYSTEM_PROMPT.md</code>.
+      <p class="hint">Free key at <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a>.
+        Stored only in this browser (localStorage) — never uploaded anywhere.
+        Free tier: real-time US quotes, company fundamentals, 60 requests/min.</p>
+      <p class="status" id="keystatus"></p>
     </div>
   </div>
 
-  <script>
-    let mode = 'single';
+  <div class="card">
+    <h2>Analyze</h2>
+    <div class="modes">
+      <button id="m-single" class="active" onclick="setMode('single')">Single Ticker</button>
+      <button id="m-watch" onclick="setMode('watch')">Watchlist Rank</button>
+    </div>
+    <div class="row">
+      <input type="text" id="tickers" placeholder="e.g. NVDA" autocomplete="off" style="text-transform:uppercase"
+             onkeydown="if(event.key==='Enter')analyze()">
+      <button class="primary" style="flex:0 0 130px" onclick="analyze()">Analyze</button>
+    </div>
+    <p class="status" id="runstatus"></p>
+  </div>
 
-    const FRAMEWORK_URL = './SYSTEM_PROMPT.md';
-    let frameworkText = null;
+  <div class="card" id="result">
+    <div class="quote-head">
+      <div>
+        <div class="nm" id="r-name">—</div>
+        <div class="sub" id="r-sub">—</div>
+      </div>
+      <div>
+        <div class="px" id="r-price">—</div>
+        <div class="chg" id="r-chg"><span class="live-dot"></span>—</div>
+      </div>
+    </div>
 
-    fetch(FRAMEWORK_URL)
-      .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-      .then(t => { frameworkText = t; })
-      .catch(() => { frameworkText = null; });
+    <div class="verdict" id="r-verdict">
+      <div class="big" id="r-verdict-big">—</div>
+      <div class="score" id="r-verdict-score">—</div>
+      <div class="why" id="r-verdict-why">—</div>
+    </div>
 
-    function setMode(m) {
-      mode = m;
-      document.getElementById('mode-single').classList.toggle('active', m === 'single');
-      document.getElementById('mode-watchlist').classList.toggle('active', m === 'watchlist');
-      document.getElementById('input-label').textContent = m === 'single' ? 'Ticker' : 'Watchlist (comma-separated)';
-      document.getElementById('tickers').placeholder = m === 'single' ? 'e.g. RKLB' : 'e.g. RKLB, ASTS, IONQ, NVDA';
+    <h2 style="margin-top:20px">Score breakdown</h2>
+    <div id="r-bars"></div>
+
+    <h2 style="margin-top:18px">Key numbers (Finnhub, TTM / latest quarter)</h2>
+    <table id="r-metrics"></table>
+
+    <button class="ghost" id="deep" style="width:100%" onclick="copyDeepDive()">Copy full deep-dive prompt for Claude →</button>
+  </div>
+
+  <div class="card" id="rankcard" style="display:none">
+    <h2>Watchlist ranking</h2>
+    <table id="ranktable"></table>
+    <p class="hint">Tap Analyze with a single ticker for the full breakdown of any name.</p>
+  </div>
+
+  <div class="footer">
+    Rubric: Business Quality 25 · Financial Health 25 · Valuation 20 · Hype vs Reality 15 · Risk 15.<br>
+    Pre-FCF companies get a capped Business Quality score — a ceiling for unproven economics, not pessimism.<br>
+    Quotes are real-time and auto-refresh while the page is open. Analysis framework, not personalized financial advice.
+  </div>
+</div>
+
+<script>
+const KEY_NEW = 'stockAnalysisFinnhubKey';
+const KEY_OLD = 'signalScoutFinnhubKey';       // reuse Signal Scout's saved key if present
+const BASE = 'https://finnhub.io/api/v1';
+let mode = 'single';
+let quoteTimer = null;
+let lastAnalysis = null;
+
+function getKey() { return localStorage.getItem(KEY_NEW) || localStorage.getItem(KEY_OLD) || ''; }
+function toggleKey() { document.getElementById('keycard').classList.toggle('collapsed'); }
+
+function refreshKeyChip() {
+  const chip = document.getElementById('keychip');
+  if (getKey()) { chip.textContent = 'key saved'; chip.className = 'chip live'; }
+  else { chip.textContent = 'not set'; chip.className = 'chip missing'; document.getElementById('keycard').classList.remove('collapsed'); }
+}
+
+async function saveKey() {
+  const k = document.getElementById('apikey').value.trim();
+  const st = document.getElementById('keystatus');
+  if (!k) { st.textContent = 'Paste a key first.'; st.className = 'status err'; return; }
+  st.textContent = 'Testing…'; st.className = 'status';
+  try {
+    const q = await fj(`/quote?symbol=AAPL`, k);
+    if (q && q.c) {
+      localStorage.setItem(KEY_NEW, k);
+      st.textContent = `Key works — AAPL quoting at $${q.c}. Saved to this browser.`; st.className = 'status ok';
+      refreshKeyChip(); document.getElementById('keycard').classList.add('collapsed');
+    } else { st.textContent = 'Key rejected by Finnhub — check it and try again.'; st.className = 'status err'; }
+  } catch (e) { st.textContent = 'Could not reach Finnhub: ' + e.message; st.className = 'status err'; }
+}
+
+async function fj(path, key) {
+  const sep = path.includes('?') ? '&' : '?';
+  const r = await fetch(BASE + path + sep + 'token=' + encodeURIComponent(key || getKey()));
+  if (r.status === 401) throw new Error('bad API key');
+  if (r.status === 429) throw new Error('rate limit hit (60/min) — wait a minute');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('m-single').classList.toggle('active', m === 'single');
+  document.getElementById('m-watch').classList.toggle('active', m === 'watch');
+  document.getElementById('tickers').placeholder = m === 'single' ? 'e.g. NVDA' : 'e.g. NVDA, CRWV, RKLB, ASTS';
+}
+
+/* ---------- scoring (Long-Term Owner framework rubric) ---------- */
+const fmtB = v => v == null ? null : (Math.abs(v) >= 1e6 ? '$' + (v/1e6).toFixed(2) + 'T' : Math.abs(v) >= 1e3 ? '$' + (v/1e3).toFixed(1) + 'B' : '$' + v.toFixed(0) + 'M');
+const pct = v => v == null ? null : v.toFixed(1) + '%';
+const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+
+function tier(v, cuts, pts) {           // v >= cuts[i] → pts[i]; else last
+  if (v == null) return null;
+  for (let i = 0; i < cuts.length; i++) if (v >= cuts[i]) return pts[i];
+  return pts[pts.length - 1];
+}
+
+function scoreStock(m, q) {
+  const gm = num(m.grossMarginTTM), om = num(m.operatingMarginTTM), nm = num(m.netProfitMarginTTM);
+  const roe = num(m.roeTTM), grow = num(m.revenueGrowthTTMYoy);
+  const de = num(m['totalDebt/totalEquityQuarterly']), cr = num(m.currentRatioQuarterly);
+  const pe = num(m.peTTM), ps = num(m.psTTM), pfcf = num(m.pfcfShareTTM);
+  const beta = num(m.beta), hi52 = num(m['52WeekHigh']);
+  const fcfPositive = pfcf != null && pfcf > 0;
+  const missing = [];
+
+  // Business Quality (25) — capped at 15 when FCF-negative/unproven
+  let bqMax = 25, bqCapNote = '';
+  if (!fcfPositive) { bqMax = 15; bqCapNote = ' Capped at 15: no positive free cash flow yet — ceiling reflects unproven economics.'; }
+  let bq = 0, bqParts = 0;
+  const bqAdd = (v, cuts, pts, w) => { const s = tier(v, cuts, pts); if (s != null) { bq += s * w; bqParts += w; } };
+  bqAdd(gm,   [60,40,25,10], [1,0.75,0.5,0.25,0], 0.32);
+  bqAdd(om,   [25,15,5,0],   [1,0.75,0.45,0.25,0], 0.28);
+  bqAdd(roe,  [20,10,0],     [1,0.7,0.4,0], 0.2);
+  bqAdd(grow, [25,10,0],     [1,0.7,0.4,0], 0.2);
+  const bqScore = bqParts ? Math.round(bq / bqParts * bqMax) : null;
+  if (bqScore == null) missing.push('margins/growth');
+
+  // Financial Health (25)
+  let fh = 0, fhParts = 0;
+  const fhAdd = (v, cuts, pts, w) => { const s = tier(v, cuts, pts); if (s != null) { fh += s * w; fhParts += w; } };
+  fhAdd(de != null ? -de : null, [-0.3,-0.7,-1.5,-3], [1,0.75,0.5,0.25,0], 0.32); // lower D/E better
+  fhAdd(cr,  [2,1.2,1],  [1,0.8,0.5,0], 0.2);
+  fhAdd(nm,  [15,5,0,-10],[1,0.75,0.5,0.2,0], 0.24);
+  if (pfcf != null) { fh += (fcfPositive ? 1 : 0) * 0.24; fhParts += 0.24; }
+  const fhScore = fhParts ? Math.round(fh / fhParts * 25) : null;
+  if (de == null) missing.push('debt/equity');
+
+  // Valuation (20)
+  let val = 0, valParts = 0;
+  const growAdj = (ps != null && grow != null && grow > 0) ? ps / grow : null;
+  const vAdd = (v, cuts, pts, w) => { const s = tier(v, cuts, pts); if (s != null) { val += s * w; valParts += w; } };
+  vAdd(pe != null && pe > 0 ? -pe : null, [-15,-25,-40,-60], [1,0.8,0.55,0.3,0.1], 0.35);
+  vAdd(ps != null ? -ps : null, [-2,-5,-10,-20], [1,0.75,0.5,0.25,0.1], 0.3);
+  vAdd(growAdj != null ? -growAdj : null, [-0.3,-0.6,-1,-2], [1,0.7,0.5,0.3,0.1], 0.35);
+  const valScore = valParts ? Math.round(val / valParts * 20) : null;
+  if (pe == null && ps == null) missing.push('valuation multiples');
+
+  // Hype vs Reality (15)
+  let hy = 0, hyParts = 0;
+  const real = (nm != null && nm > 0 ? 1 : 0) + (fcfPositive ? 1 : 0);
+  if (nm != null || pfcf != null) { hy += (real === 2 ? 1 : real === 1 ? 0.5 : 0) * 0.4; hyParts += 0.4; }
+  if (beta != null) { hy += tier(-beta, [-1.2,-1.8,-2.5], [1,0.6,0.3,0.1]) * 0.3; hyParts += 0.3; }
+  if (hi52 != null && q && q.c) {
+    const off = (hi52 - q.c) / hi52 * 100;
+    hy += (off >= 10 && off <= 40 ? 1 : off < 10 ? 0.5 : 0.4) * 0.3; hyParts += 0.3;
+  }
+  const hyScore = hyParts ? Math.round(hy / hyParts * 15) : null;
+
+  // Risk (15)
+  let rk = 0, rkParts = 0;
+  if (beta != null) { rk += tier(-beta, [-1,-1.5,-2], [1,0.7,0.4,0.2]) * 0.34; rkParts += 0.34; }
+  if (de != null)   { rk += tier(-de, [-0.5,-1,-2], [1,0.7,0.4,0.1]) * 0.33; rkParts += 0.33; }
+  if (nm != null)   { rk += tier(nm, [10,0,-20], [1,0.7,0.3,0.1]) * 0.33; rkParts += 0.33; }
+  const rkScore = rkParts ? Math.round(rk / rkParts * 15) : null;
+
+  const parts = [
+    { name: 'Business Quality', score: bqScore, max: bqMax,
+      why: `Gross margin ${pct(gm) ?? 'n/a'}, operating margin ${pct(om) ?? 'n/a'}, ROE ${pct(roe) ?? 'n/a'}, revenue growth ${pct(grow) ?? 'n/a'}.` + bqCapNote },
+    { name: 'Financial Health', score: fhScore, max: 25,
+      why: `Debt/equity ${de != null ? de.toFixed(2) : 'n/a'}, current ratio ${cr != null ? cr.toFixed(2) : 'n/a'}, net margin ${pct(nm) ?? 'n/a'}, free cash flow ${fcfPositive ? 'positive' : 'negative or unreported'}.` },
+    { name: 'Valuation', score: valScore, max: 20,
+      why: `P/E ${pe != null ? pe.toFixed(1) : 'n/a'}, P/S ${ps != null ? ps.toFixed(1) : 'n/a'}${growAdj != null ? ', P/S-to-growth ' + growAdj.toFixed(2) : ''}.` },
+    { name: 'Hype vs Reality', score: hyScore, max: 15,
+      why: real === 2 ? 'Backed by real profits and real cash flow — fundamentals, not narrative.'
+         : real === 1 ? 'Partially proven — profitable on one measure but not both.'
+         : 'Story stock: no profits and no positive cash flow yet. Thesis rests on the narrative.' },
+    { name: 'Risk Profile', score: rkScore, max: 15,
+      why: `Beta ${beta != null ? beta.toFixed(2) : 'n/a'}, leverage ${de != null ? de.toFixed(2) + 'x equity' : 'n/a'}, margin cushion ${pct(nm) ?? 'n/a'}.` },
+  ];
+
+  const scored = parts.filter(p => p.score != null);
+  const got = scored.reduce((a, p) => a + p.score, 0);
+  const avail = scored.reduce((a, p) => a + p.max, 0);
+  // Require at least 60 of the 100 rubric points to be computable — thin data
+  // yields "insufficient data", never a fake verdict.
+  const total = avail >= 60 ? Math.round(got / avail * 100) : null;
+  return { total, parts, missing, fcfPositive };
+}
+
+function verdictOf(total) {
+  if (total == null) return { label: 'INSUFFICIENT DATA', cls: 'medium', band: 'not scoreable' };
+  if (total >= 75) return { label: 'GOOD STOCK', cls: 'good', band: 'BUY-CASE · 75–100' };
+  if (total >= 50) return { label: 'MEDIUM STOCK', cls: 'medium', band: 'WATCH-CASE · 50–74' };
+  return { label: 'BAD STOCK', cls: 'bad', band: 'AVOID-CASE · 0–49' };
+}
+
+/* ---------- data fetch + render ---------- */
+async function fetchAll(t) {
+  const [quote, profile, metrics] = await Promise.all([
+    fj(`/quote?symbol=${t}`),
+    fj(`/stock/profile2?symbol=${t}`),
+    fj(`/stock/metric?symbol=${t}&metric=all`),
+  ]);
+  if (!quote || !quote.c) throw new Error(`no data for "${t}" — check the ticker`);
+  return { t, quote, profile: profile || {}, m: (metrics && metrics.metric) || {} };
+}
+
+async function analyze() {
+  const st = document.getElementById('runstatus');
+  if (!getKey()) { st.textContent = 'Set your Finnhub API key first (top card).'; st.className = 'status err';
+    document.getElementById('keycard').classList.remove('collapsed'); return; }
+  const raw = document.getElementById('tickers').value.trim();
+  if (!raw) { document.getElementById('tickers').focus(); return; }
+  const list = [...new Set(raw.split(/[,\s]+/).filter(Boolean).map(x => x.toUpperCase()))];
+  st.textContent = 'Fetching live data…'; st.className = 'status';
+  clearInterval(quoteTimer);
+  try {
+    if (mode === 'single' || list.length === 1) {
+      const d = await fetchAll(list[0]);
+      renderSingle(d);
+      document.getElementById('rankcard').style.display = 'none';
+      st.textContent = '';
+    } else {
+      const rows = [];
+      for (const t of list) {                      // sequential — respects 60/min free tier
+        st.textContent = `Fetching ${t}…`;
+        try { const d = await fetchAll(t); rows.push({ t, d, s: scoreStock(d.m, d.quote) }); }
+        catch (e) { rows.push({ t, err: e.message }); }
+      }
+      renderRank(rows);
+      st.textContent = '';
     }
+  } catch (e) { st.textContent = e.message; st.className = 'status err'; }
+}
 
-    function generate() {
-      const raw = document.getElementById('tickers').value.trim();
-      if (!raw) { document.getElementById('tickers').focus(); return; }
-      const tickers = raw.split(/[,\s]+/).filter(Boolean).map(t => t.toUpperCase());
+function renderSingle(d) {
+  lastAnalysis = d;
+  const { quote: q, profile: p, m } = d;
+  const res = scoreStock(m, q);
+  const v = verdictOf(res.total);
 
-      const request = mode === 'single'
-        ? `Analyze ${tickers[0]} using the full single-ticker output format.`
-        : `Rank my watchlist: ${tickers.join(', ')}. Use the watchlist-rank output format, then the full deep-dive on the #1 name.`;
+  document.getElementById('r-name').textContent = (p.name || d.t) + '  (' + d.t + ')';
+  document.getElementById('r-sub').textContent =
+    [p.finnhubIndustry, p.marketCapitalization ? fmtB(p.marketCapitalization) + ' market cap' : null, p.ipo ? 'IPO ' + p.ipo : null]
+    .filter(Boolean).join(' · ');
+  paintQuote(q);
 
-      const framework = frameworkText ||
-        'Load the Long-Term Owner Stock Analyst framework from stock-analyst/SYSTEM_PROMPT.md in my repo and follow it exactly.';
+  const vd = document.getElementById('r-verdict');
+  vd.className = 'verdict ' + v.cls;
+  document.getElementById('r-verdict-big').textContent = v.label;
+  document.getElementById('r-verdict-score').textContent = res.total != null ? `${res.total}/100 · ${v.band}` : 'not enough reported data to score';
+  document.getElementById('r-verdict-why').textContent =
+    (res.missing.length ? `Missing data excluded from scoring: ${res.missing.join(', ')}. ` : '') +
+    'Score is computed from live Finnhub fundamentals using the Long-Term Owner rubric.';
 
-      document.getElementById('prompt-text').value =
-        framework + '\n\n---\n\nToday’s request: ' + request +
-        '\nUse web search to pull the current price, market cap, and latest official filings before scoring.';
-      document.getElementById('output').style.display = 'block';
-      document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
-    }
+  document.getElementById('r-bars').innerHTML = res.parts.map(pt => pt.score == null ? '' : `
+    <div class="bar-row">
+      <div class="t"><b>${pt.name}</b><span>${pt.score}/${pt.max}</span></div>
+      <div class="bar"><i style="width:${Math.round(pt.score / pt.max * 100)}%"></i></div>
+      <div class="j">${pt.why}</div>
+    </div>`).join('');
 
-    function copyPrompt() {
-      const ta = document.getElementById('prompt-text');
-      ta.select();
-      navigator.clipboard.writeText(ta.value).then(() => {
-        const btn = document.getElementById('copy-btn');
-        btn.textContent = 'Copied ✓';
-        setTimeout(() => { btn.textContent = 'Copy Prompt'; }, 1500);
-      });
-    }
-  </script>
+  const rows = [
+    ['Revenue growth (TTM YoY)', pct(num(m.revenueGrowthTTMYoy))],
+    ['Gross margin (TTM)', pct(num(m.grossMarginTTM))],
+    ['Operating margin (TTM)', pct(num(m.operatingMarginTTM))],
+    ['Net margin (TTM)', pct(num(m.netProfitMarginTTM))],
+    ['Free cash flow', res.fcfPositive ? 'positive' : 'negative / unreported'],
+    ['Debt / equity', num(m['totalDebt/totalEquityQuarterly'])?.toFixed(2)],
+    ['Current ratio', num(m.currentRatioQuarterly)?.toFixed(2)],
+    ['P/E (TTM)', num(m.peTTM)?.toFixed(1)],
+    ['P/S (TTM)', num(m.psTTM)?.toFixed(1)],
+    ['Beta', num(m.beta)?.toFixed(2)],
+    ['52-week range', (num(m['52WeekLow']) != null && num(m['52WeekHigh']) != null) ? `$${m['52WeekLow'].toFixed(2)} – $${m['52WeekHigh'].toFixed(2)}` : null],
+  ];
+  document.getElementById('r-metrics').innerHTML =
+    rows.map(([k, val]) => `<tr><td>${k}</td><td${val == null ? ' class="na"' : ''}>${val ?? 'not reported'}</td></tr>`).join('');
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+
+  quoteTimer = setInterval(async () => {          // real-time refresh while open
+    try { const q2 = await fj(`/quote?symbol=${d.t}`); if (q2 && q2.c) paintQuote(q2); } catch (e) {}
+  }, 15000);
+}
+
+function paintQuote(q) {
+  document.getElementById('r-price').textContent = '$' + q.c.toFixed(2);
+  const el = document.getElementById('r-chg');
+  const up = (q.d ?? 0) >= 0;
+  el.innerHTML = `<span class="live-dot"></span>${up ? '▲' : '▼'} ${Math.abs(q.d ?? 0).toFixed(2)} (${Math.abs(q.dp ?? 0).toFixed(2)}%) today`;
+  el.className = 'chg ' + (up ? 'up' : 'down');
+}
+
+function renderRank(rows) {
+  document.getElementById('result').style.display = 'none';
+  const ok = rows.filter(r => !r.err).sort((a, b) => (b.s.total ?? -1) - (a.s.total ?? -1));
+  const bad = rows.filter(r => r.err);
+  const cls = t => t == null ? 'v-medium' : t >= 75 ? 'v-good' : t >= 50 ? 'v-medium' : 'v-bad';
+  const word = t => t == null ? '—' : t >= 75 ? 'GOOD' : t >= 50 ? 'MEDIUM' : 'BAD';
+  document.getElementById('ranktable').innerHTML =
+    '<tr><th>#</th><th>Ticker</th><th>Price</th><th>Score</th><th>Verdict</th></tr>' +
+    ok.map((r, i) => `<tr><td>${i + 1}</td><td>${r.t}</td><td>$${r.d.quote.c.toFixed(2)}</td>
+      <td>${r.s.total ?? '—'}/100</td><td class="${cls(r.s.total)}">${word(r.s.total)}</td></tr>`).join('') +
+    bad.map(r => `<tr><td>—</td><td>${r.t}</td><td colspan="3" class="na">${r.err}</td></tr>`).join('');
+  const rc = document.getElementById('rankcard');
+  rc.style.display = 'block';
+  rc.scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyDeepDive() {
+  if (!lastAnalysis) return;
+  fetch('./SYSTEM_PROMPT.md').then(r => r.ok ? r.text() : Promise.reject()).catch(() => null).then(fw => {
+    const text = (fw || 'Use the Long-Term Owner Stock Analyst framework from stock-analyst/SYSTEM_PROMPT.md.') +
+      `\n\n---\n\nToday's request: Analyze ${lastAnalysis.t} using the full single-ticker output format. ` +
+      `Use web search to pull the current price, market cap, and latest official filings before scoring.`;
+    navigator.clipboard.writeText(text).then(() => {
+      const b = document.getElementById('deep');
+      b.textContent = 'Copied ✓ — paste into Claude with web search on';
+      setTimeout(() => { b.textContent = 'Copy full deep-dive prompt for Claude →'; }, 2200);
+    });
+  });
+}
+
+refreshKeyChip();
+</script>
 </body>
 </html>
