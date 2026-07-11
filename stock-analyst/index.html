@@ -511,18 +511,45 @@ function renderRank(rows) {
 }
 
 /* ---------- instant in-app deep dive (no key needed) ---------- */
-function showDeepDive() {
+// "What the company does" comes from Wikipedia's free summary API (no key,
+// CORS-enabled). Falls back to the Finnhub industry label if unreachable.
+const descCache = {};
+async function companyDesc(d) {
+  if (d.t in descCache) return descCache[d.t];
+  let desc = null;
+  try {
+    const nm = (d.profile.name || d.t).replace(/\s+(Inc|Corp|Corporation|Ltd|PLC|Co|Company|Holdings|Group)\.?$/i, '');
+    const s = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=1&srsearch='
+      + encodeURIComponent(nm + ' company')).then(r => r.json());
+    const title = s?.query?.search?.[0]?.title;
+    if (title) {
+      const sum = await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title))
+        .then(r => r.ok ? r.json() : null);
+      let ex = sum?.extract || null;
+      if (ex && ex.length > 650) ex = ex.slice(0, 650).replace(/\s+\S*$/, '') + '…';
+      if (ex) desc = ex + ' (Source: Wikipedia)';
+    }
+  } catch (e) {}
+  descCache[d.t] = desc;
+  return desc;
+}
+
+async function showDeepDive() {
   if (!lastAnalysis) return;
   const d = lastAnalysis;
+  const btn = document.getElementById('deep');
+  btn.textContent = 'Building deep dive…';
+  const desc = await companyDesc(d);
+  btn.textContent = 'Deep dive — explain this in detail →';
   const res = scoreStock(d.m, d.quote);
   const out = document.getElementById('deepout');
-  out.innerHTML = mdLite(buildDeepReport(d, res));
+  out.innerHTML = mdLite(buildDeepReport(d, res, desc));
   out.style.display = 'block';
   if (localStorage.getItem(AKEY)) document.getElementById('aideep').style.display = 'block';
   out.scrollIntoView({ behavior: 'smooth' });
 }
 
-function buildDeepReport(d, res) {
+function buildDeepReport(d, res, desc) {
   const m = d.m, q = d.quote, p = d.profile;
   const gm = num(m.grossMarginTTM), om = num(m.operatingMarginTTM), nm = num(m.netProfitMarginTTM);
   const roe = num(m.roeTTM), grow = num(m.revenueGrowthTTMYoy);
@@ -537,6 +564,11 @@ function buildDeepReport(d, res) {
 
   lines.push(`# ${name} (${d.t}) — Deep Dive`);
   lines.push(`**${v.label} · ${res.total != null ? res.total + '/100' : 'insufficient data'} · ${v.band}**`);
+
+  lines.push(`## What the company does`);
+  lines.push(desc ||
+    `${name} operates in the ${p.finnhubIndustry ? p.finnhubIndustry.toLowerCase() : 'unclassified'} industry. ` +
+    `(A fuller business description wasn't reachable right now — the numbers below still tell you how the business behaves.)`);
 
   lines.push(`## What you own here`);
   lines.push(`${name} is a ${p.finnhubIndustry ? p.finnhubIndustry.toLowerCase() : ''} company` +
