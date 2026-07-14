@@ -1,0 +1,101 @@
+{
+  "investors": [
+    {
+      "name": "Warren Buffett \u2014 Berkshire Hathaway",
+      "cik": "0001067983",
+      "filing_date": "2026-05-15",
+      "accession": "0001193125-26-226661",
+      "source": "SEC EDGAR 13F-HR \u2014 Berkshire Hathaway",
+      "holdings": [
+        {
+          "name": "APPLE INC",
+          "value_usd": 57843260493,
+          "ticker": "AAPL"
+        },
+        {
+          "name": "AMERICAN EXPRESS CO",
+          "value_usd": 45859204536,
+          "ticker": "AXP"
+        },
+        {
+          "name": "COCA COLA CO",
+          "value_usd": 30420000000,
+          "ticker": "KO"
+        },
+        {
+          "name": "BANK AMERICA CORP",
+          "value_usd": 25039178044,
+          "ticker": "BAC"
+        },
+        {
+          "name": "CHEVRON CORPORATION",
+          "value_usd": 17457364606,
+          "ticker": "CVX"
+        },
+        {
+          "name": "OCCIDENTAL PETE CORP",
+          "value_usd": 17221193015,
+          "ticker": "OXY"
+        },
+        {
+          "name": "ALPHABET INC",
+          "value_usd": 16628526688,
+          "ticker": "GOOGL"
+        },
+        {
+          "name": "CHUBB LTD SWITZ",
+          "value_usd": 11162836215,
+          "ticker": "CB"
+        },
+        {
+          "name": "MOODYS CORP",
+          "value_usd": 10762190653,
+          "ticker": "MCO"
+        },
+        {
+          "name": "KRAFT HEINZ CO",
+          "value_usd": 7323527057,
+          "ticker": "KHC"
+        }
+      ]
+    }
+  ],
+  "insiders": [
+    {
+      "name": "Elon Musk",
+      "cik": "0001494730",
+      "source": "SEC EDGAR Form 4 filings (CIK 0001494730)",
+      "filings": [
+        {
+          "date": "2026-06-17",
+          "accession": "0001628280-26-044069",
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000162828026044069/"
+        },
+        {
+          "date": "2026-06-17",
+          "accession": "0001104659-26-075213",
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926075213/"
+        },
+        {
+          "date": "2026-04-23",
+          "accession": "0001104659-26-047678",
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926047678/"
+        },
+        {
+          "date": "2025-12-31",
+          "accession": "0001104659-25-125703",
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925125703/"
+        },
+        {
+          "date": "2025-11-10",
+          "accession": "0001104659-25-109263",
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/"
+        }
+      ]
+    }
+  ],
+  "congress": [],
+  "errors": [],
+  "updated_utc": "2026-07-13T10:55:41.906262+00:00",
+  "note": "Seed data copied from brain-trust/holdings.json; scripts/fetch-smart-money.py replaces this on the weekly refresh with Ackman/Burry 13Fs, parsed Form 4 transactions, and House PTRs."
+}

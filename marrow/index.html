@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07090c">
+<title>Marrow — AI Investment Terminal</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #07090c; --panel: #0d1117; --panel2: #12181f; --line: #1e2833;
+  --text: #e8edf2; --dim: #8b98a5; --faint: #566270;
+  --mint: #2de0a5; --mint-dim: rgba(45,224,165,0.14);
+  --red: #ff5c6c; --red-dim: rgba(255,92,108,0.13);
+  --amber: #ffb454; --blue: #58a6ff;
+  --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100dvh;
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1060px; margin: 0 auto; padding: 16px 16px 80px; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; gap: 14px; padding: 6px 0 14px; flex-wrap: wrap; }
+.logo { font-size: 21px; font-weight: 900; letter-spacing: 2.5px; }
+.logo .m { color: var(--mint); }
+.logo small { display: block; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: var(--faint); margin-top: 1px; }
+.tabs { display: flex; gap: 4px; margin-left: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tabs button {
+  border: 0; background: transparent; color: var(--dim); font: inherit; font-size: 13px; font-weight: 700;
+  padding: 8px 14px; border-radius: 9px; cursor: pointer; white-space: nowrap;
+}
+.tabs button.active { background: var(--mint-dim); color: var(--mint); }
+#livebtn {
+  border: 1px solid var(--line); background: var(--panel); color: var(--dim); font: inherit; font-size: 11px;
+  font-weight: 800; letter-spacing: 0.6px; padding: 9px 13px; border-radius: 10px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+#livebtn.live { color: var(--mint); border-color: rgba(45,224,165,0.35); }
+#livebtn.off { color: var(--red); border-color: rgba(255,92,108,0.35); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mint); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ---------- cards ---------- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+.card h3 { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
+.card h3 .sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--faint); float: right; }
+.collapsed .body { display: none; }
+.keyhead { cursor: pointer; user-select: none; }
+
+/* ---------- forms ---------- */
+input[type=text], input[type=password], input[type=number] {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 10px;
+  padding: 10px 12px; font: inherit; font-size: 14px; width: 100%;
+}
+input:focus { outline: none; border-color: var(--mint); }
+.btn {
+  border: 0; background: var(--mint); color: #04120c; font: inherit; font-size: 13px; font-weight: 800;
+  padding: 10px 18px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+}
+.btn.ghost { background: var(--panel2); color: var(--dim); border: 1px solid var(--line); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.row { display: flex; gap: 8px; }
+.status { font-size: 12px; color: var(--dim); margin-top: 8px; min-height: 15px; }
+.status.ok { color: var(--mint); } .status.err { color: var(--red); }
+
+/* ---------- tables ---------- */
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; color: var(--faint); font-size: 11px; letter-spacing: 0.8px; text-transform: uppercase; font-weight: 700; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 9px 8px; border-bottom: 1px solid rgba(30,40,51,0.55); }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
+.up { color: var(--mint); } .down { color: var(--red); }
+.tick { font-weight: 800; cursor: pointer; }
+.tick:hover { color: var(--mint); }
+.x { color: var(--faint); cursor: pointer; padding: 0 6px; font-weight: 700; }
+.x:hover { color: var(--red); }
+
+/* ---------- dashboard ---------- */
+.indices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 640px) { .indices { grid-template-columns: repeat(2, 1fr); } }
+.idx { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.idx .lbl { font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: 0.8px; }
+.idx .px { font-family: var(--mono); font-size: 18px; font-weight: 700; margin-top: 3px; }
+.idx .chg { font-family: var(--mono); font-size: 12px; margin-top: 1px; }
+
+.newsitem { padding: 10px 0; border-bottom: 1px solid rgba(30,40,51,0.55); }
+.newsitem:last-child { border-bottom: 0; }
+.newsitem a { color: var(--text); font-size: 14px; font-weight: 600; line-height: 1.35; }
+.newsitem a:hover { color: var(--mint); text-decoration: none; }
+.newsmeta { font-size: 11.5px; color: var(--faint); margin-top: 3px; }
+
+/* ---------- research ---------- */
+.rhead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.rhead .sym { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; }
+.rhead .nm { color: var(--dim); font-size: 14px; }
+.rhead .px { font-family: var(--mono); font-size: 26px; font-weight: 700; margin-left: auto; }
+.rhead .chg { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+.rangebar { position: relative; height: 5px; background: var(--panel2); border-radius: 3px; margin: 14px 0 4px; }
+.rangebar .fill { position: absolute; top: -3px; width: 11px; height: 11px; border-radius: 50%; background: var(--mint); transform: translateX(-50%); }
+.rangelbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); font-family: var(--mono); }
+
+.pillars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 640px) { .pillars { grid-template-columns: repeat(2, 1fr); } }
+.pillar { background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px; }
+.pillar .lbl { font-size: 11px; color: var(--dim); font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; }
+.pillar .val { font-family: var(--mono); font-size: 24px; font-weight: 800; margin: 5px 0 7px; }
+.pillar .bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.pillar .bar i { display: block; height: 100%; border-radius: 2px; }
+.pillar .why { font-size: 11px; color: var(--faint); margin-top: 7px; line-height: 1.4; }
+.verdict { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 13px 15px; background: var(--panel2); border: 1px solid var(--line); border-radius: 12px; }
+.verdict .score { font-family: var(--mono); font-size: 30px; font-weight: 900; }
+.verdict .tag { font-size: 12px; font-weight: 800; letter-spacing: 1px; padding: 5px 11px; border-radius: 7px; }
+.verdict .note { font-size: 12px; color: var(--dim); line-height: 1.45; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.stat { background: var(--panel2); border-radius: 10px; padding: 9px 12px; }
+.stat .k { font-size: 10.5px; color: var(--faint); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+.stat .v { font-family: var(--mono); font-size: 15px; font-weight: 700; margin-top: 2px; }
+
+.recbar { display: flex; height: 22px; border-radius: 7px; overflow: hidden; font-size: 10.5px; font-weight: 800; color: #04120c; }
+.recbar span { display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; }
+.reckey { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--dim); flex-wrap: wrap; }
+.reckey i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
+
+/* ---------- chat ---------- */
+.chatlog { max-height: 480px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.msg { max-width: 88%; padding: 11px 14px; border-radius: 13px; font-size: 14px; line-height: 1.55; }
+.msg.user { align-self: flex-end; background: var(--mint-dim); border: 1px solid rgba(45,224,165,0.25); }
+.msg.ai { align-self: flex-start; background: var(--panel2); border: 1px solid var(--line); }
+.msg.ai h1, .msg.ai h2, .msg.ai h3 { font-size: 14px; margin: 10px 0 4px; color: var(--mint); }
+.msg.ai table { margin: 8px 0; font-size: 12.5px; }
+.msg.ai td, .msg.ai th { padding: 5px 7px; }
+.msg.ai ul { padding-left: 18px; margin: 6px 0; }
+.msg.ai p { margin: 6px 0; }
+.msg.ai hr { border: 0; border-top: 1px solid var(--line); margin: 10px 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip { background: var(--panel2); border: 1px solid var(--line); color: var(--dim); font-size: 12px; padding: 6px 11px; border-radius: 16px; cursor: pointer; }
+.chip:hover { color: var(--mint); border-color: rgba(45,224,165,0.4); }
+
+/* ---------- smart money ---------- */
+.smgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 760px) { .smgrid { grid-template-columns: 1fr; } }
+.updated { font-size: 11.5px; color: var(--faint); margin-bottom: 12px; }
+
+/* ---------- portfolio ---------- */
+.ptotals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+@media (max-width: 640px) { .ptotals { grid-template-columns: repeat(2, 1fr); } }
+.alloc { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.alloc i { display: block; height: 100%; background: var(--mint); border-radius: 3px; }
+
+.disclaimer { text-align: center; color: var(--faint); font-size: 11.5px; margin-top: 26px; line-height: 1.6; }
+.empty { color: var(--faint); font-size: 13px; padding: 12px 0; }
+.view { display: none; } .view.active { display: block; }
+.spin { display: inline-block; width: 13px; height: 13px; border: 2px solid var(--line); border-top-color: var(--mint); border-radius: 50%; animation: rot 0.8s linear infinite; vertical-align: -2px; }
+@keyframes rot { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="logo"><span class="m">MAR</span>ROW<small>PERSONAL AI INVESTMENT TERMINAL</small></div>
+    <div class="tabs">
+      <button id="t-dash" class="active" onclick="setTab('dash')">Dashboard</button>
+      <button id="t-research" onclick="setTab('research')">Research</button>
+      <button id="t-smart" onclick="setTab('smart')">Smart Money</button>
+      <button id="t-port" onclick="setTab('port')">Portfolio</button>
+    </div>
+    <button id="livebtn" onclick="onLiveClick()">CONNECTING…</button>
+  </div>
+
+  <!-- API keys -->
+  <div class="card collapsed" id="keycard">
+    <h3 class="keyhead" onclick="document.getElementById('keycard').classList.toggle('collapsed')">
+      Connections <span class="sub">tap to expand — keys live only in this browser</span>
+    </h3>
+    <div class="body">
+      <p style="font-size:12.5px;color:var(--dim);margin-bottom:8px;">
+        <strong>Market data — Finnhub</strong> (free key at
+        <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a>,
+        60 calls/min). Shared with your other apps if already saved.
+      </p>
+      <div class="row">
+        <input type="password" id="fkey" placeholder="Finnhub API key">
+        <button class="btn" onclick="saveFinnhubKey()">Save</button>
+      </div>
+      <div class="status" id="fkeystatus"></div>
+      <p style="font-size:12.5px;color:var(--dim);margin:14px 0 8px;">
+        <strong>AI analyst — Anthropic</strong> (key from
+        <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>).
+        Powers the in-app analyst chat.
+      </p>
+      <div class="row">
+        <input type="password" id="akey" placeholder="Anthropic API key (sk-ant-…)">
+        <button class="btn" onclick="saveAnthKey()">Save</button>
+      </div>
+      <div class="status" id="akeystatus"></div>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div class="view active" id="v-dash">
+    <div class="indices" id="indices"></div>
+
+    <div class="card">
+      <h3>Watchlist <span class="sub">auto-refreshes every 30s · tap a ticker to research it</span></h3>
+      <div class="row" style="margin-bottom:12px;">
+        <input type="text" id="wadd" placeholder="Add ticker, e.g. NVDA" style="max-width:240px;"
+               onkeydown="if(event.key==='Enter')addWatch()">
+        <button class="btn ghost" onclick="addWatch()">+ Add</button>
+      </div>
+      <div id="watchtable"></div>
+    </div>
+
+    <div class="card">
+      <h3>Market News</h3>
+      <div id="mktnews"><div class="empty">Connect Finnhub to load headlines.</div></div>
+    </div>
+  </div>
+
+  <!-- ================= RESEARCH ================= -->
+  <div class="view" id="v-research">
+    <div class="card">
+      <div class="row">
+        <input type="text" id="rsym" placeholder="Research any ticker — e.g. AAPL, NVDA, RKLB"
+               onkeydown="if(event.key==='Enter')research()">
+        <button class="btn" id="rgo" onclick="research()">Analyze</button>
+      </div>
+      <div class="status" id="rstatus"></div>
+    </div>
+    <div id="rout" style="display:none;">
+      <div class="card">
+        <div class="rhead">
+          <span class="sym" id="r-sym"></span><span class="nm" id="r-name"></span>
+          <span class="px" id="r-px"></span><span class="chg" id="r-chg"></span>
+        </div>
+        <div class="rangebar"><div class="fill" id="r-rangedot" style="left:50%"></div></div>
+        <div class="rangelbl"><span id="r-lo"></span><span style="color:var(--faint)">52-week range</span><span id="r-hi"></span></div>
+      </div>
+
+      <div class="card">
+        <h3>Marrow Quality Rating <span class="sub">computed live from TTM fundamentals</span></h3>
+        <div class="pillars" id="pillars"></div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="card">
+        <h3>Key Stats</h3>
+        <div class="stats" id="keystats"></div>
+      </div>
+
+      <div class="card" id="reccard" style="display:none;">
+        <h3>Wall Street Consensus <span class="sub" id="recdate"></span></h3>
+        <div class="recbar" id="recbar"></div>
+        <div class="reckey" id="reckey"></div>
+      </div>
+
+      <div class="card" id="epscard" style="display:none;">
+        <h3>Earnings — EPS vs. Estimates</h3>
+        <div id="epstable"></div>
+      </div>
+
+      <div class="card">
+        <h3>AI Analyst <span class="sub">streams live — knows the data above</span></h3>
+        <div class="chatlog" id="chatlog"></div>
+        <div class="chips" id="chips"></div>
+        <div class="row">
+          <input type="text" id="chatin" placeholder="Ask anything about this stock…"
+                 onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn" id="chatbtn" onclick="sendChat()">Ask</button>
+        </div>
+        <div class="status" id="chatstatus"></div>
+      </div>
+
+      <div class="card">
+        <h3>Company News <span class="sub">last 14 days</span></h3>
+        <div id="conews"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= SMART MONEY ================= -->
+  <div class="view" id="v-smart">
+    <div class="updated" id="sm-updated"></div>
+    <div class="smgrid" id="sm-13f"></div>
+    <div class="card" id="sm-insiders" style="display:none;"></div>
+    <div class="card" id="sm-congress" style="display:none;"></div>
+  </div>
+
+  <!-- ================= PORTFOLIO ================= -->
+  <div class="view" id="v-port">
+    <div class="ptotals" id="ptotals"></div>
+    <div class="card">
+      <h3>Positions <span class="sub">stored only in this browser</span></h3>
+      <div class="row" style="margin-bottom:12px;flex-wrap:wrap;">
+        <input type="text" id="p-sym" placeholder="Ticker" style="max-width:110px;">
+        <input type="number" id="p-sh" placeholder="Shares" style="max-width:110px;" step="any">
+        <input type="number" id="p-cost" placeholder="Avg cost $" style="max-width:130px;" step="any">
+        <button class="btn ghost" onclick="addPos()">+ Add position</button>
+      </div>
+      <div id="porttable"></div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    Marrow is a personal research and education tool. It does not provide investment, financial, or legal
+    advice and does not execute trades. Market data via your own Finnhub key; AI analysis via your own
+    Anthropic key; smart-money data from public SEC EDGAR and House Clerk filings.
+  </div>
+</div>
+
+<script>
+/* ================= keys & shared fetch ================= */
+const FKEYS = ['marrowFinnhubKey', 'stockAnalysisFinnhubKey', 'signalScoutFinnhubKey'];
+const AKEYS = ['marrowAnthropicKey', 'stockAnalysisAnthropicKey'];
+const BASE = 'https://finnhub.io/api/v1';
+const getFKey = () => FKEYS.map(k => localStorage.getItem(k)).find(Boolean) || '';
+const getAKey = () => AKEYS.map(k => localStorage.getItem(k)).find(Boolean) || '';
+
+async function fj(path, key) {
+  const sep = path.includes('?') ? '&' : '?';
+  const r = await fetch(BASE + path + sep + 'token=' + encodeURIComponent(key || getFKey()));
+  if (r.status === 401) throw new Error('bad API key');
+  if (r.status === 429) throw new Error('rate limit (60/min) — wait a minute');
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+function setLive(state, text) {
+  const b = document.getElementById('livebtn');
+  b.className = state;
+  b.innerHTML = state === 'live' ? '<span class="live-dot"></span>' + text : text;
+}
+async function checkLive() {
+  if (!getFKey()) { setLive('off', 'SET API KEY'); document.getElementById('keycard').classList.remove('collapsed'); return false; }
+  setLive('', 'CONNECTING…');
+  try { const q = await fj('/quote?symbol=AAPL'); if (q && q.c) { setLive('live', 'LIVE'); return true; } } catch (e) {}
+  setLive('off', 'OFFLINE'); document.getElementById('keycard').classList.remove('collapsed'); return false;
+}
+function onLiveClick() {
+  const kc = document.getElementById('keycard');
+  if (document.getElementById('livebtn').className === 'live') kc.classList.toggle('collapsed');
+  else { kc.classList.remove('collapsed'); checkLive().then(ok => { if (ok) refreshAll(); }); }
+}
+async function saveFinnhubKey() {
+  const k = document.getElementById('fkey').value.trim();
+  const st = document.getElementById('fkeystatus');
+  if (!k) { st.textContent = 'Paste a key first.'; st.className = 'status err'; return; }
+  st.textContent = 'Testing…'; st.className = 'status';
+  try {
+    const q = await fj('/quote?symbol=AAPL', k);
+    if (q && q.c) {
+      localStorage.setItem('marrowFinnhubKey', k);
+      st.textContent = 'Key works — saved to this browser.'; st.className = 'status ok';
+      setLive('live', 'LIVE'); document.getElementById('keycard').classList.add('collapsed'); refreshAll();
+    } else { st.textContent = 'Key rejected by Finnhub.'; st.className = 'status err'; }
+  } catch (e) { st.textContent = 'Could not reach Finnhub: ' + e.message; st.className = 'status err'; }
+}
+function saveAnthKey() {
+  const k = document.getElementById('akey').value.trim();
+  const st = document.getElementById('akeystatus');
+  if (!k) { st.textContent = 'Paste a key first.'; st.className = 'status err'; return; }
+  localStorage.setItem('marrowAnthropicKey', k);
+  st.textContent = 'Saved. Validated on your first AI analyst question.'; st.className = 'status ok';
+}
+
+/* ================= helpers ================= */
+const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+const money = v => v == null ? '—' : '$' + v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = v => v == null ? '—' : v.toFixed(1) + '%';
+const bigUsd = v => v == null ? '—' :
+  Math.abs(v) >= 1e12 ? '$' + (v / 1e12).toFixed(2) + 'T' :
+  Math.abs(v) >= 1e9  ? '$' + (v / 1e9).toFixed(1)  + 'B' :
+  Math.abs(v) >= 1e6  ? '$' + (v / 1e6).toFixed(1)  + 'M' : '$' + Math.round(v).toLocaleString();
+const capUsd = v => v == null ? '—' : bigUsd(v * 1e6);   // finnhub marketCap is in $M
+const chgHtml = (d, dp) => {
+  if (d == null || dp == null) return '<span class="n">—</span>';
+  const cls = d >= 0 ? 'up' : 'down', sign = d >= 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${d.toFixed(2)} (${sign}${dp.toFixed(2)}%)</span>`;
+};
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* Minimal markdown renderer (headers, bold, tables, lists, hr) — HTML-escaped first. */
+function mdLite(src) {
+  const inline = s => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  const lines = src.split('\n');
+  let html = '', inTable = false, inList = false, para = [];
+  const flushPara = () => { if (para.length) { html += '<p>' + para.map(inline).join('<br>') + '</p>'; para = []; } };
+  const close = () => { if (inTable) { html += '</table>'; inTable = false; } if (inList) { html += '</ul>'; inList = false; } };
+  for (const ln of lines) {
+    const t = ln.trim();
+    if (/^\|(.+)\|$/.test(t)) {
+      flushPara(); if (inList) { html += '</ul>'; inList = false; }
+      if (/^\|[\s:|-]+\|$/.test(t)) continue;
+      const cells = t.slice(1, -1).split('|').map(c => inline(c.trim()));
+      if (!inTable) { html += '<table><tr>' + cells.map(c => '<th>' + c + '</th>').join('') + '</tr>'; inTable = true; }
+      else html += '<tr>' + cells.map(c => '<td>' + c + '</td>').join('') + '</tr>';
+      continue;
+    }
+    if (inTable) { html += '</table>'; inTable = false; }
+    const h = t.match(/^(#{1,3})\s+(.*)/);
+    if (h) { flushPara(); close(); html += `<h3>${inline(h[2])}</h3>`; continue; }
+    if (/^[-*]\s+/.test(t)) { flushPara(); if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + inline(t.replace(/^[-*]\s+/, '')) + '</li>'; continue; }
+    if (/^---+$/.test(t)) { flushPara(); close(); html += '<hr>'; continue; }
+    if (t === '') { flushPara(); close(); continue; }
+    para.push(t);
+  }
+  flushPara(); close();
+  return html;
+}
+
+/* ================= tabs ================= */
+let tab = 'dash';
+function setTab(t) {
+  tab = t;
+  for (const v of ['dash', 'research', 'smart', 'port']) {
+    document.getElementById('v-' + v).classList.toggle('active', v === t);
+    document.getElementById('t-' + v).classList.toggle('active', v === t);
+  }
+  if (t === 'smart' && !smLoaded) loadSmartMoney();
+  if (t === 'port') renderPortfolio();
+}
+
+/* ================= dashboard ================= */
+const INDICES = [['SPY', 'S&P 500 · SPY'], ['QQQ', 'NASDAQ 100 · QQQ'], ['DIA', 'DOW · DIA'], ['IWM', 'RUSSELL 2000 · IWM']];
+let watchlist = JSON.parse(localStorage.getItem('marrowWatchlist') || '["AAPL","NVDA","MSFT","TSLA"]');
+const saveWatch = () => localStorage.setItem('marrowWatchlist', JSON.stringify(watchlist));
+
+async function refreshIndices() {
+  const el = document.getElementById('indices');
+  const out = await Promise.all(INDICES.map(async ([s, lbl]) => {
+    try {
+      const q = await fj('/quote?symbol=' + s);
+      return { lbl, q };
+    } catch (e) { return { lbl, q: null }; }
+  }));
+  el.innerHTML = out.map(({ lbl, q }) => `
+    <div class="idx">
+      <div class="lbl">${lbl}</div>
+      <div class="px">${q && q.c ? '$' + q.c.toFixed(2) : '—'}</div>
+      <div class="chg">${q ? chgHtml(num(q.d), num(q.dp)) : ''}</div>
+    </div>`).join('');
+}
+
+async function refreshWatchlist() {
+  const el = document.getElementById('watchtable');
+  if (!watchlist.length) { el.innerHTML = '<div class="empty">Watchlist is empty — add a ticker above.</div>'; return; }
+  const rows = await Promise.all(watchlist.map(async s => {
+    try { return { s, q: await fj('/quote?symbol=' + s) }; } catch (e) { return { s, q: null }; }
+  }));
+  el.innerHTML = '<table><tr><th>Ticker</th><th class="n">Price</th><th class="n">Today</th><th class="n">Day range</th><th></th></tr>' +
+    rows.map(({ s, q }) => `<tr>
+      <td class="tick" onclick="goResearch('${s}')">${s}</td>
+      <td class="n">${q && q.c ? money(q.c) : '—'}</td>
+      <td class="n">${q ? chgHtml(num(q.d), num(q.dp)) : '—'}</td>
+      <td class="n" style="color:var(--faint)">${q && q.l ? q.l.toFixed(2) + ' – ' + q.h.toFixed(2) : '—'}</td>
+      <td class="n"><span class="x" onclick="rmWatch('${s}')">✕</span></td>
+    </tr>`).join('') + '</table>';
+}
+
+function addWatch() {
+  const s = document.getElementById('wadd').value.trim().toUpperCase();
+  if (!s || watchlist.includes(s)) return;
+  watchlist.push(s); saveWatch();
+  document.getElementById('wadd').value = '';
+  refreshWatchlist();
+}
+function rmWatch(s) { watchlist = watchlist.filter(x => x !== s); saveWatch(); refreshWatchlist(); }
+function goResearch(s) { setTab('research'); document.getElementById('rsym').value = s; research(); }
+
+async function refreshMktNews() {
+  try {
+    const news = await fj('/news?category=general');
+    document.getElementById('mktnews').innerHTML = (news || []).slice(0, 8).map(n => `
+      <div class="newsitem">
+        <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a>
+        <div class="newsmeta">${esc(n.source || '')} · ${new Date(n.datetime * 1000).toLocaleString()}</div>
+      </div>`).join('') || '<div class="empty">No headlines.</div>';
+  } catch (e) {}
+}
+
+let dashTimer = null;
+function refreshAll() {
+  refreshIndices(); refreshWatchlist(); refreshMktNews();
+  if (tab === 'port') renderPortfolio();
+  clearInterval(dashTimer);
+  dashTimer = setInterval(() => {
+    if (document.hidden) return;
+    refreshIndices(); refreshWatchlist();
+    if (tab === 'port') renderPortfolio();
+  }, 30000);
+}
+
+/* ================= research + rating engine ================= */
+let lastR = null;   // { t, quote, profile, m, rec, eps }
+
+function tier(v, cuts, pts) { if (v == null) return null; for (let i = 0; i < cuts.length; i++) if (v >= cuts[i]) return pts[i]; return pts[pts.length - 1] ?? 0; }
+function tierLow(v, cuts, pts) { if (v == null) return null; for (let i = 0; i < cuts.length; i++) if (v <= cuts[i]) return pts[i]; return pts[pts.length - 1] ?? 0; }
+function avgDefined(parts) {
+  const d = parts.filter(p => p != null);
+  return d.length ? Math.round(d.reduce((a, b) => a + b, 0) / d.length) : null;
+}
+
+function computePillars(m) {
+  const grow = num(m.revenueGrowthTTMYoy), epsg = num(m.epsGrowthTTMYoy), g5 = num(m.revenueGrowth5Y);
+  const gm = num(m.grossMarginTTM), om = num(m.operatingMarginTTM), nm = num(m.netProfitMarginTTM), roe = num(m.roeTTM);
+  const de = num(m['totalDebt/totalEquityQuarterly']), cr = num(m.currentRatioQuarterly);
+  const pe = num(m.peTTM), ps = num(m.psTTM), pfcf = num(m.pfcfShareTTM);
+
+  const growth = avgDefined([
+    tier(grow, [40, 25, 15, 7, 0], [100, 85, 70, 55, 40, 20]),
+    tier(epsg, [40, 25, 15, 7, 0], [100, 85, 70, 55, 40, 20]),
+    tier(g5,   [25, 15, 8, 3, 0],  [100, 85, 70, 55, 40, 25]),
+  ]);
+  const quality = avgDefined([
+    tier(gm,  [60, 45, 30, 18], [100, 80, 60, 40, 20]),
+    tier(om,  [30, 20, 10, 3],  [100, 80, 60, 40, 20]),
+    tier(nm,  [25, 15, 8, 2],   [100, 80, 60, 40, 20]),
+    tier(roe, [30, 20, 12, 5],  [100, 80, 60, 40, 20]),
+  ]);
+  const health = avgDefined([
+    de != null ? tierLow(de, [0.3, 0.7, 1.2, 2], [100, 80, 60, 40, 15]) : null,
+    tier(cr, [2.5, 1.8, 1.2, 0.9], [100, 80, 60, 40, 20]),
+    nm != null ? (nm > 0 ? 80 : 25) : null,
+  ]);
+  const valuation = avgDefined([
+    pe != null ? (pe <= 0 ? 20 : tierLow(pe, [12, 20, 30, 45, 70], [100, 80, 60, 40, 25, 10])) : null,
+    ps != null ? tierLow(ps, [2, 4, 8, 15, 25], [100, 80, 60, 40, 25, 10]) : null,
+    pfcf != null ? (pfcf <= 0 ? 20 : tierLow(pfcf, [15, 25, 40, 60], [100, 80, 60, 40, 20])) : null,
+  ]);
+  return {
+    pillars: [
+      { name: 'Growth', v: growth, why: grow != null ? `Revenue ${grow >= 0 ? '+' : ''}${grow.toFixed(0)}% TTM YoY` + (epsg != null ? `, EPS ${epsg >= 0 ? '+' : ''}${epsg.toFixed(0)}%` : '') : 'Growth data unavailable' },
+      { name: 'Business Quality', v: quality, why: gm != null ? `${gm.toFixed(0)}% gross / ${nm != null ? nm.toFixed(0) + '% net' : '—'} margin` + (roe != null ? `, ROE ${roe.toFixed(0)}%` : '') : 'Margin data unavailable' },
+      { name: 'Financial Health', v: health, why: de != null ? `Debt/equity ${de.toFixed(2)}` + (cr != null ? `, current ratio ${cr.toFixed(1)}` : '') : 'Balance-sheet data unavailable' },
+      { name: 'Valuation', v: valuation, why: pe != null && pe > 0 ? `P/E ${pe.toFixed(0)}` + (ps != null ? `, P/S ${ps.toFixed(1)}` : '') : ps != null ? `Unprofitable — P/S ${ps.toFixed(1)}` : 'Valuation data unavailable' },
+    ],
+    composite: avgDefined([growth, quality, health, valuation]),
+  };
+}
+const pillarColor = v => v == null ? 'var(--faint)' : v >= 70 ? 'var(--mint)' : v >= 45 ? 'var(--amber)' : 'var(--red)';
+
+async function research() {
+  const t = document.getElementById('rsym').value.trim().toUpperCase();
+  const st = document.getElementById('rstatus');
+  if (!t) return;
+  if (!getFKey()) { st.textContent = 'Connect a Finnhub key first (top right).'; st.className = 'status err'; document.getElementById('keycard').classList.remove('collapsed'); return; }
+  st.innerHTML = '<span class="spin"></span> Pulling live data for ' + t + '…'; st.className = 'status';
+  document.getElementById('rgo').disabled = true;
+  try {
+    const to = new Date(), from = new Date(Date.now() - 14 * 864e5);
+    const dstr = d => d.toISOString().slice(0, 10);
+    const [quote, profile, metrics, rec, eps, news] = await Promise.all([
+      fj('/quote?symbol=' + t),
+      fj('/stock/profile2?symbol=' + t).catch(() => ({})),
+      fj('/stock/metric?symbol=' + t + '&metric=all').catch(() => ({})),
+      fj('/stock/recommendation?symbol=' + t).catch(() => []),
+      fj('/stock/earnings?symbol=' + t).catch(() => []),
+      fj(`/company-news?symbol=${t}&from=${dstr(from)}&to=${dstr(to)}`).catch(() => []),
+    ]);
+    if (!quote || !quote.c) throw new Error('no quote for "' + t + '" — check the ticker (US-listed only on free Finnhub)');
+    lastR = { t, quote, profile: profile || {}, m: (metrics && metrics.metric) || {}, rec: rec || [], eps: eps || [] };
+    renderResearch(news || []);
+    st.textContent = ''; st.className = 'status';
+  } catch (e) {
+    st.textContent = 'Failed: ' + e.message; st.className = 'status err';
+  } finally { document.getElementById('rgo').disabled = false; }
+}
+
+function renderResearch(news) {
+  const { t, quote, profile, m, rec, eps } = lastR;
+  document.getElementById('rout').style.display = 'block';
+  document.getElementById('r-sym').textContent = t;
+  document.getElementById('r-name').textContent = profile.name || '';
+  document.getElementById('r-px').textContent = money(quote.c);
+  const chg = document.getElementById('r-chg');
+  chg.innerHTML = chgHtml(num(quote.d), num(quote.dp));
+
+  const lo = num(m['52WeekLow']), hi = num(m['52WeekHigh']);
+  document.getElementById('r-lo').textContent = lo != null ? '$' + lo.toFixed(2) : '—';
+  document.getElementById('r-hi').textContent = hi != null ? '$' + hi.toFixed(2) : '—';
+  const posPct = (lo != null && hi != null && hi > lo) ? Math.min(100, Math.max(0, (quote.c - lo) / (hi - lo) * 100)) : 50;
+  document.getElementById('r-rangedot').style.left = posPct + '%';
+
+  // pillars
+  const { pillars, composite } = computePillars(m);
+  document.getElementById('pillars').innerHTML = pillars.map(p => `
+    <div class="pillar">
+      <div class="lbl">${p.name}</div>
+      <div class="val" style="color:${pillarColor(p.v)}">${p.v == null ? '—' : p.v}</div>
+      <div class="bar"><i style="width:${p.v || 0}%;background:${pillarColor(p.v)}"></i></div>
+      <div class="why">${esc(p.why)}</div>
+    </div>`).join('');
+  const vTag = composite == null ? ['NO DATA', 'var(--faint)'] :
+    composite >= 70 ? ['STRONG', 'var(--mint)'] : composite >= 55 ? ['SOLID', 'var(--mint)'] :
+    composite >= 40 ? ['MIXED', 'var(--amber)'] : ['WEAK', 'var(--red)'];
+  document.getElementById('verdict').innerHTML = `
+    <span class="score" style="color:${vTag[1]}">${composite ?? '—'}<span style="font-size:14px;color:var(--faint)">/100</span></span>
+    <span class="tag" style="color:${vTag[1]};background:${vTag[1] === 'var(--faint)' ? 'var(--panel)' : 'color-mix(in srgb, ' + vTag[1] + ' 14%, transparent)'}">${vTag[0]}</span>
+    <span class="note">Composite of the four pillars, from live TTM fundamentals. A screen, not a verdict — ask the AI analyst below to pressure-test it.</span>`;
+
+  // key stats
+  const stats = [
+    ['Market cap', capUsd(num(profile.marketCapitalization))],
+    ['P/E (TTM)', num(m.peTTM) != null ? m.peTTM.toFixed(1) : '—'],
+    ['P/S (TTM)', num(m.psTTM) != null ? m.psTTM.toFixed(1) : '—'],
+    ['Rev growth YoY', pct(num(m.revenueGrowthTTMYoy))],
+    ['Gross margin', pct(num(m.grossMarginTTM))],
+    ['Net margin', pct(num(m.netProfitMarginTTM))],
+    ['ROE (TTM)', pct(num(m.roeTTM))],
+    ['Debt/Equity', num(m['totalDebt/totalEquityQuarterly']) != null ? m['totalDebt/totalEquityQuarterly'].toFixed(2) : '—'],
+    ['Current ratio', num(m.currentRatioQuarterly) != null ? m.currentRatioQuarterly.toFixed(2) : '—'],
+    ['Beta', num(m.beta) != null ? m.beta.toFixed(2) : '—'],
+    ['Div yield', pct(num(m.dividendYieldIndicatedAnnual))],
+    ['Industry', esc(profile.finnhubIndustry || '—')],
+  ];
+  document.getElementById('keystats').innerHTML = stats.map(([k, v]) =>
+    `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('');
+
+  // analyst consensus
+  const rc = rec && rec[0];
+  const recCard = document.getElementById('reccard');
+  if (rc && (rc.strongBuy + rc.buy + rc.hold + rc.sell + rc.strongSell) > 0) {
+    recCard.style.display = 'block';
+    const total = rc.strongBuy + rc.buy + rc.hold + rc.sell + rc.strongSell;
+    const segs = [
+      ['Strong buy', rc.strongBuy, '#2de0a5'], ['Buy', rc.buy, '#7ee8c4'],
+      ['Hold', rc.hold, '#ffb454'], ['Sell', rc.sell, '#ff8a95'], ['Strong sell', rc.strongSell, '#ff5c6c'],
+    ];
+    document.getElementById('recdate').textContent = total + ' analysts · ' + (rc.period || '');
+    document.getElementById('recbar').innerHTML = segs.filter(s => s[1] > 0)
+      .map(([l, v, c]) => `<span style="flex:${v};background:${c}" title="${l}: ${v}">${v}</span>`).join('');
+    document.getElementById('reckey').innerHTML = segs
+      .map(([l, v, c]) => `<span><i style="background:${c}"></i>${l} ${v}</span>`).join('');
+  } else recCard.style.display = 'none';
+
+  // EPS surprises
+  const epsCard = document.getElementById('epscard');
+  if (eps && eps.length) {
+    epsCard.style.display = 'block';
+    document.getElementById('epstable').innerHTML =
+      '<table><tr><th>Quarter</th><th class="n">Estimate</th><th class="n">Actual</th><th class="n">Surprise</th></tr>' +
+      eps.slice(0, 4).map(e => {
+        const sp = num(e.surprisePercent);
+        return `<tr><td>${esc(e.period || '')}</td>
+          <td class="n">${num(e.estimate) != null ? e.estimate.toFixed(2) : '—'}</td>
+          <td class="n">${num(e.actual) != null ? e.actual.toFixed(2) : '—'}</td>
+          <td class="n ${sp != null ? (sp >= 0 ? 'up' : 'down') : ''}">${sp != null ? (sp >= 0 ? '+' : '') + sp.toFixed(1) + '%' : '—'}</td></tr>`;
+      }).join('') + '</table>';
+  } else epsCard.style.display = 'none';
+
+  // news
+  document.getElementById('conews').innerHTML = news.slice(0, 8).map(n => `
+    <div class="newsitem">
+      <a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.headline)}</a>
+      <div class="newsmeta">${esc(n.source || '')} · ${new Date(n.datetime * 1000).toLocaleString()}</div>
+    </div>`).join('') || '<div class="empty">No recent company news.</div>';
+
+  // reset chat for the new ticker
+  chatHistory = [];
+  document.getElementById('chatlog').innerHTML = '';
+  document.getElementById('chips').innerHTML = [
+    'Bull case vs bear case?', 'Is the valuation justified?', 'Biggest risks and sell triggers?',
+    'How did the last earnings look?', 'Would you hold this for 5 years?',
+  ].map(q => `<span class="chip" onclick="askChip(this)">${q}</span>`).join('');
+}
+
+/* ================= AI analyst chat ================= */
+let chatHistory = [];
+let chatBusy = false;
+
+function askChip(el) { document.getElementById('chatin').value = el.textContent; sendChat(); }
+
+async function sendChat() {
+  const inEl = document.getElementById('chatin');
+  const q = inEl.value.trim();
+  const st = document.getElementById('chatstatus');
+  if (!q || chatBusy || !lastR) return;
+  const ak = getAKey();
+  if (!ak) { st.textContent = 'Add your Anthropic key in Connections (top right) to enable the AI analyst.'; st.className = 'status err'; document.getElementById('keycard').classList.remove('collapsed'); return; }
+
+  chatBusy = true; inEl.value = ''; st.textContent = ''; st.className = 'status';
+  document.getElementById('chatbtn').disabled = true;
+  const log = document.getElementById('chatlog');
+  log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
+  const aiEl = document.createElement('div');
+  aiEl.className = 'msg ai'; aiEl.innerHTML = '<span class="spin"></span>';
+  log.appendChild(aiEl); log.scrollTop = log.scrollHeight;
+
+  const d = lastR;
+  const system =
+    `You are Marrow, a personal AI investment analyst — sharp, data-first, and honest about uncertainty. ` +
+    `You are embedded in a research terminal with NO web access. The user is looking at ${d.t} (${d.profile.name || ''}). ` +
+    `Use the LIVE data below (Finnhub, pulled seconds ago) as the verified source for price and fundamentals, plus your own knowledge of the company. ` +
+    `Anything you cannot support from either, label [UNVERIFIED], and note your knowledge cutoff where it matters. ` +
+    `Be direct and specific: numbers over adjectives, always both sides of a trade, concrete triggers over vague hedging. ` +
+    `Keep answers tight (under ~400 words unless asked for depth). Use markdown headers/tables/lists where they help. ` +
+    `You provide research and education, never personalized financial advice — no "you should buy/sell".\n\n` +
+    `LIVE DATA (as of ${new Date().toLocaleString()}):\n` +
+    JSON.stringify({ quote: d.quote, profile: d.profile, metrics_ttm: d.m, analyst_recommendations: d.rec.slice(0, 2), eps_surprises: d.eps.slice(0, 4) }, null, 1);
+
+  chatHistory.push({ role: 'user', content: q });
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': ak,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-8',
+        max_tokens: 4000,
+        stream: true,
+        system,
+        messages: chatHistory,
+      }),
+    });
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const e = await resp.json(); msg = e.error?.message || msg; } catch (_) {}
+      if (resp.status === 401) msg = 'Anthropic key rejected — re-save it in Connections.';
+      throw new Error(msg);
+    }
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '', text = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (!ln.startsWith('data: ')) continue;
+        let ev; try { ev = JSON.parse(ln.slice(6)); } catch (_) { continue; }
+        if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+          text += ev.delta.text;
+          aiEl.innerHTML = mdLite(text);
+          log.scrollTop = log.scrollHeight;
+        } else if (ev.type === 'error') throw new Error(ev.error?.message || 'stream error');
+      }
+    }
+    if (!text) throw new Error('empty response — try again');
+    chatHistory.push({ role: 'assistant', content: text });
+  } catch (e) {
+    chatHistory.pop();
+    aiEl.innerHTML = `<span style="color:var(--red)">Analyst failed: ${esc(e.message)}</span>`;
+  } finally {
+    chatBusy = false;
+    document.getElementById('chatbtn').disabled = false;
+  }
+}
+
+/* ================= smart money ================= */
+let smLoaded = false;
+async function loadSmartMoney() {
+  smLoaded = true;
+  let data = null;
+  try { const r = await fetch('./smartmoney.json'); if (r.ok) data = await r.json(); } catch (e) {}
+  if (!data) { // fall back to the Brain Trust feed (same EDGAR pipeline)
+    try {
+      const r = await fetch('../brain-trust/holdings.json');
+      if (r.ok) {
+        const h = await r.json();
+        data = { updated_utc: h.updated_utc, investors: [], insiders: [], congress: [] };
+        if (h.buffett) data.investors.push({
+          name: 'Warren Buffett — Berkshire Hathaway', filing_date: h.buffett.filing_date,
+          source: h.buffett.source,
+          holdings: (h.buffett.top_holdings || []).map(x => ({ name: x.name, value_usd: x.value_thousands })),
+        });
+        if (h.musk) data.insiders.push({ name: 'Elon Musk', source: h.musk.source, filings: h.musk.filings || [] });
+      }
+    } catch (e) {}
+  }
+  const grid = document.getElementById('sm-13f');
+  if (!data) { grid.innerHTML = '<div class="card"><div class="empty">Smart-money data not available — run scripts/fetch-smart-money.py (or wait for the weekly refresh).</div></div>'; return; }
+  document.getElementById('sm-updated').textContent =
+    'Public filings from SEC EDGAR' + (data.congress && data.congress.length ? ' + House Clerk' : '') +
+    ' · refreshed ' + (data.updated_utc ? new Date(data.updated_utc).toLocaleString() : '—') + ' · auto-updates weekly';
+
+  grid.innerHTML = (data.investors || []).map(inv => {
+    const total = (inv.holdings || []).reduce((a, h) => a + (h.value_usd || 0), 0);
+    return `<div class="card" style="margin-bottom:0;">
+      <h3>${esc(inv.name)} <span class="sub">13F · ${esc(inv.filing_date || '')}</span></h3>
+      <table><tr><th>Holding</th><th class="n">Value</th><th class="n">Weight</th></tr>` +
+      (inv.holdings || []).slice(0, 10).map(h => `<tr>
+        <td>${esc(h.name)}${h.ticker ? ` <span class="tick" onclick="goResearch('${esc(h.ticker)}')" style="color:var(--faint);font-weight:600">· ${esc(h.ticker)}</span>` : ''}</td>
+        <td class="n">${bigUsd(h.value_usd)}</td>
+        <td class="n" style="color:var(--dim)">${total ? ((h.value_usd || 0) / total * 100).toFixed(1) + '%' : '—'}</td>
+      </tr>`).join('') + '</table></div>';
+  }).join('') || '<div class="card" style="margin-bottom:0;"><div class="empty">No 13F data yet.</div></div>';
+
+  const insEl = document.getElementById('sm-insiders');
+  if (data.insiders && data.insiders.length) {
+    insEl.style.display = 'block';
+    insEl.innerHTML = '<h3>Insider Activity <span class="sub">SEC Form 4</span></h3>' + data.insiders.map(p => `
+      <div style="margin-bottom:10px;">
+        <strong>${esc(p.name)}</strong> <span style="color:var(--faint);font-size:12px;">· ${esc(p.source || '')}</span>
+        <table style="margin-top:6px;"><tr><th>Filed</th><th>Transaction</th><th class="n">Filing</th></tr>` +
+        (p.filings || []).slice(0, 5).map(f => `<tr>
+          <td class="n" style="text-align:left;">${esc(f.date || '')}</td>
+          <td>${f.summary ? esc(f.summary) : '<span style="color:var(--faint)">See filing</span>'}</td>
+          <td class="n"><a href="${esc(f.url || '#')}" target="_blank" rel="noopener">EDGAR ↗</a></td>
+        </tr>`).join('') + '</table></div>').join('');
+  } else insEl.style.display = 'none';
+
+  const cgEl = document.getElementById('sm-congress');
+  if (data.congress && data.congress.length) {
+    cgEl.style.display = 'block';
+    cgEl.innerHTML = '<h3>Congress Trades <span class="sub">House periodic transaction reports</span></h3>' +
+      '<table><tr><th>Member</th><th>Office</th><th class="n">Filed</th><th class="n">Report</th></tr>' +
+      data.congress.slice(0, 20).map(c => `<tr>
+        <td><strong>${esc(c.name)}</strong></td>
+        <td style="color:var(--dim)">${esc(c.office || '')}</td>
+        <td class="n">${esc(c.date || '')}</td>
+        <td class="n"><a href="${esc(c.url || '#')}" target="_blank" rel="noopener">PTR ↗</a></td>
+      </tr>`).join('') + '</table>' +
+      '<div class="status" style="margin-top:8px;">Filings link to the official disclosure PDFs — trades inside are reported up to 45 days after execution.</div>';
+  } else cgEl.style.display = 'none';
+}
+
+/* ================= portfolio ================= */
+let positions = JSON.parse(localStorage.getItem('marrowPortfolio') || '[]');
+const savePort = () => localStorage.setItem('marrowPortfolio', JSON.stringify(positions));
+
+function addPos() {
+  const s = document.getElementById('p-sym').value.trim().toUpperCase();
+  const sh = parseFloat(document.getElementById('p-sh').value);
+  const c = parseFloat(document.getElementById('p-cost').value);
+  if (!s || !(sh > 0) || !(c >= 0)) return;
+  const ex = positions.find(p => p.s === s);
+  if (ex) { // merge: weighted average cost
+    const totSh = ex.sh + sh;
+    ex.cost = (ex.sh * ex.cost + sh * c) / totSh; ex.sh = totSh;
+  } else positions.push({ s, sh, cost: c });
+  savePort();
+  for (const id of ['p-sym', 'p-sh', 'p-cost']) document.getElementById(id).value = '';
+  renderPortfolio();
+}
+function rmPos(s) { positions = positions.filter(p => p.s !== s); savePort(); renderPortfolio(); }
+
+async function renderPortfolio() {
+  const el = document.getElementById('porttable');
+  const tot = document.getElementById('ptotals');
+  if (!positions.length) {
+    el.innerHTML = '<div class="empty">No positions yet — add your holdings above. Everything stays in this browser.</div>';
+    tot.innerHTML = ''; return;
+  }
+  const rows = await Promise.all(positions.map(async p => {
+    try { return { ...p, q: getFKey() ? await fj('/quote?symbol=' + p.s) : null }; }
+    catch (e) { return { ...p, q: null }; }
+  }));
+  let mv = 0, costTot = 0, dayChg = 0;
+  for (const r of rows) {
+    costTot += r.sh * r.cost;
+    if (r.q && r.q.c) { mv += r.sh * r.q.c; dayChg += r.sh * (num(r.q.d) || 0); }
+    else mv += r.sh * r.cost;
+  }
+  const gain = mv - costTot;
+  const cell = (lbl, val, cls) => `<div class="idx"><div class="lbl">${lbl}</div><div class="px ${cls || ''}">${val}</div></div>`;
+  tot.innerHTML =
+    cell('MARKET VALUE', money(mv)) +
+    cell('DAY P&L', (dayChg >= 0 ? '+' : '') + money(dayChg).replace('$-', '-$'), dayChg >= 0 ? 'up' : 'down') +
+    cell('TOTAL P&L', (gain >= 0 ? '+' : '') + money(gain).replace('$-', '-$'), gain >= 0 ? 'up' : 'down') +
+    cell('RETURN', costTot ? ((gain >= 0 ? '+' : '') + (gain / costTot * 100).toFixed(1) + '%') : '—', gain >= 0 ? 'up' : 'down');
+
+  el.innerHTML = '<table><tr><th>Ticker</th><th class="n">Shares</th><th class="n">Avg cost</th><th class="n">Price</th><th class="n">Value</th><th class="n">P&L</th><th class="n">Alloc</th><th></th></tr>' +
+    rows.map(r => {
+      const px = r.q && r.q.c ? r.q.c : null;
+      const val = r.sh * (px ?? r.cost);
+      const pl = px != null ? (px - r.cost) * r.sh : null;
+      const alloc = mv ? val / mv * 100 : 0;
+      return `<tr>
+        <td class="tick" onclick="goResearch('${r.s}')">${r.s}</td>
+        <td class="n">${r.sh}</td>
+        <td class="n">${money(r.cost)}</td>
+        <td class="n">${px != null ? money(px) : '—'}</td>
+        <td class="n">${money(val)}</td>
+        <td class="n ${pl == null ? '' : pl >= 0 ? 'up' : 'down'}">${pl == null ? '—' : (pl >= 0 ? '+' : '') + money(pl).replace('$-', '-$')}</td>
+        <td class="n" style="min-width:80px;">${alloc.toFixed(1)}%<div class="alloc"><i style="width:${alloc}%"></i></div></td>
+        <td class="n"><span class="x" onclick="rmPos('${r.s}')">✕</span></td>
+      </tr>`;
+    }).join('') + '</table>';
+}
+
+/* ================= boot ================= */
+checkLive().then(ok => { if (ok) refreshAll(); });
+</script>
+</body>
+</html>
