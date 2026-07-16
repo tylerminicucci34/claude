@@ -170,7 +170,6 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       <button id="t-smart" onclick="setTab('smart')">Smart Money</button>
       <button id="t-port" onclick="setTab('port')">Portfolio</button>
       <button id="t-picks" onclick="setTab('picks')">Top 10</button>
-      <button id="t-bot" onclick="setTab('bot')">Trading Bot</button>
     </div>
     <button id="livebtn" onclick="onLiveClick()">CONNECTING…</button>
   </div>
@@ -352,43 +351,6 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
     </div>
   </div>
 
-  <!-- ================= TRADING BOT ================= -->
-  <div class="view" id="v-bot">
-    <div class="card">
-      <h3>Trading Bot <span class="sub" id="botmode">not running</span></h3>
-      <p style="font-size:12.5px;color:var(--dim);line-height:1.55;margin-bottom:12px;">
-        <strong>5 markets · 3 strategies · 1 risk rule.</strong> SPY &amp; QQQ mean reversion (15-min),
-        BTC momentum breakouts (1-hour), gold &amp; oil trend following (4-hour) — every trade sized so
-        a stop-out costs exactly 1% of the account. The engine lives in
-        <span style="font-family:var(--mono);color:var(--text)">trading-bot/</span> and runs on your
-        machine or a $5 server; this tab is its control room.
-      </p>
-      <div id="botstatus" class="empty">No status yet — the bot writes its state on every pass.
-        Zero-setup test drive: <span style="font-family:var(--mono);color:var(--text)">python3 trading-bot/bot.py --demo</span>, then reload.</div>
-    </div>
-
-    <div class="card">
-      <h3>Recent Bot Trades</h3>
-      <div id="bottrades" class="empty">None logged yet.</div>
-    </div>
-
-    <div class="card">
-      <h3>From Zero to Paper-Trading — 5 Steps</h3>
-      <div style="font-size:13px;color:var(--dim);line-height:1.9;">
-        <div><strong style="color:var(--mint);font-family:var(--mono)">01</strong> &nbsp;Free Alpaca paper keys at <a href="https://alpaca.markets" target="_blank" rel="noopener">alpaca.markets</a> → <span style="font-family:var(--mono)">export ALPACA_KEY=… ALPACA_SECRET=…</span></div>
-        <div><strong style="color:var(--mint);font-family:var(--mono)">02</strong> &nbsp;Backtest the edge first: <span style="font-family:var(--mono)">python3 trading-bot/backtest.py</span> — fail here and it goes nowhere near money</div>
-        <div><strong style="color:var(--mint);font-family:var(--mono)">03</strong> &nbsp;Paper trade 2+ weeks: <span style="font-family:var(--mono)">python3 trading-bot/bot.py --loop</span> (fake money, real prices)</div>
-        <div><strong style="color:var(--mint);font-family:var(--mono)">04</strong> &nbsp;Two messages a day: <span style="font-family:var(--mono)">briefing.py morning / evening</span> — add Telegram keys for phone delivery</div>
-        <div><strong style="color:var(--mint);font-family:var(--mono)">05</strong> &nbsp;Keep it alive on a VPS under systemd/tmux — full docs in <span style="font-family:var(--mono)">trading-bot/README.md</span></div>
-      </div>
-      <p style="font-size:12px;color:var(--faint);line-height:1.6;margin-top:12px;border-left:3px solid var(--amber);padding-left:12px;">
-        Ships hard-locked to the paper account — going live requires editing config.py <em>and</em> an
-        env var, on purpose. Textbook strategies: assume the edge is modest until the backtest and
-        paper results prove otherwise. Never trade money you can't afford to lose.
-      </p>
-    </div>
-  </div>
-
   <div class="disclaimer">
     Marrow is a personal research and education tool. It does not provide investment, financial, or legal
     advice and does not execute trades. Market data via your own Finnhub key; AI analysis via your own
@@ -500,14 +462,13 @@ function mdLite(src) {
 let tab = 'dash';
 function setTab(t) {
   tab = t;
-  for (const v of ['dash', 'research', 'smart', 'port', 'picks', 'bot']) {
+  for (const v of ['dash', 'research', 'smart', 'port', 'picks']) {
     document.getElementById('v-' + v).classList.toggle('active', v === t);
     document.getElementById('t-' + v).classList.toggle('active', v === t);
   }
   if (t === 'smart' && !smLoaded) loadSmartMoney();
   if (t === 'port') renderPortfolio();
   if (t === 'picks') refreshPicks(false);
-  if (t === 'bot') loadBot();
 }
 
 /* ================= dashboard ================= */
@@ -1429,54 +1390,6 @@ function askPicksAI() {
     ? 'Opened in Claude on the web — it will pressure-test all 10 picks and tell you what should knock each one off the list.'
     : 'Pop-up blocked — the prompt is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.';
   st.className = 'status ok';
-}
-
-/* ================= trading bot control room ================= */
-async function loadBot() {
-  let s = null;
-  try {
-    const r = await fetch('../trading-bot/state/status.json?t=' + Date.now());
-    if (r.ok) s = await r.json();
-  } catch (e) {}
-  if (!s) return;   // keep the setup instructions showing
-
-  const mode = s.mode || 'UNKNOWN';
-  const modeEl = document.getElementById('botmode');
-  modeEl.textContent = mode + ' · last pass ' + new Date(s.updated_utc).toLocaleString();
-  modeEl.style.color = mode.startsWith('DEMO') ? 'var(--amber)' : mode === 'LIVE' ? 'var(--red)' : 'var(--mint)';
-
-  const pos = s.positions || {};
-  let html = `<div style="font-family:var(--mono);font-size:22px;font-weight:700;margin-bottom:10px;">
-    $${(s.equity || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-    <span style="font-size:12px;color:var(--faint);font-weight:400;">equity (${esc(mode)})</span></div>`;
-  if (Object.keys(pos).length) {
-    html += '<table><tr><th>Symbol</th><th>Side</th><th class="n">Qty</th><th class="n">Entry</th><th class="n">Stop</th><th>Strategy</th></tr>' +
-      Object.entries(pos).map(([sym, p]) => `<tr><td><strong>${esc(sym)}</strong></td>
-        <td class="${p.side === 'long' ? 'up' : 'down'}">${esc(p.side)}</td>
-        <td class="n">${p.qty}</td><td class="n">${(+p.entry).toFixed(2)}</td>
-        <td class="n">${(+p.stop).toFixed(2)}</td>
-        <td style="color:var(--dim)">${esc((p.strategy || '').replace('_', ' '))}</td></tr>`).join('') + '</table>';
-  } else html += '<div class="empty">Flat — no open positions.</div>';
-  if (s.last_run_events && s.last_run_events.length) {
-    html += '<div style="font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.8;margin-top:12px;">' +
-      s.last_run_events.map(esc).join('<br>') + '</div>';
-  }
-  document.getElementById('botstatus').innerHTML = html;
-  document.getElementById('botstatus').className = '';
-
-  const tr = s.recent_trades || [];
-  if (tr.length) {
-    document.getElementById('bottrades').className = '';
-    document.getElementById('bottrades').innerHTML =
-      '<table><tr><th>Time</th><th>Symbol</th><th>Action</th><th>Side</th><th class="n">Price</th><th>Reason</th><th class="n">P&L</th></tr>' +
-      tr.slice().reverse().map(t => `<tr>
-        <td class="n" style="text-align:left">${esc((t.time || '').slice(0, 16).replace('T', ' '))}</td>
-        <td><strong>${esc(t.symbol)}</strong></td><td>${esc(t.action)}</td>
-        <td class="${t.side === 'long' ? 'up' : 'down'}">${esc(t.side)}</td>
-        <td class="n">${t.price ? (+t.price).toFixed(2) : ''}</td>
-        <td style="color:var(--dim);font-size:12px;">${esc(t.reason || '')}</td>
-        <td class="n ${+t.pnl >= 0 ? 'up' : 'down'}">${t.pnl ? (+t.pnl >= 0 ? '+' : '') + (+t.pnl).toFixed(2) : ''}</td></tr>`).join('') + '</table>';
-  }
 }
 
 /* ================= boot ================= */
