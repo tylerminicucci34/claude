@@ -169,6 +169,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       <button id="t-research" onclick="setTab('research')">Research</button>
       <button id="t-smart" onclick="setTab('smart')">Smart Money</button>
       <button id="t-port" onclick="setTab('port')">Portfolio</button>
+      <button id="t-picks" onclick="setTab('picks')">Top 10</button>
     </div>
     <button id="livebtn" onclick="onLiveClick()">CONNECTING…</button>
   </div>
@@ -326,6 +327,30 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
     </div>
   </div>
 
+  <!-- ================= TOP 10 ================= -->
+  <div class="view" id="v-picks">
+    <div class="card">
+      <h3>Top 10 — Strongest 12-Month Outlook
+        <span class="sub" id="picksmeta"></span></h3>
+      <p style="font-size:12.5px;color:var(--dim);line-height:1.55;margin-bottom:12px;">
+        Ranked by an <strong>outlook score</strong>: Wall Street analyst consensus (45%), the Marrow
+        quality rating (35%), and revenue growth (20%) — recomputed from live data. Remove any stock
+        with ✕ if something changes; the next-ranked candidate takes its place. A data-driven screen,
+        not a prediction or advice.
+      </p>
+      <div class="row" style="margin-bottom:12px;flex-wrap:wrap;">
+        <button class="btn ghost" id="picksrefresh" onclick="refreshPicks(true)">↻ Re-rank now</button>
+        <input type="text" id="picksadd" placeholder="Add a candidate, e.g. RKLB" style="max-width:220px;"
+               onkeydown="if(event.key==='Enter')addPickCandidate()">
+        <button class="btn ghost" onclick="addPickCandidate()">+ Add to pool</button>
+        <button class="btn ghost" onclick="askPicksAI()">Pressure-test with AI →</button>
+      </div>
+      <div class="status" id="picksstatus"></div>
+      <div id="pickstable"></div>
+      <div id="picksremoved" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
   <div class="disclaimer">
     Marrow is a personal research and education tool. It does not provide investment, financial, or legal
     advice and does not execute trades. Market data via your own Finnhub key; AI analysis via your own
@@ -437,12 +462,13 @@ function mdLite(src) {
 let tab = 'dash';
 function setTab(t) {
   tab = t;
-  for (const v of ['dash', 'research', 'smart', 'port']) {
+  for (const v of ['dash', 'research', 'smart', 'port', 'picks']) {
     document.getElementById('v-' + v).classList.toggle('active', v === t);
     document.getElementById('t-' + v).classList.toggle('active', v === t);
   }
   if (t === 'smart' && !smLoaded) loadSmartMoney();
   if (t === 'port') renderPortfolio();
+  if (t === 'picks') refreshPicks(false);
 }
 
 /* ================= dashboard ================= */
@@ -1199,6 +1225,171 @@ async function renderPortfolio() {
         <td class="n"><span class="x" onclick="rmPos('${r.s}')">✕</span></td>
       </tr>`;
     }).join('') + '</table>';
+}
+
+/* ================= top 10 picks ================= */
+const PICKS_DEFAULT = ['NVDA', 'MSFT', 'AAPL', 'GOOGL', 'AMZN', 'META', 'AVGO', 'TSM', 'LLY', 'V',
+  'MA', 'COST', 'CRM', 'AMD', 'NFLX', 'PLTR', 'UBER', 'JPM', 'ORCL', 'NOW', 'ISRG', 'CMG', 'CVX', 'UNH'];
+let picksUniverse = JSON.parse(localStorage.getItem('marrowPicksUniverse') || 'null') || PICKS_DEFAULT.slice();
+let picksRemoved = JSON.parse(localStorage.getItem('marrowPicksRemoved') || '[]');
+let picksCache = JSON.parse(localStorage.getItem('marrowPicksCache') || 'null');
+let picksBusy = false;
+function savePicksState() {
+  localStorage.setItem('marrowPicksUniverse', JSON.stringify(picksUniverse));
+  localStorage.setItem('marrowPicksRemoved', JSON.stringify(picksRemoved));
+  if (picksCache) localStorage.setItem('marrowPicksCache', JSON.stringify(picksCache));
+}
+
+async function scorePickTicker(t) {
+  const [metrics, rec] = await Promise.all([
+    fj('/stock/metric?symbol=' + t + '&metric=all'),
+    fj('/stock/recommendation?symbol=' + t).catch(() => []),
+  ]);
+  const m = (metrics && metrics.metric) || {};
+  const { composite } = computePillars(m);
+  const r = rec && rec[0];
+  let consensus = null, analysts = 0, bullPct = null;
+  if (r) {
+    analysts = (r.strongBuy || 0) + (r.buy || 0) + (r.hold || 0) + (r.sell || 0) + (r.strongSell || 0);
+    if (analysts > 0) {
+      const raw = (2 * r.strongBuy + r.buy - r.sell - 2 * r.strongSell) / (2 * analysts);  // -1..1
+      consensus = Math.round((raw + 1) / 2 * 100);
+      bullPct = Math.round((r.strongBuy + r.buy) / analysts * 100);
+    }
+  }
+  const g = num(m.revenueGrowthTTMYoy);
+  const growthScore = g == null ? null : Math.max(0, Math.min(100, 50 + g * 1.5));
+  const parts = [[consensus, 0.45], [composite, 0.35], [growthScore, 0.20]].filter(p => p[0] != null);
+  const wsum = parts.reduce((a, p) => a + p[1], 0);
+  const outlook = parts.length >= 2 ? Math.round(parts.reduce((a, p) => a + p[0] * p[1], 0) / wsum) : null;
+  return { t, outlook, quality: composite, consensus, bullPct, analysts, growth: g };
+}
+
+async function refreshPicks(force) {
+  const st = document.getElementById('picksstatus');
+  if (picksBusy) return;
+  if (!force && picksCache && picksCache.results && (Date.now() - picksCache.at) < 20 * 3600e3) {
+    renderPicks(); return;
+  }
+  if (!getFKey()) {
+    st.textContent = 'Connect a Finnhub key (top right) to rank the list.'; st.className = 'status err';
+    document.getElementById('keycard').classList.remove('collapsed'); return;
+  }
+  picksBusy = true;
+  document.getElementById('picksrefresh').disabled = true;
+  const results = [];
+  try {
+    // batches of 6 tickers (12 calls) with a pause — stays inside the free 60/min limit
+    for (let i = 0; i < picksUniverse.length; i += 6) {
+      const batch = picksUniverse.slice(i, i + 6);
+      st.innerHTML = `<span class="spin"></span> Scoring ${Math.min(i + 6, picksUniverse.length)} of ${picksUniverse.length} candidates…`;
+      st.className = 'status';
+      const scored = await Promise.all(batch.map(t => scorePickTicker(t).catch(e => ({ t, error: e.message }))));
+      results.push(...scored);
+      if (i + 6 < picksUniverse.length) await new Promise(r => setTimeout(r, 1200));
+    }
+    picksCache = { at: Date.now(), results };
+    savePicksState();
+    const failed = results.filter(r => r.error);
+    st.textContent = failed.length ? `Ranked. ${failed.length} candidate(s) skipped (${failed.map(f => f.t).join(', ')}).` : '';
+    st.className = 'status';
+    renderPicks();
+  } catch (e) {
+    st.textContent = 'Ranking failed: ' + e.message; st.className = 'status err';
+  } finally {
+    picksBusy = false;
+    document.getElementById('picksrefresh').disabled = false;
+  }
+}
+
+function renderPicks() {
+  const el = document.getElementById('pickstable');
+  const meta = document.getElementById('picksmeta');
+  const results = (picksCache && picksCache.results || []).filter(r => r.outlook != null && !picksRemoved.includes(r.t));
+  results.sort((a, b) => b.outlook - a.outlook);
+  const top = results.slice(0, 10);
+  meta.textContent = picksCache
+    ? `pool of ${picksUniverse.length} · ranked ${new Date(picksCache.at).toLocaleString()}`
+    : '';
+  if (!top.length) {
+    el.innerHTML = '<div class="empty">No ranked candidates yet — hit “Re-rank now”.</div>';
+  } else {
+    el.innerHTML = '<table><tr><th>#</th><th>Ticker</th><th class="n">Outlook</th><th>Why it ranks here</th><th></th></tr>' +
+      top.map((r, i) => {
+        const why = [
+          r.bullPct != null ? `${r.bullPct}% of ${r.analysts} analysts bullish` : null,
+          r.quality != null ? `quality ${r.quality}/100` : null,
+          r.growth != null ? `revenue ${r.growth >= 0 ? '+' : ''}${r.growth.toFixed(0)}%` : null,
+        ].filter(Boolean).join(' · ');
+        return `<tr>
+          <td class="n" style="text-align:left;color:var(--faint)">${i + 1}</td>
+          <td class="tick" onclick="goResearch('${r.t}')">${r.t}</td>
+          <td class="n" style="color:${pillarColor(r.outlook)};font-weight:800">${r.outlook}</td>
+          <td style="color:var(--dim);font-size:12.5px;">${why}</td>
+          <td class="n"><span class="x" onclick="removePick('${r.t}')" title="Remove — next-ranked stock takes its place">✕</span></td>
+        </tr>`;
+      }).join('') + '</table>';
+  }
+  const rm = document.getElementById('picksremoved');
+  rm.innerHTML = picksRemoved.length
+    ? '<span style="font-size:11.5px;color:var(--faint);letter-spacing:0.5px;">REMOVED — TAP TO RESTORE: </span>' +
+      picksRemoved.map(t => `<span class="chip" onclick="restorePick('${t}')">${t} ↩</span>`).join(' ')
+    : '';
+}
+
+function removePick(t) {
+  if (!picksRemoved.includes(t)) picksRemoved.push(t);
+  savePicksState(); renderPicks();
+}
+function restorePick(t) {
+  picksRemoved = picksRemoved.filter(x => x !== t);
+  savePicksState(); renderPicks();
+}
+
+async function addPickCandidate() {
+  const inEl = document.getElementById('picksadd');
+  const t = inEl.value.trim().toUpperCase();
+  const st = document.getElementById('picksstatus');
+  if (!t) return;
+  inEl.value = '';
+  picksRemoved = picksRemoved.filter(x => x !== t);
+  if (!picksUniverse.includes(t)) picksUniverse.push(t);
+  if (!getFKey()) { savePicksState(); return; }
+  st.innerHTML = `<span class="spin"></span> Scoring ${t}…`; st.className = 'status';
+  try {
+    const r = await scorePickTicker(t);
+    if (!picksCache) picksCache = { at: Date.now(), results: [] };
+    picksCache.results = picksCache.results.filter(x => x.t !== t).concat([r]);
+    st.textContent = r.outlook != null ? `${t} scored ${r.outlook} — ranked into the pool.` : `${t} added, but not enough data to score it.`;
+    st.className = 'status ok';
+  } catch (e) {
+    st.textContent = `Could not score ${t}: ${e.message}`; st.className = 'status err';
+  }
+  savePicksState(); renderPicks();
+}
+
+function askPicksAI() {
+  const results = (picksCache && picksCache.results || []).filter(r => r.outlook != null && !picksRemoved.includes(r.t));
+  results.sort((a, b) => b.outlook - a.outlook);
+  const top = results.slice(0, 10);
+  const st = document.getElementById('picksstatus');
+  if (!top.length) { st.textContent = 'Rank the list first.'; st.className = 'status err'; return; }
+  const prompt =
+    `You are a sharp, data-first stock analyst. Below is my top-10 list for the next 12 months, ranked by a ` +
+    `score built from analyst consensus (45%), a fundamentals quality rating (35%), and revenue growth (20%). ` +
+    `Pressure-test it: for each stock, give the strongest reason it belongs, the most likely thing to go wrong ` +
+    `in the next year, and a concrete signal that should get it removed from the list. Use web search for ` +
+    `anything current. Research only — no personalized advice.\n\n` +
+    top.map((r, i) => `${i + 1}. ${r.t} — outlook ${r.outlook}/100` +
+      (r.bullPct != null ? `, ${r.bullPct}% of ${r.analysts} analysts bullish` : '') +
+      (r.quality != null ? `, quality ${r.quality}` : '') +
+      (r.growth != null ? `, revenue ${r.growth >= 0 ? '+' : ''}${r.growth.toFixed(0)}%` : '')).join('\n');
+  navigator.clipboard?.writeText(prompt).catch(() => {});
+  const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
+  st.innerHTML = win
+    ? 'Opened in Claude on the web — it will pressure-test all 10 picks and tell you what should knock each one off the list.'
+    : 'Pop-up blocked — the prompt is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.';
+  st.className = 'status ok';
 }
 
 /* ================= boot ================= */
