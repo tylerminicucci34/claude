@@ -295,6 +295,17 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
   <!-- ================= SMART MONEY ================= -->
   <div class="view" id="v-smart">
     <div class="updated" id="sm-updated"></div>
+    <div class="card" id="sm-askcard" style="display:none;">
+      <h3>AI Analyst — Smart Money <span class="sub" id="sm-chatmode"></span></h3>
+      <div class="chatlog" id="sm-chatlog" style="max-height:360px;"></div>
+      <div class="chips" id="sm-chips"></div>
+      <div class="row">
+        <input type="text" id="sm-chatin" placeholder="Ask about any of these trades or portfolios…"
+               onkeydown="if(event.key==='Enter')sendSmartChat()">
+        <button class="btn" id="sm-chatbtn" onclick="sendSmartChat()">Ask</button>
+      </div>
+      <div class="status" id="sm-chatstatus"></div>
+    </div>
     <div class="smgrid" id="sm-13f"></div>
     <div class="card" id="sm-insiders" style="display:none;"></div>
     <div class="card" id="sm-congress" style="display:none;"></div>
@@ -930,7 +941,7 @@ let smDataPromise = null;
 function getSmartData() {
   if (!smDataPromise) smDataPromise = (async () => {
     let data = null;
-    try { const r = await fetch('./smartmoney.json'); if (r.ok) data = await r.json(); } catch (e) {}
+    try { const r = await fetch('./smartmoney.json?t=' + Date.now()); if (r.ok) data = await r.json(); } catch (e) {}
     if (!data) { // fall back to the Brain Trust feed (same EDGAR pipeline)
       try {
         const r = await fetch('../brain-trust/holdings.json');
@@ -951,14 +962,129 @@ function getSmartData() {
   return smDataPromise;
 }
 
+/* Compact text digest of everything on the Smart Money tab, for the AI analyst. */
+function smDigest(data) {
+  const L = [];
+  L.push(`SMART MONEY DATA — public filings (SEC EDGAR + House Clerk), refreshed ${data.updated_utc ? new Date(data.updated_utc).toLocaleDateString() : 'recently'}:`);
+  for (const inv of (data.investors || [])) {
+    const total = (inv.holdings || []).reduce((a, h) => a + (h.value_usd || 0), 0);
+    L.push(`\n13F — ${inv.name} (filed ${inv.filing_date || '?'}), top holdings: ` +
+      (inv.holdings || []).slice(0, 8).map(h =>
+        `${h.name}${h.ticker ? ` [${h.ticker}]` : ''} ${bigUsd(h.value_usd)}${total ? ` (${(h.value_usd / total * 100).toFixed(1)}%)` : ''}`).join('; '));
+  }
+  for (const p of (data.insiders || [])) {
+    const fs = (p.filings || []).slice(0, 3).map(f => `${f.date}: ${f.summary || 'see filing'}`);
+    L.push(`\nInsider Form 4s — ${p.name}: ` + (fs.length ? fs.join(' | ') : 'no recent filings'));
+  }
+  const cg = data.congress || [];
+  if (cg.length) {
+    L.push(`\nCongress trade reports (House PTRs; the trades themselves are in the linked disclosure PDFs, reported up to 45 days late): ` +
+      cg.slice(0, 15).map(c => `${c.date} ${c.name} (${c.office})`).join('; '));
+  }
+  return L.join('\n');
+}
+
+let smChatHistory = [];
+function askSmChip(el) { document.getElementById('sm-chatin').value = el.textContent; sendSmartChat(); }
+
+async function sendSmartChat() {
+  const inEl = document.getElementById('sm-chatin');
+  const q = inEl.value.trim();
+  const st = document.getElementById('sm-chatstatus');
+  const log = document.getElementById('sm-chatlog');
+  if (!q) return;
+  const data = await getSmartData();
+  if (!data) return;
+  const context =
+    `You are a sharp, data-first analyst of institutional and political trading activity. Use the ` +
+    `filing data below as your verified source (plus web search for anything newer). Congress PTRs ` +
+    `list who filed and when — the individual trades are in the linked PDFs, so don't invent them. ` +
+    `Be direct and specific; label anything unverifiable [UNVERIFIED]. Research and education only — ` +
+    `no personalized buy/sell advice.\n\n` + smDigest(data);
+  const ak = getAKey();
+  inEl.value = ''; st.textContent = ''; st.className = 'status';
+
+  if (!ak) {   // keyless: hand off to Claude on the web with all the data attached
+    const prompt = context + `\n\nQuestion: ${q}`;
+    navigator.clipboard?.writeText(prompt).catch(() => {});
+    const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
+    log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
+    log.insertAdjacentHTML('beforeend', `<div class="msg ai">${win
+      ? 'Opened in <strong>Claude on the web</strong> with all the smart-money filings attached — the answer streams there. No API key needed.'
+      : 'Pop-up blocked — the full prompt (with the filing data) is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.'}</div>`);
+    log.scrollTop = log.scrollHeight;
+    return;
+  }
+
+  // key saved: stream the answer in-app
+  document.getElementById('sm-chatbtn').disabled = true;
+  log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
+  const aiEl = document.createElement('div');
+  aiEl.className = 'msg ai'; aiEl.innerHTML = '<span class="spin"></span>';
+  log.appendChild(aiEl); log.scrollTop = log.scrollHeight;
+  smChatHistory.push({ role: 'user', content: q });
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json', 'x-api-key': ak,
+        'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 4000, stream: true, system: context, messages: smChatHistory }),
+    });
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const e = await resp.json(); msg = e.error?.message || msg; } catch (_) {}
+      throw new Error(msg);
+    }
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    let buf = '', text = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (!ln.startsWith('data: ')) continue;
+        let ev; try { ev = JSON.parse(ln.slice(6)); } catch (_) { continue; }
+        if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+          text += ev.delta.text; aiEl.innerHTML = mdLite(text); log.scrollTop = log.scrollHeight;
+        } else if (ev.type === 'error') throw new Error(ev.error?.message || 'stream error');
+      }
+    }
+    if (!text) throw new Error('empty response — try again');
+    smChatHistory.push({ role: 'assistant', content: text });
+  } catch (e) {
+    smChatHistory.pop();
+    aiEl.innerHTML = `<span style="color:var(--red)">Analyst failed: ${esc(e.message)}</span>`;
+  } finally {
+    document.getElementById('sm-chatbtn').disabled = false;
+  }
+}
+
 async function loadSmartMoney() {
   smLoaded = true;
   const data = await getSmartData();
   const grid = document.getElementById('sm-13f');
   if (!data) { grid.innerHTML = '<div class="card"><div class="empty">Smart-money data not available — run scripts/fetch-smart-money.py (or wait for the weekly refresh).</div></div>'; return; }
   document.getElementById('sm-updated').textContent =
-    'Public filings from SEC EDGAR' + (data.congress && data.congress.length ? ' + House Clerk' : '') +
+    `Tracking ${(data.investors || []).length} superinvestor portfolios · ${(data.insiders || []).length} insiders · ` +
+    `${(data.congress || []).length} congress filings — public data from SEC EDGAR` +
+    (data.congress && data.congress.length ? ' + House Clerk' : '') +
     ' · refreshed ' + (data.updated_utc ? new Date(data.updated_utc).toLocaleString() : '—') + ' · auto-updates weekly';
+
+  // AI analyst for this tab
+  document.getElementById('sm-askcard').style.display = 'block';
+  document.getElementById('sm-chatmode').textContent = getAKey()
+    ? 'streams in-app — knows every filing below'
+    : 'no key needed — opens in Claude on the web with every filing below attached';
+  if (!document.getElementById('sm-chips').innerHTML) {
+    document.getElementById('sm-chips').innerHTML = [
+      'What did Nancy Pelosi file recently?', "Summarize Elon Musk's latest Form 4s",
+      'What is Michael Burry betting on?', 'Where do these portfolios overlap?',
+      'What did Trump do with his DJT shares?',
+    ].map(c => `<span class="chip" onclick="askSmChip(this)">${c}</span>`).join('');
+  }
 
   grid.innerHTML = (data.investors || []).map(inv => {
     const total = (inv.holdings || []).reduce((a, h) => a + (h.value_usd || 0), 0);
