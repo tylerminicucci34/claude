@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-07-16T13:14:14.315038+00:00",
+  "updated_utc": "2026-07-16T13:16:57.943047+00:00",
   "buffett": {
     "filing_date": "2026-05-15",
     "accession": "0001193125-26-226661",
@@ -78,8 +78,34 @@
     ]
   },
   "trump": {
-    "source": "SEC EDGAR Form 4 filings (CIK 0001746139)",
-    "filings": []
+    "source": "SEC EDGAR Form 4 filings (CIK 0000947033)",
+    "filings": [
+      {
+        "date": "2024-12-19",
+        "accession": "0001474506-24-000291",
+        "url": "https://www.sec.gov/Archives/edgar/data/947033/000147450624000291/"
+      },
+      {
+        "date": "2024-04-30",
+        "accession": "0001474506-24-000146",
+        "url": "https://www.sec.gov/Archives/edgar/data/947033/000147450624000146/"
+      },
+      {
+        "date": "2009-03-04",
+        "accession": "0000899140-09-000582",
+        "url": "https://www.sec.gov/Archives/edgar/data/947033/000089914009000582/"
+      },
+      {
+        "date": "2008-09-15",
+        "accession": "0000909518-08-000726",
+        "url": "https://www.sec.gov/Archives/edgar/data/947033/000090951808000726/"
+      },
+      {
+        "date": "2008-09-11",
+        "accession": "0000909518-08-000720",
+        "url": "https://www.sec.gov/Archives/edgar/data/947033/000090951808000720/"
+      }
+    ]
   },
   "errors": []
 }
