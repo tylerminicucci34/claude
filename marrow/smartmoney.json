@@ -5,7 +5,7 @@
       "cik": "0001067983",
       "filing_date": "2026-05-15",
       "accession": "0001193125-26-226661",
-      "source": "SEC EDGAR 13F-HR \u2014 Berkshire Hathaway",
+      "source": "SEC EDGAR 13F-HR \u2014 Warren Buffett \u2014 Berkshire Hathaway",
       "holdings": [
         {
           "name": "APPLE INC",
@@ -56,6 +56,112 @@
           "name": "KRAFT HEINZ CO",
           "value_usd": 7323527057,
           "ticker": "KHC"
+        },
+        {
+          "name": "DAVITA INC",
+          "value_usd": 4626158909,
+          "ticker": "DVA"
+        },
+        {
+          "name": "KROGER CO",
+          "value_usd": 3618000000,
+          "ticker": "KR"
+        }
+      ]
+    },
+    {
+      "name": "Bill Ackman \u2014 Pershing Square",
+      "cik": "0001336528",
+      "filing_date": "2026-05-15",
+      "accession": "0001172661-26-002336",
+      "source": "SEC EDGAR 13F-HR \u2014 Bill Ackman \u2014 Pershing Square",
+      "holdings": [
+        {
+          "name": "BROOKFIELD CORP",
+          "value_usd": 2415946008,
+          "ticker": "BN"
+        },
+        {
+          "name": "AMAZON COM INC",
+          "value_usd": 2385104083,
+          "ticker": "AMZN"
+        },
+        {
+          "name": "UBER TECHNOLOGIES INC",
+          "value_usd": 2154934398,
+          "ticker": "UBER"
+        },
+        {
+          "name": "MICROSOFT CORP",
+          "value_usd": 2092970053
+        },
+        {
+          "name": "RESTAURANT BRANDS INTL INC",
+          "value_usd": 1673501194,
+          "ticker": "QSR"
+        },
+        {
+          "name": "META PLATFORMS INC",
+          "value_usd": 1522358404
+        },
+        {
+          "name": "HOWARD HUGHES HOLDINGS INC",
+          "value_usd": 1192581569,
+          "ticker": "HHH"
+        },
+        {
+          "name": "SEAPORT ENTMT GROUP INC",
+          "value_usd": 107910794
+        },
+        {
+          "name": "ALPHABET INC",
+          "value_usd": 98731763,
+          "ticker": "GOOGL"
+        },
+        {
+          "name": "HERTZ GLOBAL HLDGS INC",
+          "value_usd": 70261595
+        }
+      ]
+    },
+    {
+      "name": "Michael Burry \u2014 Scion Asset Mgmt",
+      "cik": "0001649339",
+      "filing_date": "2025-11-03",
+      "accession": "0001649339-25-000007",
+      "source": "SEC EDGAR 13F-HR \u2014 Michael Burry \u2014 Scion Asset Mgmt",
+      "holdings": [
+        {
+          "name": "PALANTIR TECHNOLOGIES INC",
+          "value_usd": 912100000
+        },
+        {
+          "name": "NVIDIA CORPORATION",
+          "value_usd": 186580000
+        },
+        {
+          "name": "PFIZER INC",
+          "value_usd": 152880000
+        },
+        {
+          "name": "HALLIBURTON CO",
+          "value_usd": 61500000
+        },
+        {
+          "name": "MOLINA HEALTHCARE INC",
+          "value_usd": 23920000
+        },
+        {
+          "name": "LULULEMON ATHLETICA INC",
+          "value_usd": 17793000
+        },
+        {
+          "name": "SLM CORP",
+          "value_usd": 13287895
+        },
+        {
+          "name": "BRUKER CORP",
+          "value_usd": 13137181
         }
       ]
     }
@@ -69,45 +175,357 @@
         {
           "date": "2026-06-17",
           "accession": "0001628280-26-044069",
-          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000162828026044069/"
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000162828026044069/",
+          "summary": "SPCX: acquired 511,289,725 sh; acquired 78,395 sh; disposed of 25,172,695 sh"
         },
         {
           "date": "2026-06-17",
           "accession": "0001104659-26-075213",
-          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926075213/"
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926075213/",
+          "summary": "TSLA: acquired 303,960,630 sh @ $23.34; tax-withheld 17,531,857 sh @ $404.66"
         },
         {
           "date": "2026-04-23",
           "accession": "0001104659-26-047678",
-          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926047678/"
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465926047678/",
+          "summary": "TSLA: disposed of 96,000,000 sh @ $0.00"
         },
         {
           "date": "2025-12-31",
           "accession": "0001104659-25-125703",
-          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925125703/"
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925125703/",
+          "summary": "TSLA: gifted 210,699 sh @ $0.00"
         },
         {
           "date": "2025-11-10",
           "accession": "0001104659-25-109263",
-          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/"
+          "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/",
+          "summary": "TSLA: acquired 423,743,904 sh @ $334.09"
         }
       ]
-    },
-    {
-      "name": "Donald J. Trump",
-      "cik": "0001746139",
-      "source": "SEC EDGAR Form 4 filings (CIK 0001746139)",
-      "filings": []
     },
     {
       "name": "Warren Buffett",
       "cik": "0000315090",
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
-      "filings": []
+      "filings": [
+        {
+          "date": "2026-07-15",
+          "accession": "0001193125-26-304843",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526304843/",
+          "summary": "BRK.A: acquired 12,000,000 sh @ $0.00; gifted 9,000,000 sh @ $0.00; gifted 1,000,000 sh @ $0.00"
+        },
+        {
+          "date": "2026-05-26",
+          "accession": "0001193125-26-239886",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526239886/",
+          "summary": "BRK.A: gifted 160 sh @ $0.00"
+        },
+        {
+          "date": "2026-05-20",
+          "accession": "0001193125-26-232543",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526232543/",
+          "summary": "BRK.A: acquired 37,500 sh @ $0.00; gifted 18,646 sh @ $0.00; gifted 18,646 sh @ $0.00"
+        },
+        {
+          "date": "2026-05-05",
+          "accession": "0001193125-26-207021",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526207021/",
+          "summary": "DVA: sold 1,220,376 sh @ $149.84"
+        },
+        {
+          "date": "2026-03-19",
+          "accession": "0001193125-26-116315",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526116315/",
+          "summary": "BRK.A: see filing"
+        }
+      ]
     }
   ],
-  "congress": [],
-  "errors": [],
-  "updated_utc": "2026-07-13T10:55:41.906262+00:00",
-  "note": "Seed data copied from brain-trust/holdings.json; scripts/fetch-smart-money.py replaces this on the weekly refresh with Ackman/Burry 13Fs, parsed Form 4 transactions, and House PTRs."
+  "congress": [
+    {
+      "name": "Debbie Dingell",
+      "office": "MI06",
+      "date": "2026-07-15",
+      "doc_id": "20034960",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034960.pdf"
+    },
+    {
+      "name": "Katherine M. Clark",
+      "office": "MA05",
+      "date": "2026-07-14",
+      "doc_id": "20034892",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034892.pdf"
+    },
+    {
+      "name": "Debbie Wasserman Schultz",
+      "office": "FL25",
+      "date": "2026-07-14",
+      "doc_id": "20034999",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034999.pdf"
+    },
+    {
+      "name": "Rudy C. Yakym",
+      "office": "IN02",
+      "date": "2026-07-13",
+      "doc_id": "20034984",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034984.pdf"
+    },
+    {
+      "name": "John James",
+      "office": "MI10",
+      "date": "2026-07-12",
+      "doc_id": "20034949",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034949.pdf"
+    },
+    {
+      "name": "Rick Larsen",
+      "office": "WA02",
+      "date": "2026-07-12",
+      "doc_id": "20034977",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034977.pdf"
+    },
+    {
+      "name": "Virginia Foxx",
+      "office": "NC05",
+      "date": "2026-07-10",
+      "doc_id": "20034895",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034895.pdf"
+    },
+    {
+      "name": "Scott H. Peters",
+      "office": "CA50",
+      "date": "2026-07-10",
+      "doc_id": "20034911",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034911.pdf"
+    },
+    {
+      "name": "Robert J. Wittman",
+      "office": "VA01",
+      "date": "2026-07-10",
+      "doc_id": "20034916",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034916.pdf"
+    },
+    {
+      "name": "Richard Dean Dr McCormick",
+      "office": "GA06",
+      "date": "2026-07-09",
+      "doc_id": "20034954",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034954.pdf"
+    },
+    {
+      "name": "Tim Moore",
+      "office": "NC14",
+      "date": "2026-07-09",
+      "doc_id": "20034952",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034952.pdf"
+    },
+    {
+      "name": "Kelly Louise Morrison",
+      "office": "MN03",
+      "date": "2026-07-09",
+      "doc_id": "20034806",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034806.pdf"
+    },
+    {
+      "name": "Charles J. \"Chuck\" Fleischmann",
+      "office": "TN03",
+      "date": "2026-07-08",
+      "doc_id": "9116212",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116212.pdf"
+    },
+    {
+      "name": "Mike Kelly",
+      "office": "PA16",
+      "date": "2026-07-08",
+      "doc_id": "20034947",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034947.pdf"
+    },
+    {
+      "name": "Susie Lee",
+      "office": "NV03",
+      "date": "2026-07-08",
+      "doc_id": "20034790",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034790.pdf"
+    },
+    {
+      "name": "Michael T. McCaul",
+      "office": "TX10",
+      "date": "2026-07-08",
+      "doc_id": "9116211",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116211.pdf"
+    },
+    {
+      "name": "John McGuire",
+      "office": "VA05",
+      "date": "2026-07-08",
+      "doc_id": "20034942",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034942.pdf"
+    },
+    {
+      "name": "Ritchie John Torres",
+      "office": "NY15",
+      "date": "2026-07-08",
+      "doc_id": "20034224",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034224.pdf"
+    },
+    {
+      "name": "Nicholas Begich",
+      "office": "AK00",
+      "date": "2026-07-07",
+      "doc_id": "20034920",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034920.pdf"
+    },
+    {
+      "name": "April McClain Delaney",
+      "office": "MD06",
+      "date": "2026-07-07",
+      "doc_id": "20034932",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034932.pdf"
+    },
+    {
+      "name": "Josh Gottheimer",
+      "office": "NJ05",
+      "date": "2026-07-07",
+      "doc_id": "20034938",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034938.pdf"
+    },
+    {
+      "name": "Maria Elvira Salazar",
+      "office": "FL27",
+      "date": "2026-07-07",
+      "doc_id": "20034928",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034928.pdf"
+    },
+    {
+      "name": "Lloyd Doggett",
+      "office": "TX37",
+      "date": "2026-07-06",
+      "doc_id": "20034923",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034923.pdf"
+    },
+    {
+      "name": "Rohit Khanna",
+      "office": "CA17",
+      "date": "2026-07-06",
+      "doc_id": "9116206",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116206.pdf"
+    },
+    {
+      "name": "Gilbert Cisneros",
+      "office": "CA31",
+      "date": "2026-07-02",
+      "doc_id": "20034906",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034906.pdf"
+    },
+    {
+      "name": "Daniel Meuser",
+      "office": "PA09",
+      "date": "2026-07-02",
+      "doc_id": "20034774",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034774.pdf"
+    },
+    {
+      "name": "Ann Wagner",
+      "office": "MO02",
+      "date": "2026-07-02",
+      "doc_id": "20034915",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034915.pdf"
+    },
+    {
+      "name": "Donald Sternoff Beyer",
+      "office": "VA08",
+      "date": "2026-07-01",
+      "doc_id": "20034891",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034891.pdf"
+    },
+    {
+      "name": "Max Miller",
+      "office": "OH07",
+      "date": "2026-07-01",
+      "doc_id": "20034869",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034869.pdf"
+    },
+    {
+      "name": "David J. Taylor",
+      "office": "OH02",
+      "date": "2026-07-01",
+      "doc_id": "20034897",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034897.pdf"
+    },
+    {
+      "name": "Keith Alan Self",
+      "office": "TX03",
+      "date": "2026-06-30",
+      "doc_id": "9116197",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116197.pdf"
+    },
+    {
+      "name": "Cleo Fields",
+      "office": "LA06",
+      "date": "2026-06-26",
+      "doc_id": "20034800",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034800.pdf"
+    },
+    {
+      "name": "Greg Stanton",
+      "office": "AZ04",
+      "date": "2026-06-26",
+      "doc_id": "20034717",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034717.pdf"
+    },
+    {
+      "name": "Dwight Evans",
+      "office": "PA03",
+      "date": "2026-06-24",
+      "doc_id": "20034851",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034851.pdf"
+    },
+    {
+      "name": "Neal Patrick MD, Facs Dunn",
+      "office": "FL02",
+      "date": "2026-06-23",
+      "doc_id": "20034815",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034815.pdf"
+    },
+    {
+      "name": "Nancy Pelosi",
+      "office": "CA11",
+      "date": "2026-06-23",
+      "doc_id": "20034836",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034836.pdf"
+    },
+    {
+      "name": "Jared Moskowitz",
+      "office": "FL23",
+      "date": "2026-06-19",
+      "doc_id": "20034749",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034749.pdf"
+    },
+    {
+      "name": "Scott H. Peters",
+      "office": "CA50",
+      "date": "2026-06-19",
+      "doc_id": "20034784",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034784.pdf"
+    },
+    {
+      "name": "Thomas H. Kean",
+      "office": "NJ07",
+      "date": "2026-06-18",
+      "doc_id": "20034783",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034783.pdf"
+    },
+    {
+      "name": "Steve Cohen",
+      "office": "TN09",
+      "date": "2026-06-17",
+      "doc_id": "20034796",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034796.pdf"
+    }
+  ],
+  "errors": [
+    "Form4 Donald J. Trump: CIK 0001746139 is registered to 'Auron Therapeutics, Inc.', expected 'TRUMP' \u2014 skipping"
+  ],
+  "updated_utc": "2026-07-16T13:14:16.084824+00:00"
 }
