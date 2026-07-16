@@ -22,13 +22,14 @@ top. Pure-stdlib Python (no dependencies), Alpaca's free broker API, **paper tra
 2. **Hard stop at entry, never widened**; momentum/trend stops trail the best price and only ratchet in your favor.
 3. **Correlation filter** — SPY and QQQ both long? No new BTC long. One risk-on bet, not three.
 
+The control-room dashboard for this bot is the **Trading Bot tab inside Marrow** (`marrow/index.html`), which renders the `state/status.json` this bot writes each pass.
+
 ## Files
 
 - `bot.py` — the bot. One pass per run (cron-friendly) or `--loop` for every 15 minutes.
 - `backtest.py` — walk-forward simulation with per-symbol and portfolio metrics (return, win rate, max drawdown, Sharpe-like score).
 - `briefing.py` — the two messages a day (`morning` / `evening`), optional Telegram delivery.
 - `strategies.py` / `risk.py` / `indicators.py` / `broker.py` / `config.py` — the modules.
-- `index.html` — control-room dashboard (linked from the My Apps hub); renders `state/status.json` that the bot writes each pass.
 - `state/` — positions, trade log (`trades.csv`), status. Git-ignored.
 
 ## Quick start
