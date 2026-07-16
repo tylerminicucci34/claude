@@ -23,8 +23,8 @@ HEADERS = {
 
 BERKSHIRE_CIK = "0001067983"
 MUSK_CIK = "0001494730"
-# Donald J Trump's reporting CIK as a director/officer of DJT (TMTG)
-TRUMP_CIK = "0001746139"
+# Donald J Trump's personal reporting CIK (Form 4 filer for DJT/TMTG)
+TRUMP_CIK = "0000947033"
 
 
 def fetch_json(url):

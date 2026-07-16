@@ -37,7 +37,7 @@ INVESTORS = [
 #  a safety check so a wrong CIK can never mislabel someone else's filings)
 INSIDERS = [
     ("Elon Musk", "0001494730", "MUSK"),
-    ("Donald J. Trump", "0001746139", "TRUMP"),
+    ("Donald J. Trump", "0000947033", "TRUMP"),
     ("Warren Buffett", "0000315090", "BUFFETT"),
 ]
 
