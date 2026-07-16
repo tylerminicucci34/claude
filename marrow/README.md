@@ -11,7 +11,7 @@ no account, and no data leaving your browser except to APIs you hold the keys fo
 |---|---|---|
 | **Dashboard** | Index ETFs (SPY/QQQ/DIA/IWM), a watchlist that auto-refreshes every 30s, market headlines | Finnhub (your free key) |
 | **Research** | Live quote + 52-week range, **Marrow Quality Rating** (Growth / Business Quality / Financial Health / Valuation, each 0–100 with a composite), an **About & Why This Rating** section (Wikipedia company description + plain-English pillar-by-pillar score explanation + a smart-money callout when tracked investors/insiders are in the stock), key TTM stats, Wall Street analyst consensus, EPS-vs-estimate history, company news, and a streaming **AI analyst chat** that knows all the data on screen | Finnhub + Wikipedia + Anthropic API (your keys) |
-| **Smart Money** | Superinvestor 13F holdings (Buffett, Ackman, Burry), insider Form 4 activity with parsed buy/sell summaries (Musk, Trump, Buffett — extend via `INSIDERS` in the script; each CIK is name-verified against EDGAR before use), and the latest House congress-trade reports (PTRs) with high-profile members starred (Pelosi, Greene, Gottheimer, …) and a link to the Senate's separate EFD search | SEC EDGAR + House Clerk, refreshed weekly by GitHub Actions |
+| **Smart Money** | Superinvestor 13F holdings (Buffett, Ackman, Burry), insider Form 4 activity with parsed buy/sell summaries (Musk, Trump, Buffett — extend via `INSIDERS` in the script; each CIK is name-verified against EDGAR before use), and the latest House congress-trade reports (PTRs) with high-profile members starred (Pelosi, Greene, Gottheimer, …) and a link to the Senate's separate EFD search | SEC EDGAR + House Clerk, refreshed daily by GitHub Actions |
 | **Portfolio** | Manual positions with live market value, day P&L, total P&L, return %, and allocation bars | localStorage + Finnhub |
 
 ## Setup
@@ -31,7 +31,7 @@ Keys live only in your browser's localStorage. Nothing is uploaded anywhere.
 - **SEC EDGAR Form 4** — recent insider filings with transaction summaries (edit `INSIDERS`).
 - **House Clerk financial disclosures** — latest periodic transaction reports with PDF links.
 
-The existing `update-holdings.yml` workflow runs it every Monday and commits changes. Run it
+The existing `update-holdings.yml` workflow runs it every day at 08:00 UTC and commits changes. Run it
 manually anytime with `python3 scripts/fetch-smart-money.py` (SEC asks for a real contact in the
 `User-Agent` — update it in the script).
 

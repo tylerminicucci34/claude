@@ -1066,12 +1066,12 @@ async function loadSmartMoney() {
   smLoaded = true;
   const data = await getSmartData();
   const grid = document.getElementById('sm-13f');
-  if (!data) { grid.innerHTML = '<div class="card"><div class="empty">Smart-money data not available — run scripts/fetch-smart-money.py (or wait for the weekly refresh).</div></div>'; return; }
+  if (!data) { grid.innerHTML = '<div class="card"><div class="empty">Smart-money data not available — run scripts/fetch-smart-money.py (or wait for the daily refresh).</div></div>'; return; }
   document.getElementById('sm-updated').textContent =
     `Tracking ${(data.investors || []).length} superinvestor portfolios · ${(data.insiders || []).length} insiders · ` +
     `${(data.congress || []).length} congress filings — public data from SEC EDGAR` +
     (data.congress && data.congress.length ? ' + House Clerk' : '') +
-    ' · refreshed ' + (data.updated_utc ? new Date(data.updated_utc).toLocaleString() : '—') + ' · auto-updates weekly';
+    ' · refreshed ' + (data.updated_utc ? new Date(data.updated_utc).toLocaleString() : '—') + ' · auto-updates daily';
 
   // AI analyst for this tab
   document.getElementById('sm-askcard').style.display = 'block';
@@ -1111,7 +1111,7 @@ async function loadSmartMoney() {
           <td>${f.summary ? esc(f.summary) : '<span style="color:var(--faint)">See filing</span>'}</td>
           <td class="n"><a href="${esc(f.url || '#')}" target="_blank" rel="noopener">EDGAR ↗</a></td>
         </tr>`).join('') + '</table>'
-        : '<div class="empty" style="padding:6px 0 2px;">No recent Form 4 filings pulled yet — populates on the weekly refresh.</div>') +
+        : '<div class="empty" style="padding:6px 0 2px;">No recent Form 4 filings pulled yet — populates on the daily refresh.</div>') +
       '</div>').join('');
   } else insEl.style.display = 'none';
 
