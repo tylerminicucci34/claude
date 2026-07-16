@@ -92,6 +92,18 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1494730/000110465925109263/"
         }
       ]
+    },
+    {
+      "name": "Donald J. Trump",
+      "cik": "0001746139",
+      "source": "SEC EDGAR Form 4 filings (CIK 0001746139)",
+      "filings": []
+    },
+    {
+      "name": "Warren Buffett",
+      "cik": "0000315090",
+      "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
+      "filings": []
     }
   ],
   "congress": [],

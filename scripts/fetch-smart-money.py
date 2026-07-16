@@ -33,8 +33,12 @@ INVESTORS = [
     ("Michael Burry — Scion Asset Mgmt", "0001649339"),
 ]
 
+# (display name, CIK, substring that must appear in EDGAR's registered name —
+#  a safety check so a wrong CIK can never mislabel someone else's filings)
 INSIDERS = [
-    ("Elon Musk", "0001494730"),
+    ("Elon Musk", "0001494730", "MUSK"),
+    ("Donald J. Trump", "0001746139", "TRUMP"),
+    ("Warren Buffett", "0000315090", "BUFFETT"),
 ]
 
 # Best-effort issuer-name → ticker map for click-through in the app.
@@ -186,8 +190,12 @@ def summarize_form4(base_url, primary_doc):
     return (f"{symbol}: " if symbol else "") + "; ".join(parts)
 
 
-def fetch_insider(name, cik, limit=5):
+def fetch_insider(name, cik, expect_name, limit=5):
     data = fetch_json(f"https://data.sec.gov/submissions/CIK{cik}.json")
+    registered = (data.get("name") or "").upper()
+    if expect_name.upper() not in registered:
+        raise RuntimeError(
+            f"CIK {cik} is registered to '{data.get('name')}', expected '{expect_name}' — skipping")
     recent = data["filings"]["recent"]
     filings = []
     for i, form in enumerate(recent["form"]):
@@ -216,7 +224,7 @@ def fetch_insider(name, cik, limit=5):
     }
 
 
-def fetch_house_ptrs(limit=25):
+def fetch_house_ptrs(limit=40):
     """Latest House periodic transaction reports from the Clerk's yearly index."""
     year = datetime.now(timezone.utc).year
     blob = None
@@ -291,9 +299,9 @@ def main():
         result["investors"] = investors
 
     insiders = []
-    for name, cik in INSIDERS:
+    for name, cik, expect in INSIDERS:
         try:
-            insiders.append(fetch_insider(name, cik))
+            insiders.append(fetch_insider(name, cik, expect))
         except Exception as e:
             result["errors"].append(f"Form4 {name}: {e}")
         time.sleep(0.3)

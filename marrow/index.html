@@ -249,6 +249,13 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       </div>
 
       <div class="card">
+        <h3>About &amp; Why This Rating <span class="sub" id="aboutsrc"></span></h3>
+        <div id="about" style="font-size:14px;line-height:1.65;"></div>
+        <div id="smflags"></div>
+        <div id="whyrating" style="font-size:13.5px;line-height:1.6;color:var(--dim);"></div>
+      </div>
+
+      <div class="card">
         <h3>Key Stats</h3>
         <div class="stats" id="keystats"></div>
       </div>
@@ -544,6 +551,117 @@ function computePillars(m) {
 }
 const pillarColor = v => v == null ? 'var(--faint)' : v >= 70 ? 'var(--mint)' : v >= 45 ? 'var(--amber)' : 'var(--red)';
 
+/* Plain-English explanation of how each pillar earned its score. */
+function explainRating(m, pillars, composite) {
+  const g = num(m.revenueGrowthTTMYoy), eg = num(m.epsGrowthTTMYoy), g5 = num(m.revenueGrowth5Y);
+  const gm = num(m.grossMarginTTM), nm = num(m.netProfitMarginTTM), roe = num(m.roeTTM);
+  const de = num(m['totalDebt/totalEquityQuarterly']), cr = num(m.currentRatioQuarterly);
+  const pe = num(m.peTTM), ps = num(m.psTTM);
+  const lines = [];
+
+  const [pG, pQ, pH, pV] = pillars.map(p => p.v);
+  if (pG != null) {
+    let s = g != null
+      ? (g >= 25 ? `revenue is growing ${g.toFixed(0)}% year over year — expansion this fast is rare and earns top marks`
+        : g >= 7 ? `revenue is growing a healthy ${g.toFixed(0)}% year over year`
+        : g >= 0 ? `revenue growth of ${g.toFixed(0)}% is sluggish — the business is barely expanding`
+        : `revenue is shrinking (${g.toFixed(0)}%), which caps this pillar hard`)
+      : 'revenue growth was unreported';
+    if (eg != null) s += eg >= 0 ? `, and earnings per share grew ${eg.toFixed(0)}% on top of it` : `, but earnings per share fell ${Math.abs(eg).toFixed(0)}%`;
+    if (g5 != null) s += ` (5-year average: ${g5.toFixed(0)}%/yr)`;
+    lines.push(['Growth', pG, s]);
+  }
+  if (pQ != null) {
+    let s = gm != null
+      ? (gm >= 60 ? `a ${gm.toFixed(0)}% gross margin is elite — customers pay far above cost, which usually means real pricing power`
+        : gm >= 45 ? `a ${gm.toFixed(0)}% gross margin shows solid pricing power`
+        : gm >= 30 ? `a ${gm.toFixed(0)}% gross margin says this is a competitive business with limited differentiation`
+        : `a ${gm.toFixed(0)}% gross margin is commodity territory`)
+      : 'margins were unreported';
+    if (nm != null) s += nm >= 15 ? `; ${nm.toFixed(0)}% of every sales dollar reaches the bottom line` : nm >= 0 ? `; only ${nm.toFixed(0)}% of sales survives to net profit` : `; the company is currently unprofitable (${nm.toFixed(0)}% net margin)`;
+    if (roe != null) s += `, and return on equity of ${roe.toFixed(0)}% ${roe >= 20 ? 'shows capital being put to work very efficiently' : roe >= 12 ? 'is respectable' : 'is weak for the capital invested'}`;
+    lines.push(['Business Quality', pQ, s]);
+  }
+  if (pH != null) {
+    let s = de != null
+      ? (de <= 0.3 ? `debt is minimal (${de.toFixed(2)}× equity), so the balance sheet can absorb shocks`
+        : de <= 0.7 ? `debt of ${de.toFixed(2)}× equity is comfortably manageable`
+        : de <= 1.5 ? `debt of ${de.toFixed(2)}× equity is meaningful — rising rates or a downturn would sting`
+        : `debt of ${de.toFixed(2)}× equity is heavy and dominates this score`)
+      : 'leverage was unreported';
+    if (cr != null) s += `, and a current ratio of ${cr.toFixed(1)} means short-term bills are ${cr >= 1.5 ? 'easily covered' : cr >= 1 ? 'covered with little cushion' : 'NOT fully covered by liquid assets'}`;
+    if (nm != null && nm < 0) s += '; ongoing losses add survival risk';
+    lines.push(['Financial Health', pH, s]);
+  }
+  if (pV != null) {
+    let s;
+    if (pe != null && pe > 0) {
+      s = pe <= 15 ? `at ${pe.toFixed(0)}× earnings the stock is priced cheaply — little growth needs to go right`
+        : pe <= 30 ? `at ${pe.toFixed(0)}× earnings the price already assumes steady execution`
+        : `at ${pe.toFixed(0)}× earnings the market has priced in years of strong growth — any stumble gets punished`;
+    } else s = 'with no positive earnings to price against, valuation leans on sales multiples';
+    if (ps != null) s += ` (${ps.toFixed(1)}× sales${ps > 10 ? ' — very expensive by that yardstick too' : ''})`;
+    s += '. Note: a low valuation score means the stock is expensive, not that the business is bad';
+    lines.push(['Valuation', pV, s]);
+  }
+
+  let html = '<div style="margin-top:12px;"><strong style="color:var(--text);font-size:12px;letter-spacing:1px;">WHY THIS RATING</strong><ul style="padding-left:18px;margin-top:6px;">';
+  html += lines.map(([name, v, s]) =>
+    `<li style="margin-bottom:6px;"><strong style="color:${pillarColor(v)}">${name} ${v}/100</strong> — ${esc(s)}.</li>`).join('');
+  html += '</ul>';
+  if (composite != null) {
+    html += `<p style="margin-top:4px;">The <strong style="color:var(--text)">${composite}/100 composite</strong> is a straight average of the pillars above — pillars with missing data are excluded rather than guessed. It grades the numbers as they stand today; it can't see strategy, management, or what's coming next quarter, which is exactly what the AI analyst below is for.</p>`;
+  }
+  return html + '</div>';
+}
+
+/* Company description: Wikipedia summary with profile facts as fallback. */
+async function loadAbout(t, profile) {
+  const el = document.getElementById('about'), src = document.getElementById('aboutsrc');
+  el.innerHTML = '<span class="spin"></span>'; src.textContent = '';
+  let extract = null, page = null;
+  try {
+    const s = await (await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=1&srsearch='
+      + encodeURIComponent((profile.name || t) + ' company'))).json();
+    const title = s?.query?.search?.[0]?.title;
+    if (title) {
+      const sum = await (await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(title))).json();
+      if (sum && sum.extract) { extract = sum.extract; page = sum.content_urls?.desktop?.page; }
+    }
+  } catch (e) {}
+  const facts = [
+    profile.finnhubIndustry ? 'Industry: ' + profile.finnhubIndustry : null,
+    profile.exchange ? 'Listed on ' + profile.exchange : null,
+    profile.ipo ? 'IPO ' + profile.ipo : null,
+  ].filter(Boolean).join(' · ');
+  el.innerHTML =
+    (extract ? `<p>${esc(extract)}</p>` : `<p style="color:var(--dim)">No encyclopedia summary found — company profile: ${esc(profile.name || t)}.</p>`) +
+    (facts ? `<p style="color:var(--faint);font-size:12px;margin-top:6px;">${esc(facts)}${profile.weburl ? ` · <a href="${esc(profile.weburl)}" target="_blank" rel="noopener">website ↗</a>` : ''}</p>` : '');
+  if (extract) src.innerHTML = page ? `<a href="${esc(page)}" target="_blank" rel="noopener">Wikipedia ↗</a>` : 'Wikipedia';
+}
+
+/* Flag any smart-money presence in the analyzed ticker. */
+async function showSmartFlags(t) {
+  const el = document.getElementById('smflags');
+  el.innerHTML = '';
+  const data = await getSmartData();
+  if (!data) return;
+  const hits = [];
+  for (const inv of (data.investors || [])) {
+    const total = (inv.holdings || []).reduce((a, h) => a + (h.value_usd || 0), 0);
+    const h = (inv.holdings || []).find(x => x.ticker === t);
+    if (h) hits.push(`<strong>${esc(inv.name)}</strong> holds ${bigUsd(h.value_usd)}${total ? ` — ${(h.value_usd / total * 100).toFixed(1)}% of the portfolio` : ''} (13F, ${esc(inv.filing_date || '')})`);
+  }
+  for (const p of (data.insiders || [])) {
+    const f = (p.filings || []).find(f => f.summary && f.summary.toUpperCase().startsWith(t + ':'));
+    if (f) hits.push(`<strong>${esc(p.name)}</strong> ${esc(f.summary.slice(t.length + 1).trim())} (Form 4, ${esc(f.date || '')})`);
+  }
+  if (hits.length) {
+    el.innerHTML = `<div style="margin:12px 0 2px;padding:11px 14px;background:var(--mint-dim);border:1px solid rgba(45,224,165,0.25);border-radius:10px;font-size:13px;line-height:1.7;">
+      <strong style="color:var(--mint);font-size:11.5px;letter-spacing:1px;">SMART MONEY IN ${esc(t)}</strong><br>${hits.join('<br>')}</div>`;
+  }
+}
+
 async function research() {
   const t = document.getElementById('rsym').value.trim().toUpperCase();
   const st = document.getElementById('rstatus');
@@ -602,6 +720,11 @@ function renderResearch(news) {
     <span class="score" style="color:${vTag[1]}">${composite ?? '—'}<span style="font-size:14px;color:var(--faint)">/100</span></span>
     <span class="tag" style="color:${vTag[1]};background:${vTag[1] === 'var(--faint)' ? 'var(--panel)' : 'color-mix(in srgb, ' + vTag[1] + ' 14%, transparent)'}">${vTag[0]}</span>
     <span class="note">Composite of the four pillars, from live TTM fundamentals. A screen, not a verdict — ask the AI analyst below to pressure-test it.</span>`;
+
+  // about + rating explanation + smart-money flags
+  document.getElementById('whyrating').innerHTML = explainRating(m, pillars, composite);
+  loadAbout(t, profile);
+  showSmartFlags(t);
 
   // key stats
   const stats = [
@@ -758,25 +881,35 @@ async function sendChat() {
 
 /* ================= smart money ================= */
 let smLoaded = false;
+let smDataPromise = null;
+
+function getSmartData() {
+  if (!smDataPromise) smDataPromise = (async () => {
+    let data = null;
+    try { const r = await fetch('./smartmoney.json'); if (r.ok) data = await r.json(); } catch (e) {}
+    if (!data) { // fall back to the Brain Trust feed (same EDGAR pipeline)
+      try {
+        const r = await fetch('../brain-trust/holdings.json');
+        if (r.ok) {
+          const h = await r.json();
+          data = { updated_utc: h.updated_utc, investors: [], insiders: [], congress: [] };
+          if (h.buffett) data.investors.push({
+            name: 'Warren Buffett — Berkshire Hathaway', filing_date: h.buffett.filing_date,
+            source: h.buffett.source,
+            holdings: (h.buffett.top_holdings || []).map(x => ({ name: x.name, value_usd: x.value_thousands })),
+          });
+          if (h.musk) data.insiders.push({ name: 'Elon Musk', source: h.musk.source, filings: h.musk.filings || [] });
+        }
+      } catch (e) {}
+    }
+    return data;
+  })();
+  return smDataPromise;
+}
+
 async function loadSmartMoney() {
   smLoaded = true;
-  let data = null;
-  try { const r = await fetch('./smartmoney.json'); if (r.ok) data = await r.json(); } catch (e) {}
-  if (!data) { // fall back to the Brain Trust feed (same EDGAR pipeline)
-    try {
-      const r = await fetch('../brain-trust/holdings.json');
-      if (r.ok) {
-        const h = await r.json();
-        data = { updated_utc: h.updated_utc, investors: [], insiders: [], congress: [] };
-        if (h.buffett) data.investors.push({
-          name: 'Warren Buffett — Berkshire Hathaway', filing_date: h.buffett.filing_date,
-          source: h.buffett.source,
-          holdings: (h.buffett.top_holdings || []).map(x => ({ name: x.name, value_usd: x.value_thousands })),
-        });
-        if (h.musk) data.insiders.push({ name: 'Elon Musk', source: h.musk.source, filings: h.musk.filings || [] });
-      }
-    } catch (e) {}
-  }
+  const data = await getSmartData();
   const grid = document.getElementById('sm-13f');
   if (!data) { grid.innerHTML = '<div class="card"><div class="empty">Smart-money data not available — run scripts/fetch-smart-money.py (or wait for the weekly refresh).</div></div>'; return; }
   document.getElementById('sm-updated').textContent =
@@ -800,27 +933,37 @@ async function loadSmartMoney() {
     insEl.style.display = 'block';
     insEl.innerHTML = '<h3>Insider Activity <span class="sub">SEC Form 4</span></h3>' + data.insiders.map(p => `
       <div style="margin-bottom:10px;">
-        <strong>${esc(p.name)}</strong> <span style="color:var(--faint);font-size:12px;">· ${esc(p.source || '')}</span>
-        <table style="margin-top:6px;"><tr><th>Filed</th><th>Transaction</th><th class="n">Filing</th></tr>` +
-        (p.filings || []).slice(0, 5).map(f => `<tr>
+        <strong>${esc(p.name)}</strong> <span style="color:var(--faint);font-size:12px;">· ${esc(p.source || '')}</span>` +
+        ((p.filings && p.filings.length) ?
+        `<table style="margin-top:6px;"><tr><th>Filed</th><th>Transaction</th><th class="n">Filing</th></tr>` +
+        p.filings.slice(0, 5).map(f => `<tr>
           <td class="n" style="text-align:left;">${esc(f.date || '')}</td>
           <td>${f.summary ? esc(f.summary) : '<span style="color:var(--faint)">See filing</span>'}</td>
           <td class="n"><a href="${esc(f.url || '#')}" target="_blank" rel="noopener">EDGAR ↗</a></td>
-        </tr>`).join('') + '</table></div>').join('');
+        </tr>`).join('') + '</table>'
+        : '<div class="empty" style="padding:6px 0 2px;">No recent Form 4 filings pulled yet — populates on the weekly refresh.</div>') +
+      '</div>').join('');
   } else insEl.style.display = 'none';
 
+  const FEATURED_POLS = ['PELOSI', 'GREENE', 'GOTTHEIMER', 'CRENSHAW', 'KHANNA', 'MCCAUL', 'ISSA', 'MULLIN', 'TRUMP'];
   const cgEl = document.getElementById('sm-congress');
   if (data.congress && data.congress.length) {
     cgEl.style.display = 'block';
-    cgEl.innerHTML = '<h3>Congress Trades <span class="sub">House periodic transaction reports</span></h3>' +
-      '<table><tr><th>Member</th><th>Office</th><th class="n">Filed</th><th class="n">Report</th></tr>' +
-      data.congress.slice(0, 20).map(c => `<tr>
-        <td><strong>${esc(c.name)}</strong></td>
+    const isFeatured = c => FEATURED_POLS.some(n => (c.name || '').toUpperCase().includes(n));
+    const featured = data.congress.filter(isFeatured);
+    const rest = data.congress.filter(c => !isFeatured(c));
+    const row = (c, star) => `<tr>
+        <td><strong${star ? ' style="color:var(--mint)"' : ''}>${star ? '★ ' : ''}${esc(c.name)}</strong></td>
         <td style="color:var(--dim)">${esc(c.office || '')}</td>
         <td class="n">${esc(c.date || '')}</td>
         <td class="n"><a href="${esc(c.url || '#')}" target="_blank" rel="noopener">PTR ↗</a></td>
-      </tr>`).join('') + '</table>' +
-      '<div class="status" style="margin-top:8px;">Filings link to the official disclosure PDFs — trades inside are reported up to 45 days after execution.</div>';
+      </tr>`;
+    cgEl.innerHTML = '<h3>Congress Trades <span class="sub">House periodic transaction reports</span></h3>' +
+      '<table><tr><th>Member</th><th>Office</th><th class="n">Filed</th><th class="n">Report</th></tr>' +
+      featured.map(c => row(c, true)).join('') +
+      rest.slice(0, Math.max(0, 25 - featured.length)).map(c => row(c, false)).join('') + '</table>' +
+      '<div class="status" style="margin-top:8px;">★ = high-profile trader. Filings link to the official disclosure PDFs — trades inside are reported up to 45 days after execution. ' +
+      'Senators file separately: search <a href="https://efdsearch.senate.gov/search/" target="_blank" rel="noopener">efdsearch.senate.gov</a>.</div>';
   } else cgEl.style.display = 'none';
 }
 
