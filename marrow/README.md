@@ -10,7 +10,7 @@ no account, and no data leaving your browser except to APIs you hold the keys fo
 | Tab | What it does | Data source |
 |---|---|---|
 | **Dashboard** | Index ETFs (SPY/QQQ/DIA/IWM), a watchlist that auto-refreshes every 30s, market headlines | Finnhub (your free key) |
-| **Research** | Live quote + 52-week range, **Marrow Quality Rating** (Growth / Business Quality / Financial Health / Valuation, each 0–100 with a composite), an **About & Why This Rating** section (Wikipedia company description + plain-English pillar-by-pillar score explanation + a smart-money callout when tracked investors/insiders are in the stock), key TTM stats, Wall Street analyst consensus, EPS-vs-estimate history, company news, and a streaming **AI analyst chat** that knows all the data on screen | Finnhub + Wikipedia + Anthropic API (your keys) |
+| **Research** | Live quote + 52-week range, **Marrow Quality Rating** (Growth / Business Quality / Financial Health / Valuation, each 0–100 with a composite), an **About & Why This Rating** section (Wikipedia company description + plain-English pillar-by-pillar score explanation + a smart-money callout when tracked investors/insiders are in the stock), key TTM stats, Wall Street analyst consensus, EPS-vs-estimate history, company news, and an **AI analyst chat** that knows all the data on screen — a built-in data analyst answers instantly with no key; adding an Anthropic key upgrades to Claude answers streaming in the same chat (nothing ever opens a new tab) | Finnhub + Wikipedia (+ optional Anthropic key) |
 | **Smart Money** | Superinvestor 13F holdings (Buffett, Ackman, Burry), insider Form 4 activity with parsed buy/sell summaries (Musk, Trump, Buffett — extend via `INSIDERS` in the script; each CIK is name-verified against EDGAR before use), and the latest House congress-trade reports (PTRs) with high-profile members starred (Pelosi, Greene, Gottheimer, …) and a link to the Senate's separate EFD search | SEC EDGAR + House Clerk, refreshed daily by GitHub Actions |
 | **Portfolio** | Manual positions with live market value, day P&L, total P&L, return %, and allocation bars | localStorage + Finnhub |
 | **Top 10** | The strongest 12-month-outlook stocks from an editable candidate pool, ranked by outlook score (analyst consensus 45% + Marrow quality rating 35% + revenue growth 20%). Remove a stock with ✕ when something changes and the next-ranked candidate fills in (restorable); add candidates anytime; "Pressure-test with AI" hands the list to Claude for per-stock risks and removal triggers. Rankings cache for the day; re-rank on demand | Finnhub (your key) |
@@ -20,7 +20,9 @@ no account, and no data leaving your browser except to APIs you hold the keys fo
 1. Open `index.html` (works from `file://` or any static host).
 2. Tap **SET API KEY** and paste a free [Finnhub](https://finnhub.io/register) key (60 calls/min).
    If you already saved one in Stock Analysis or Signal Scout, Marrow reuses it automatically.
-3. (Optional) Paste an [Anthropic](https://console.anthropic.com/) key to enable the AI analyst chat.
+3. The AI analyst works out of the box (built-in, answers from the loaded data). Optionally paste an
+   [Anthropic](https://console.anthropic.com/) key to upgrade it to Claude — answers stream inside the
+   same chat; nothing opens in new tabs.
 
 Keys live only in your browser's localStorage. Nothing is uploaded anywhere.
 

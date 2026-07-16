@@ -191,11 +191,11 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       </div>
       <div class="status" id="fkeystatus"></div>
       <p style="font-size:12.5px;color:var(--dim);margin:14px 0 8px;">
-        <strong>AI analyst — no key needed.</strong> Questions open in
-        <a href="https://claude.ai" target="_blank" rel="noopener">Claude on the web</a> with the live
-        data attached, using your regular Claude account. Optionally paste an Anthropic API key
-        (from <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>)
-        to get streaming answers inside the app instead.
+        <strong>AI analyst — works with no key.</strong> The built-in analyst answers instantly from
+        the live data, right in the chat. Optionally paste an Anthropic API key (from
+        <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>)
+        to upgrade to Claude-written answers — they stream in the same chat box, nothing ever opens
+        in a new tab.
       </p>
       <div class="row">
         <input type="password" id="akey" placeholder="Anthropic API key (sk-ant-…)">
@@ -343,11 +343,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
         <input type="text" id="picksadd" placeholder="Add a candidate, e.g. RKLB" style="max-width:220px;"
                onkeydown="if(event.key==='Enter')addPickCandidate()">
         <button class="btn ghost" onclick="addPickCandidate()">+ Add to pool</button>
-        <button class="btn ghost" onclick="askPicksAI()">Pressure-test with AI →</button>
+        <button class="btn ghost" onclick="askPicksAI()">Pressure-test the list →</button>
       </div>
       <div class="status" id="picksstatus"></div>
       <div id="pickstable"></div>
       <div id="picksremoved" style="margin-top:12px;"></div>
+      <div id="picksai" class="msg ai" style="display:none;max-width:100%;margin-top:12px;"></div>
     </div>
   </div>
 
@@ -826,8 +827,8 @@ function renderResearch(news) {
   chatHistory = [];
   document.getElementById('chatlog').innerHTML = '';
   document.getElementById('chatmode').textContent = getAKey()
-    ? 'streams in-app — knows the data above'
-    : 'no key needed — opens in Claude on the web with the data attached';
+    ? 'Claude streams in-app — knows the data above'
+    : 'built-in analyst, no key needed — instant answers from the data above';
   document.getElementById('chips').innerHTML = [
     'Bull case vs bear case?', 'Is the valuation justified?', 'Biggest risks and sell triggers?',
     'How did the last earnings look?', 'Would you hold this for 5 years?',
@@ -840,43 +841,101 @@ let chatBusy = false;
 
 function askChip(el) { document.getElementById('chatin').value = el.textContent; sendChat(); }
 
-/* Compact live-data block that fits in a URL for the web handoff. */
-function analystContext() {
+/* Built-in analyst: instant in-app answers computed from the loaded data.
+   No key, no external calls, nothing opens — it all stays in this chat. */
+const FOOT = '\n\n---\n_Built-in analyst — computed from the live data on this page. Add an Anthropic key in Connections for Claude-written answers (they stream right here too)._';
+
+function localAnalyst(q) {
   const d = lastR, m = d.m;
   const { pillars, composite } = computePillars(m);
-  const keep = ['revenueGrowthTTMYoy', 'epsGrowthTTMYoy', 'revenueGrowth5Y', 'grossMarginTTM',
-    'operatingMarginTTM', 'netProfitMarginTTM', 'roeTTM', 'totalDebt/totalEquityQuarterly',
-    'currentRatioQuarterly', 'peTTM', 'psTTM', 'pfcfShareTTM', 'beta', '52WeekHigh', '52WeekLow',
-    'dividendYieldIndicatedAnnual'];
-  const metrics = {};
-  for (const k of keep) if (num(m[k]) != null) metrics[k] = m[k];
-  return `LIVE DATA for ${d.t} (${d.profile.name || ''}) — Finnhub, ${new Date().toLocaleString()}:\n` +
-    `Price $${d.quote.c}, today ${d.quote.d >= 0 ? '+' : ''}${d.quote.d} (${d.quote.dp}%). ` +
-    `Market cap ${capUsd(num(d.profile.marketCapitalization))}. Industry: ${d.profile.finnhubIndustry || '?'}.\n` +
-    `TTM metrics: ${JSON.stringify(metrics)}\n` +
-    (d.rec[0] ? `Analyst ratings (${d.rec[0].period}): ${d.rec[0].strongBuy} strong buy / ${d.rec[0].buy} buy / ${d.rec[0].hold} hold / ${d.rec[0].sell + d.rec[0].strongSell} sell.\n` : '') +
-    (d.eps.length ? `Recent EPS vs estimate: ${d.eps.slice(0, 3).map(e => `${e.period}: ${e.actual} vs ${e.estimate}`).join('; ')}.\n` : '') +
-    `Marrow Quality Rating ${composite ?? '?'}/100 (${pillars.map(p => `${p.name} ${p.v ?? '?'}`).join(', ')}).`;
-}
+  const g = num(m.revenueGrowthTTMYoy), eg = num(m.epsGrowthTTMYoy);
+  const pe = num(m.peTTM), ps = num(m.psTTM), pfcf = num(m.pfcfShareTTM);
+  const gm = num(m.grossMarginTTM), nm = num(m.netProfitMarginTTM), roe = num(m.roeTTM);
+  const de = num(m['totalDebt/totalEquityQuarterly']), cr = num(m.currentRatioQuarterly);
+  const beta = num(m.beta), divy = num(m.dividendYieldIndicatedAnnual);
+  const r = d.rec && d.rec[0];
+  const total = r ? r.strongBuy + r.buy + r.hold + r.sell + r.strongSell : 0;
+  const bullPct = total ? Math.round((r.strongBuy + r.buy) / total * 100) : null;
+  const f0 = v => v == null ? '—' : v.toFixed(0);
+  const ql = q.toLowerCase();
+  const has = (...ws) => ws.some(w => ql.includes(w));
+  const secs = [];
 
-/* No API key: hand the question to Claude on the web with the data attached. */
-function webAnalyst(q) {
-  const d = lastR;
-  const log = document.getElementById('chatlog');
-  const prompt =
-    `You are a sharp, data-first stock analyst. Use the live data below as the verified source for ` +
-    `price and fundamentals (plus web search for anything newer). Be direct: numbers over adjectives, ` +
-    `both sides of the trade, concrete triggers over vague hedging. Label anything unverifiable ` +
-    `[UNVERIFIED]. Research and education only — no personalized buy/sell advice.\n\n` +
-    analystContext() + `\n\nQuestion about ${d.t}: ${q}`;
-  navigator.clipboard?.writeText(prompt).catch(() => {});
-  const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
-  log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
-  log.insertAdjacentHTML('beforeend', `<div class="msg ai">${win
-    ? 'Opened in <strong>Claude on the web</strong> with the live ' + esc(d.t) + ' data attached — the answer streams there. No API key needed.'
-    : 'Pop-up blocked — the full prompt (with live data) is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.'}
-    <br><span style="color:var(--faint);font-size:11.5px;">Prefer answers inside the app? Add an Anthropic API key in Connections.</span></div>`);
-  log.scrollTop = log.scrollHeight;
+  if (has('bull', 'bear', 'case', 'thesis')) {
+    const bull = [], bear = [];
+    if (g != null) (g >= 10 ? bull : bear).push(g >= 10 ? `revenue growing ${f0(g)}% YoY` : `revenue growth is only ${f0(g)}%`);
+    if (gm != null) (gm >= 45 ? bull : bear).push(gm >= 45 ? `${f0(gm)}% gross margin — real pricing power` : `${f0(gm)}% gross margin invites competition`);
+    if (nm != null) (nm >= 15 ? bull : bear).push(nm >= 15 ? `${f0(nm)}% of sales reaches the bottom line` : nm >= 0 ? `thin ${f0(nm)}% net margin` : `currently unprofitable (${f0(nm)}% net margin)`);
+    if (roe != null && roe >= 20) bull.push(`ROE of ${f0(roe)}% — capital works hard here`);
+    if (bullPct != null) (bullPct >= 65 ? bull : bear).push(bullPct >= 65 ? `${bullPct}% of ${total} analysts are bullish` : `only ${bullPct}% of ${total} analysts are bullish`);
+    if (pe != null && pe > 0) (pe <= 25 ? bull : bear).push(pe <= 25 ? `reasonable ${f0(pe)}× earnings` : `${f0(pe)}× earnings already prices in years of execution`);
+    if (de != null) (de <= 0.7 ? bull : bear).push(de <= 0.7 ? `clean balance sheet (debt ${de.toFixed(2)}× equity)` : `debt of ${de.toFixed(2)}× equity is a drag in a downturn`);
+    secs.push(`## Bull case\n${bull.map(x => '- ' + x).join('\n') || '- Little in the current numbers argues the bull side.'}\n\n## Bear case\n${bear.map(x => '- ' + x).join('\n') || '- Little in the current numbers argues the bear side.'}`);
+  }
+  if (has('valuation', 'expensive', 'cheap', 'overvalued', 'undervalued', 'justified', 'multiple')) {
+    let s = `## Valuation\n`;
+    s += pe != null && pe > 0
+      ? `At **${pe.toFixed(1)}× TTM earnings**${ps != null ? ` and ${ps.toFixed(1)}× sales` : ''}${pfcf != null && pfcf > 0 ? ` (${pfcf.toFixed(0)}× free cash flow)` : ''}, ` +
+        (pe <= 15 ? 'little has to go right at this price — the market expects modest growth at most.'
+          : pe <= 30 ? 'the price assumes steady execution: keep growing near the current rate and the multiple holds.'
+          : `the market is paying today for several years of strong growth. Sustained ~${f0(Math.max(g ?? 15, 15))}%+ growth justifies it; a slowdown gets punished twice — lower earnings AND a lower multiple.`)
+      : `There are no positive earnings to price against${ps != null ? `, so the market leans on the ${ps.toFixed(1)}× sales multiple` : ''} — the valuation is a bet on future profitability.`;
+    s += `\n\nThe Valuation pillar scores **${pillars[3].v ?? '—'}/100** — remember a low score means *expensive*, not *bad business*.`;
+    secs.push(s);
+  }
+  if (has('risk', 'sell', 'trigger', 'wrong', 'worry', 'danger', 'concern')) {
+    const risks = [];
+    if (pe != null && pe > 35) risks.push(`**Multiple compression.** ${f0(pe)}× earnings deflates fast on any miss. *Watch:* two straight quarters of slowing revenue growth.`);
+    if (g != null && g < 5) risks.push(`**Stalling growth.** ${f0(g)}% revenue growth leaves no cushion. *Watch:* growth turning negative.`);
+    if (nm != null && nm < 0) risks.push(`**Unprofitability.** Losses mean the clock matters. *Watch:* cash runway and any capital raise.`);
+    if (de != null && de > 1.2) risks.push(`**Leverage.** Debt ${de.toFixed(2)}× equity magnifies any stumble. *Watch:* interest costs eating margin.`);
+    if (cr != null && cr < 1.1) risks.push(`**Liquidity.** Current ratio ${cr.toFixed(2)} leaves little short-term slack. *Watch:* it dropping below 1.0.`);
+    if (gm != null && gm < 30) risks.push(`**No moat.** ${f0(gm)}% gross margin means price wars hurt. *Watch:* margin compressing further.`);
+    if (beta != null && beta > 1.6) risks.push(`**Volatility.** Beta ${beta.toFixed(1)} — this moves nearly twice the market. Only a risk if you'd be shaken out.`);
+    if (!risks.length) risks.push(`**Execution risk.** Nothing in the current numbers screams danger, so every quarter is a referendum on management. *Watch:* missing their own guidance twice in a row.`);
+    secs.push(`## Biggest risks & what would trigger a rethink\n${risks.map(x => '- ' + x).join('\n')}`);
+  }
+  if (has('earnings', 'quarter', 'eps', 'beat', 'miss', 'report')) {
+    if (d.eps && d.eps.length) {
+      const rows = d.eps.slice(0, 4).map(e => {
+        const sp = num(e.surprisePercent);
+        return `| ${e.period || ''} | ${num(e.estimate)?.toFixed(2) ?? '—'} | ${num(e.actual)?.toFixed(2) ?? '—'} | ${sp != null ? (sp >= 0 ? '+' : '') + sp.toFixed(1) + '%' : '—'} |`;
+      });
+      const beats = d.eps.slice(0, 4).filter(e => num(e.surprisePercent) != null && e.surprisePercent >= 0).length;
+      secs.push(`## Earnings vs. expectations\n| Quarter | Est. | Actual | Surprise |\n|---|---|---|---|\n${rows.join('\n')}\n\n${beats} of the last ${Math.min(4, d.eps.length)} quarters beat estimates. The next report is the real test: check revenue growth (now ${f0(g)}%), net margin (${nm != null ? nm.toFixed(1) + '%' : 'unreported'}), and guidance.`);
+    } else secs.push(`## Earnings\nNo EPS history available for ${d.t} on the free feed.`);
+  }
+  if (has('hold', '5 year', 'five year', 'long term', 'long-term', 'decade')) {
+    secs.push(`## The long-term lens\nMarrow scores ${d.t} **${composite ?? '—'}/100** — ${pillars.map(p => `${p.name} ${p.v ?? '—'}`).join(', ')}. ` +
+      ((pillars[1].v ?? 0) >= 70
+        ? `Business quality is the pillar that matters most over 5+ years, and it's strong here: ${pillars[1].why}. The question is purely what you pay — ` +
+          (pe != null && pe > 30 ? `at ${f0(pe)}× earnings, time has to do a lot of work.` : `and the current price doesn't demand perfection.`)
+        : `Business quality (${pillars[1].v ?? '—'}/100 — ${pillars[1].why}) is the pillar long holds live or die on, and it's not elite here. A 5-year hold is a bet that improves.`) +
+      `\n\nA useful test: if this stock dropped 40% tomorrow with no news, would the fundamentals above make you want more, or make you want out?`);
+  }
+  if (has('grow')) {
+    secs.push(`## Growth\nRevenue ${g != null ? (g >= 0 ? '+' : '') + f0(g) + '% TTM YoY' : 'growth unreported'}${eg != null ? `, EPS ${eg >= 0 ? '+' : ''}${f0(eg)}%` : ''}${num(m.revenueGrowth5Y) != null ? `, 5-year average ${f0(m.revenueGrowth5Y)}%/yr` : ''}. Growth pillar: **${pillars[0].v ?? '—'}/100**.`);
+  }
+  if (has('debt', 'health', 'balance sheet', 'cash', 'solvent')) {
+    secs.push(`## Financial health\nDebt/equity ${de != null ? de.toFixed(2) : '—'}, current ratio ${cr != null ? cr.toFixed(2) : '—'}, net margin ${nm != null ? nm.toFixed(1) + '%' : '—'}. Pillar score **${pillars[2].v ?? '—'}/100** — ${pillars[2].why}.`);
+  }
+  if (has('dividend', 'yield', 'income')) {
+    secs.push(`## Dividend\n${divy != null && divy > 0 ? `Indicated yield ${divy.toFixed(2)}%. With net margin at ${nm != null ? nm.toFixed(0) + '%' : '—'}, the question is durability — check the payout ratio in the latest filing.` : `${d.t} pays no meaningful dividend — returns here come from the business compounding, not income.`}`);
+  }
+  if (has('analyst', 'wall street', 'consensus', 'rating', 'upgrade', 'downgrade')) {
+    secs.push(r && total
+      ? `## Wall Street\n${total} analysts: ${r.strongBuy} strong buy, ${r.buy} buy, ${r.hold} hold, ${r.sell + r.strongSell} sell — **${bullPct}% bullish** (${r.period}). Consensus is a sentiment gauge, not a forecast; the interesting signal is when it *changes*.`
+      : `## Wall Street\nNo analyst coverage data for ${d.t} on the free feed.`);
+  }
+
+  if (!secs.length) {   // general question → structured rundown
+    secs.push(`## ${d.t} at a glance\n**${money(d.quote.c)}** (${d.quote.dp >= 0 ? '+' : ''}${d.quote.dp?.toFixed(2)}% today) · ${capUsd(num(d.profile.marketCapitalization))} market cap · ${esc(d.profile.finnhubIndustry || '')}\n\n` +
+      `**Marrow rating ${composite ?? '—'}/100:**\n${pillars.map(p => `- ${p.name} **${p.v ?? '—'}** — ${p.why}`).join('\n')}\n\n` +
+      (bullPct != null ? `Wall Street: ${bullPct}% of ${total} analysts bullish. ` : '') +
+      (pe != null && pe > 0 ? `Valuation: ${pe.toFixed(1)}× earnings${ps != null ? `, ${ps.toFixed(1)}× sales` : ''}.` : '') +
+      `\n\nI'm a rule-based analyst, so for "${esc(q)}" the above is the data I can bring to bear — try the chips below, or ask about valuation, risks, growth, earnings, health, or the bull/bear case.`);
+  }
+  return secs.slice(0, 3).join('\n\n') + FOOT;
 }
 
 async function sendChat() {
@@ -885,7 +944,14 @@ async function sendChat() {
   const st = document.getElementById('chatstatus');
   if (!q || chatBusy || !lastR) return;
   const ak = getAKey();
-  if (!ak) { inEl.value = ''; st.textContent = ''; webAnalyst(q); return; }
+  if (!ak) {   // built-in analyst: instant, in-app, no tabs
+    inEl.value = ''; st.textContent = '';
+    const log = document.getElementById('chatlog');
+    log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
+    log.insertAdjacentHTML('beforeend', `<div class="msg ai">${mdLite(localAnalyst(q))}</div>`);
+    log.scrollTop = log.scrollHeight;
+    return;
+  }
 
   chatBusy = true; inEl.value = ''; st.textContent = ''; st.className = 'status';
   document.getElementById('chatbtn').disabled = true;
@@ -1013,6 +1079,71 @@ function smDigest(data) {
 let smChatHistory = [];
 function askSmChip(el) { document.getElementById('sm-chatin').value = el.textContent; sendSmartChat(); }
 
+/* Built-in smart-money analyst: answers from the filings, in-app, no key. */
+function localSmartAnalyst(q, data) {
+  const ql = q.toLowerCase();
+  const has = (...ws) => ws.some(w => ql.includes(w));
+  const secs = [];
+  const investors = data.investors || [], insiders = data.insiders || [], congress = data.congress || [];
+
+  const invTable = inv => {
+    const total = (inv.holdings || []).reduce((a, h) => a + (h.value_usd || 0), 0);
+    return `## ${inv.name}\n13F filed ${inv.filing_date || '?'} — top holdings:\n| Holding | Value | Weight |\n|---|---|---|\n` +
+      (inv.holdings || []).slice(0, 8).map(h =>
+        `| ${h.name}${h.ticker ? ` (${h.ticker})` : ''} | ${bigUsd(h.value_usd)} | ${total ? (h.value_usd / total * 100).toFixed(1) + '%' : '—'} |`).join('\n');
+  };
+  const insList = p => `## ${p.name} — recent Form 4s\n` +
+    ((p.filings || []).length
+      ? p.filings.slice(0, 5).map(f => `- **${f.date}** — ${f.summary || 'see the filing on EDGAR'}`).join('\n')
+      : '- No recent filings pulled yet (populates on the daily refresh).');
+
+  // match a person by name
+  for (const inv of investors) {
+    if (inv.name.toLowerCase().split(/[^a-z]+/).some(w => w.length > 3 && ql.includes(w))) { secs.push(invTable(inv)); break; }
+  }
+  for (const p of insiders) {
+    if (p.name.toLowerCase().split(/[^a-z]+/).some(w => w.length > 3 && ql.includes(w))) { secs.push(insList(p)); break; }
+  }
+  const cgMatches = congress.filter(c => c.name.toLowerCase().split(/[^a-z]+/).some(w => w.length > 3 && ql.includes(w)));
+  if (cgMatches.length) {
+    secs.push(`## ${cgMatches[0].name} — trade reports\n` +
+      cgMatches.slice(0, 6).map(c => `- **${c.date}** — periodic transaction report (${c.office}); the trades themselves are in the linked PDF on the Smart Money tab`).join('\n') +
+      `\n\nHouse members report trades up to 45 days after execution.`);
+  }
+
+  if (has('overlap', 'common', 'both own', 'share', 'agree')) {
+    const seen = {};
+    for (const inv of investors) for (const h of (inv.holdings || [])) {
+      const k = (h.ticker || h.name).toUpperCase();
+      (seen[k] = seen[k] || []).push(inv.name.split('—')[0].trim());
+    }
+    const overlaps = Object.entries(seen).filter(([, v]) => v.length > 1);
+    secs.push(`## Portfolio overlap\n` + (overlaps.length
+      ? overlaps.map(([k, v]) => `- **${k}** — held by ${v.join(' and ')}`).join('\n')
+      : `No position appears in more than one of the tracked 13F portfolios right now — the three run very different books (${investors.map(i => i.name.split('—')[0].trim()).join(', ')}).`));
+  }
+  if (has('congress', 'politician', 'house', 'senate', 'pelosi') && !cgMatches.length) {
+    const star = ['PELOSI', 'GREENE', 'GOTTHEIMER', 'CRENSHAW', 'KHANNA', 'MCCAUL', 'ISSA', 'MULLIN'];
+    const feat = congress.filter(c => star.some(n => c.name.toUpperCase().includes(n)));
+    secs.push(`## Congress activity\n${congress.length} recent House trade reports on file.` +
+      (feat.length ? ` High-profile filers:\n` + feat.map(c => `- **${c.name}** (${c.office}) — filed ${c.date}`).join('\n') : '') +
+      `\n\nNewest filings: ` + congress.slice(0, 5).map(c => `${c.name} (${c.date})`).join(', ') +
+      `. Senators file separately — efdsearch.senate.gov.`);
+  }
+  if (!secs.length && has('recent', 'latest', 'activity', 'summar', 'moves', 'buy', 'sell', 'trade')) {
+    secs.push(`## Latest smart-money activity\n` +
+      insiders.map(p => `- **${p.name}**: ` + ((p.filings || [])[0] ? `${p.filings[0].date} — ${p.filings[0].summary || 'see filing'}` : 'no recent filings')).join('\n') +
+      `\n\n13Fs on file: ` + investors.map(i => `${i.name.split('—')[0].trim()} (${i.filing_date})`).join(', ') +
+      (congress[0] ? `. Newest congress report: ${congress[0].name}, ${congress[0].date}.` : ''));
+  }
+
+  if (!secs.length) {   // general → full digest
+    secs.push(investors.map(invTable).join('\n\n'));
+    secs.push(insiders.map(insList).join('\n\n'));
+  }
+  return secs.slice(0, 3).join('\n\n') + FOOT;
+}
+
 async function sendSmartChat() {
   const inEl = document.getElementById('sm-chatin');
   const q = inEl.value.trim();
@@ -1030,14 +1161,9 @@ async function sendSmartChat() {
   const ak = getAKey();
   inEl.value = ''; st.textContent = ''; st.className = 'status';
 
-  if (!ak) {   // keyless: hand off to Claude on the web with all the data attached
-    const prompt = context + `\n\nQuestion: ${q}`;
-    navigator.clipboard?.writeText(prompt).catch(() => {});
-    const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
+  if (!ak) {   // built-in analyst: instant, in-app, no tabs
     log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
-    log.insertAdjacentHTML('beforeend', `<div class="msg ai">${win
-      ? 'Opened in <strong>Claude on the web</strong> with all the smart-money filings attached — the answer streams there. No API key needed.'
-      : 'Pop-up blocked — the full prompt (with the filing data) is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.'}</div>`);
+    log.insertAdjacentHTML('beforeend', `<div class="msg ai">${mdLite(localSmartAnalyst(q, data))}</div>`);
     log.scrollTop = log.scrollHeight;
     return;
   }
@@ -1102,8 +1228,8 @@ async function loadSmartMoney() {
   // AI analyst for this tab
   document.getElementById('sm-askcard').style.display = 'block';
   document.getElementById('sm-chatmode').textContent = getAKey()
-    ? 'streams in-app — knows every filing below'
-    : 'no key needed — opens in Claude on the web with every filing below attached';
+    ? 'Claude streams in-app — knows every filing below'
+    : 'built-in analyst, no key needed — answers from the filings below';
   if (!document.getElementById('sm-chips').innerHTML) {
     document.getElementById('sm-chips').innerHTML = [
       'What did Nancy Pelosi file recently?', "Summarize Elon Musk's latest Form 4s",
@@ -1368,28 +1494,77 @@ async function addPickCandidate() {
   savePicksState(); renderPicks();
 }
 
-function askPicksAI() {
+async function askPicksAI() {
   const results = (picksCache && picksCache.results || []).filter(r => r.outlook != null && !picksRemoved.includes(r.t));
   results.sort((a, b) => b.outlook - a.outlook);
   const top = results.slice(0, 10);
   const st = document.getElementById('picksstatus');
+  const out = document.getElementById('picksai');
   if (!top.length) { st.textContent = 'Rank the list first.'; st.className = 'status err'; return; }
+  st.textContent = ''; out.style.display = 'block';
+  const ak = getAKey();
+
+  if (!ak) {   // built-in pressure test — in-app, no tabs
+    const lines = top.map((r, i) => {
+      const comp = [['analyst support', r.consensus], ['fundamentals quality', r.quality],
+                    ['growth', r.growth == null ? null : Math.max(0, Math.min(100, 50 + r.growth * 1.5))]]
+        .filter(c => c[1] != null).sort((a, b) => b[1] - a[1]);
+      const strongest = comp[0], weakest = comp[comp.length - 1];
+      const watch = [];
+      if (r.bullPct != null) watch.push(`bullish analysts dropping below ${Math.max(50, r.bullPct - 15)}%`);
+      if (r.growth != null) watch.push(r.growth < 10 ? 'revenue growth going negative' : `growth slowing under ${Math.max(5, Math.round(r.growth / 2))}%`);
+      if (r.quality != null && r.quality < 60) watch.push('the quality rating slipping further');
+      return `**${i + 1}. ${r.t} (${r.outlook}/100)** — carried by ${strongest[0]} (${Math.round(strongest[1])}); weakest leg is ${weakest[0]} (${Math.round(weakest[1])}). *Remove if:* ${watch.join(', ') || 'the next earnings report breaks the trend'}.`;
+    });
+    out.innerHTML = mdLite(`## Pressure test\n${lines.join('\n\n')}\n\nRe-rank after earnings season — every number here goes stale.` + FOOT);
+    return;
+  }
+
+  // API key saved: Claude streams the pressure test right here
+  out.innerHTML = '<span class="spin"></span>';
   const prompt =
-    `You are a sharp, data-first stock analyst. Below is my top-10 list for the next 12 months, ranked by a ` +
-    `score built from analyst consensus (45%), a fundamentals quality rating (35%), and revenue growth (20%). ` +
-    `Pressure-test it: for each stock, give the strongest reason it belongs, the most likely thing to go wrong ` +
-    `in the next year, and a concrete signal that should get it removed from the list. Use web search for ` +
-    `anything current. Research only — no personalized advice.\n\n` +
+    `Below is my top-10 stock list for the next 12 months, ranked by analyst consensus (45%), a fundamentals ` +
+    `quality rating (35%), and revenue growth (20%). Pressure-test it: for each stock, the strongest reason it ` +
+    `belongs, the most likely thing to go wrong within a year, and a concrete signal that should get it removed. ` +
+    `Be terse — one line each. Research only, no personalized advice.\n\n` +
     top.map((r, i) => `${i + 1}. ${r.t} — outlook ${r.outlook}/100` +
       (r.bullPct != null ? `, ${r.bullPct}% of ${r.analysts} analysts bullish` : '') +
       (r.quality != null ? `, quality ${r.quality}` : '') +
       (r.growth != null ? `, revenue ${r.growth >= 0 ? '+' : ''}${r.growth.toFixed(0)}%` : '')).join('\n');
-  navigator.clipboard?.writeText(prompt).catch(() => {});
-  const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
-  st.innerHTML = win
-    ? 'Opened in Claude on the web — it will pressure-test all 10 picks and tell you what should knock each one off the list.'
-    : 'Pop-up blocked — the prompt is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.';
-  st.className = 'status ok';
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json', 'x-api-key': ak,
+        'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ model: 'claude-opus-4-8', max_tokens: 3000, stream: true,
+        messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!resp.ok) {
+      let msg = 'HTTP ' + resp.status;
+      try { const e = await resp.json(); msg = e.error?.message || msg; } catch (_) {}
+      throw new Error(msg);
+    }
+    const reader = resp.body.getReader(), dec = new TextDecoder();
+    let buf = '', text = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const ln of lines) {
+        if (!ln.startsWith('data: ')) continue;
+        let ev; try { ev = JSON.parse(ln.slice(6)); } catch (_) { continue; }
+        if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+          text += ev.delta.text; out.innerHTML = mdLite(text);
+        } else if (ev.type === 'error') throw new Error(ev.error?.message || 'stream error');
+      }
+    }
+    if (!text) throw new Error('empty response');
+  } catch (e) {
+    out.innerHTML = `<span style="color:var(--red)">Pressure test failed: ${esc(e.message)}</span>`;
+  }
 }
 
 /* ================= boot ================= */
