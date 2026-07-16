@@ -190,9 +190,11 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       </div>
       <div class="status" id="fkeystatus"></div>
       <p style="font-size:12.5px;color:var(--dim);margin:14px 0 8px;">
-        <strong>AI analyst — Anthropic</strong> (key from
-        <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>).
-        Powers the in-app analyst chat.
+        <strong>AI analyst — no key needed.</strong> Questions open in
+        <a href="https://claude.ai" target="_blank" rel="noopener">Claude on the web</a> with the live
+        data attached, using your regular Claude account. Optionally paste an Anthropic API key
+        (from <a href="https://console.anthropic.com/" target="_blank" rel="noopener">console.anthropic.com</a>)
+        to get streaming answers inside the app instead.
       </p>
       <div class="row">
         <input type="password" id="akey" placeholder="Anthropic API key (sk-ant-…)">
@@ -272,7 +274,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
       </div>
 
       <div class="card">
-        <h3>AI Analyst <span class="sub">streams live — knows the data above</span></h3>
+        <h3>AI Analyst <span class="sub" id="chatmode">knows the data above</span></h3>
         <div class="chatlog" id="chatlog"></div>
         <div class="chips" id="chips"></div>
         <div class="row">
@@ -786,6 +788,9 @@ function renderResearch(news) {
   // reset chat for the new ticker
   chatHistory = [];
   document.getElementById('chatlog').innerHTML = '';
+  document.getElementById('chatmode').textContent = getAKey()
+    ? 'streams in-app — knows the data above'
+    : 'no key needed — opens in Claude on the web with the data attached';
   document.getElementById('chips').innerHTML = [
     'Bull case vs bear case?', 'Is the valuation justified?', 'Biggest risks and sell triggers?',
     'How did the last earnings look?', 'Would you hold this for 5 years?',
@@ -798,13 +803,52 @@ let chatBusy = false;
 
 function askChip(el) { document.getElementById('chatin').value = el.textContent; sendChat(); }
 
+/* Compact live-data block that fits in a URL for the web handoff. */
+function analystContext() {
+  const d = lastR, m = d.m;
+  const { pillars, composite } = computePillars(m);
+  const keep = ['revenueGrowthTTMYoy', 'epsGrowthTTMYoy', 'revenueGrowth5Y', 'grossMarginTTM',
+    'operatingMarginTTM', 'netProfitMarginTTM', 'roeTTM', 'totalDebt/totalEquityQuarterly',
+    'currentRatioQuarterly', 'peTTM', 'psTTM', 'pfcfShareTTM', 'beta', '52WeekHigh', '52WeekLow',
+    'dividendYieldIndicatedAnnual'];
+  const metrics = {};
+  for (const k of keep) if (num(m[k]) != null) metrics[k] = m[k];
+  return `LIVE DATA for ${d.t} (${d.profile.name || ''}) — Finnhub, ${new Date().toLocaleString()}:\n` +
+    `Price $${d.quote.c}, today ${d.quote.d >= 0 ? '+' : ''}${d.quote.d} (${d.quote.dp}%). ` +
+    `Market cap ${capUsd(num(d.profile.marketCapitalization))}. Industry: ${d.profile.finnhubIndustry || '?'}.\n` +
+    `TTM metrics: ${JSON.stringify(metrics)}\n` +
+    (d.rec[0] ? `Analyst ratings (${d.rec[0].period}): ${d.rec[0].strongBuy} strong buy / ${d.rec[0].buy} buy / ${d.rec[0].hold} hold / ${d.rec[0].sell + d.rec[0].strongSell} sell.\n` : '') +
+    (d.eps.length ? `Recent EPS vs estimate: ${d.eps.slice(0, 3).map(e => `${e.period}: ${e.actual} vs ${e.estimate}`).join('; ')}.\n` : '') +
+    `Marrow Quality Rating ${composite ?? '?'}/100 (${pillars.map(p => `${p.name} ${p.v ?? '?'}`).join(', ')}).`;
+}
+
+/* No API key: hand the question to Claude on the web with the data attached. */
+function webAnalyst(q) {
+  const d = lastR;
+  const log = document.getElementById('chatlog');
+  const prompt =
+    `You are a sharp, data-first stock analyst. Use the live data below as the verified source for ` +
+    `price and fundamentals (plus web search for anything newer). Be direct: numbers over adjectives, ` +
+    `both sides of the trade, concrete triggers over vague hedging. Label anything unverifiable ` +
+    `[UNVERIFIED]. Research and education only — no personalized buy/sell advice.\n\n` +
+    analystContext() + `\n\nQuestion about ${d.t}: ${q}`;
+  navigator.clipboard?.writeText(prompt).catch(() => {});
+  const win = window.open('https://claude.ai/new?q=' + encodeURIComponent(prompt), '_blank', 'noopener');
+  log.insertAdjacentHTML('beforeend', `<div class="msg user">${esc(q)}</div>`);
+  log.insertAdjacentHTML('beforeend', `<div class="msg ai">${win
+    ? 'Opened in <strong>Claude on the web</strong> with the live ' + esc(d.t) + ' data attached — the answer streams there. No API key needed.'
+    : 'Pop-up blocked — the full prompt (with live data) is on your clipboard: paste it into <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai</a>.'}
+    <br><span style="color:var(--faint);font-size:11.5px;">Prefer answers inside the app? Add an Anthropic API key in Connections.</span></div>`);
+  log.scrollTop = log.scrollHeight;
+}
+
 async function sendChat() {
   const inEl = document.getElementById('chatin');
   const q = inEl.value.trim();
   const st = document.getElementById('chatstatus');
   if (!q || chatBusy || !lastR) return;
   const ak = getAKey();
-  if (!ak) { st.textContent = 'Add your Anthropic key in Connections (top right) to enable the AI analyst.'; st.className = 'status err'; document.getElementById('keycard').classList.remove('collapsed'); return; }
+  if (!ak) { inEl.value = ''; st.textContent = ''; webAnalyst(q); return; }
 
   chatBusy = true; inEl.value = ''; st.textContent = ''; st.className = 'status';
   document.getElementById('chatbtn').disabled = true;
