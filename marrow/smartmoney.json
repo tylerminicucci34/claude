@@ -281,11 +281,46 @@
   ],
   "congress": [
     {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-07-16",
+      "doc_id": "20035013",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035013.pdf"
+    },
+    {
+      "name": "Richard W. Allen",
+      "office": "GA12",
+      "date": "2026-07-15",
+      "doc_id": "20034945",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034945.pdf"
+    },
+    {
       "name": "Debbie Dingell",
       "office": "MI06",
       "date": "2026-07-15",
       "doc_id": "20034960",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034960.pdf"
+    },
+    {
+      "name": "Byron Donalds",
+      "office": "FL19",
+      "date": "2026-07-15",
+      "doc_id": "20034968",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034968.pdf"
+    },
+    {
+      "name": "Jonathan Jackson",
+      "office": "IL01",
+      "date": "2026-07-15",
+      "doc_id": "20034908",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034908.pdf"
+    },
+    {
+      "name": "Thomas H. Kean",
+      "office": "NJ07",
+      "date": "2026-07-15",
+      "doc_id": "20035003",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035003.pdf"
     },
     {
       "name": "Katherine M. Clark",
@@ -524,43 +559,8 @@
       "date": "2026-06-23",
       "doc_id": "20034815",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034815.pdf"
-    },
-    {
-      "name": "Nancy Pelosi",
-      "office": "CA11",
-      "date": "2026-06-23",
-      "doc_id": "20034836",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034836.pdf"
-    },
-    {
-      "name": "Jared Moskowitz",
-      "office": "FL23",
-      "date": "2026-06-19",
-      "doc_id": "20034749",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034749.pdf"
-    },
-    {
-      "name": "Scott H. Peters",
-      "office": "CA50",
-      "date": "2026-06-19",
-      "doc_id": "20034784",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034784.pdf"
-    },
-    {
-      "name": "Thomas H. Kean",
-      "office": "NJ07",
-      "date": "2026-06-18",
-      "doc_id": "20034783",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034783.pdf"
-    },
-    {
-      "name": "Steve Cohen",
-      "office": "TN09",
-      "date": "2026-06-17",
-      "doc_id": "20034796",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034796.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-16T13:16:59.526624+00:00"
+  "updated_utc": "2026-07-17T09:51:45.477665+00:00"
 }
