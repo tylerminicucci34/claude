@@ -96,12 +96,30 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 .x:hover { color: var(--red); }
 
 /* ---------- the bull ---------- */
-.bullbar { display: flex; align-items: center; gap: 22px; padding: 8px 26px 4px; overflow: hidden; }
-#bullwrap { flex: 0 0 auto; width: 210px; }
-#bullsvg { width: 210px; height: 120px; display: block; filter: drop-shadow(0 6px 18px rgba(45,224,165,0.18)); }
-.bulltext .bt1 { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
-.bulltext .bt2 { font-size: 12.5px; color: var(--faint); margin-top: 3px; }
-@media (max-width: 560px) { .bullbar { gap: 12px; } #bullwrap, #bullsvg { width: 150px; } #bullsvg { height: 88px; } }
+.bullhero { position: relative; text-align: center; padding: 26px 18px 30px; overflow: hidden; }
+.bullhero .bt1 { font-size: 22px; font-weight: 850; letter-spacing: -0.3px; position: relative; z-index: 2; }
+.bullhero .bt2 { font-size: 12.5px; color: var(--faint); margin-top: 4px; position: relative; z-index: 2; }
+.spot {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 620px; height: 100%; pointer-events: none; opacity: 0;
+  background: linear-gradient(to bottom, rgba(255,228,180,0.20), rgba(255,228,180,0.05) 55%, transparent 82%);
+  clip-path: polygon(50% -14%, 6% 106%, 94% 106%);
+  filter: blur(5px);
+}
+#bullwrap { position: relative; display: inline-block; margin-top: 16px; }
+#bullsvg { width: min(400px, 88vw); height: auto; display: block; position: relative; z-index: 2;
+  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.55)) drop-shadow(0 2px 26px rgba(255,190,110,0.13)); }
+.glowbase {
+  position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
+  width: 80%; height: 30px; opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255,196,120,0.4), transparent 70%);
+  filter: blur(7px);
+}
+.ripple {
+  position: absolute; left: 50%; bottom: 4px; width: 260px; height: 36px;
+  border: 1.5px solid rgba(255,205,140,0.35); border-radius: 50%;
+  transform: translateX(-50%) scale(0.45); opacity: 0; pointer-events: none;
+}
 
 .bull, .torso, .leg, .tail { transform-box: fill-box; }
 .bull { transform-origin: 50% 100%; }
@@ -116,6 +134,16 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 .run .torso { animation: head-toss 7s ease-in-out 2.2s infinite; }
 .run .tail { animation: tail-wag 3.2s ease-in-out 1.5s infinite; }
 .run .dust { animation: dust-puff 1.15s ease-out both; }
+.run .spot { animation: fade-in 1.1s ease 0.5s both; }
+.run .glowbase { animation: fade-in 1.1s ease 0.75s both; }
+.run .ripple { animation: ripple 3.6s ease-out 1.5s infinite; }
+.run .ripple.r2 { animation-delay: 3.3s; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ripple {
+  0% { transform: translateX(-50%) scale(0.45); opacity: 0.55; }
+  70% { opacity: 0; }
+  100% { transform: translateX(-50%) scale(1.55); opacity: 0; }
+}
 
 @keyframes bull-charge {
   0%   { transform: translateX(-300px); }
@@ -282,58 +310,65 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 
   <!-- ================= DASHBOARD ================= -->
   <div class="view active" id="v-dash">
-    <div class="card bullbar">
-      <div id="bullwrap" class="run">
-        <svg id="bullsvg" viewBox="0 0 260 150" aria-label="charging bull">
+    <div class="card bullhero" id="bullhero">
+      <div class="bt1">The bull is on the floor.</div>
+      <div class="bt2" id="bulldate"></div>
+      <div class="spot"></div>
+      <div id="bullwrap">
+        <div class="glowbase"></div>
+        <div class="ripple r1"></div><div class="ripple r2"></div>
+        <svg id="bullsvg" viewBox="0 0 300 170" aria-label="charging bull">
           <defs>
-            <linearGradient id="bullg" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#3ef0b6"/><stop offset="1" stop-color="#149a7d"/>
+            <linearGradient id="bullg" x1="0" y1="0" x2="0.65" y2="1">
+              <stop offset="0" stop-color="#e6a95e"/><stop offset="0.55" stop-color="#b87a33"/><stop offset="1" stop-color="#77491b"/>
+            </linearGradient>
+            <linearGradient id="bullleg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#a5692a"/><stop offset="1" stop-color="#5e3a15"/>
             </linearGradient>
           </defs>
-          <ellipse class="bshadow" cx="128" cy="136" rx="92" ry="8" fill="rgba(0,0,0,0.45)"/>
+          <ellipse class="bshadow" cx="152" cy="158" rx="108" ry="9" fill="rgba(0,0,0,0.5)"/>
           <g class="dust">
-            <circle cx="28" cy="122" r="7" fill="rgba(147,160,173,0.5)"/>
-            <circle cx="12" cy="112" r="5" fill="rgba(147,160,173,0.35)"/>
-            <circle cx="20" cy="132" r="4" fill="rgba(147,160,173,0.4)"/>
+            <circle cx="30" cy="140" r="8" fill="rgba(180,150,110,0.4)"/>
+            <circle cx="12" cy="128" r="5" fill="rgba(180,150,110,0.28)"/>
+            <circle cx="22" cy="150" r="4" fill="rgba(180,150,110,0.33)"/>
           </g>
           <g class="bull">
-            <!-- hind legs -->
-            <g transform="translate(58,92)"><g class="leg l1"><rect x="-6" y="-4" width="11" height="42" rx="5" fill="url(#bullg)"/><rect x="-6" y="34" width="11" height="7" rx="2.5" fill="#0c2b22"/></g></g>
-            <g transform="translate(78,94)"><g class="leg l3"><rect x="-5" y="-4" width="10" height="40" rx="5" fill="#17b48f"/><rect x="-5" y="32" width="10" height="7" rx="2.5" fill="#0c2b22"/></g></g>
-            <!-- front legs -->
-            <g transform="translate(152,94)"><g class="leg l2"><rect x="-5" y="-4" width="10" height="40" rx="5" fill="#17b48f"/><rect x="-5" y="32" width="10" height="7" rx="2.5" fill="#0c2b22"/></g></g>
-            <g transform="translate(170,92)"><g class="leg l4"><rect x="-6" y="-4" width="11" height="42" rx="5" fill="url(#bullg)"/><rect x="-6" y="34" width="11" height="7" rx="2.5" fill="#0c2b22"/></g></g>
-            <!-- tail -->
-            <g transform="translate(38,66)"><g class="tail">
-              <path d="M2 0 C -14 4, -20 22, -12 40" fill="none" stroke="url(#bullg)" stroke-width="7" stroke-linecap="round"/>
-              <circle cx="-12" cy="42" r="7" fill="#149a7d"/>
+            <!-- far legs (behind body) -->
+            <g transform="translate(92,110)"><g class="leg l3"><rect x="-5" y="-6" width="10" height="44" rx="5" fill="#6e4419"/><rect x="-5" y="34" width="10" height="8" rx="3" fill="#2c1a09"/></g></g>
+            <g transform="translate(192,110)"><g class="leg l2"><rect x="-5" y="-6" width="10" height="44" rx="5" fill="#6e4419"/><rect x="-5" y="34" width="10" height="8" rx="3" fill="#2c1a09"/></g></g>
+            <!-- tail arched over the back, like the statue -->
+            <g transform="translate(66,56)"><g class="tail">
+              <path d="M 4 8 C -6 -8, -24 -12, -36 -2" fill="none" stroke="url(#bullg)" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="-36" cy="-2" r="6" fill="#8a5722"/>
             </g></g>
             <!-- body + lowered head -->
             <g class="torso">
-              <path fill="url(#bullg)" d="M 36 86
-                C 28 66, 42 52, 64 50
-                C 90 46, 112 44, 130 38
-                C 148 32, 168 34, 180 46
-                C 190 56, 200 62, 210 68
-                C 222 76, 224 90, 214 97
-                C 206 102, 194 100, 188 92
-                C 178 98, 166 98, 158 92
-                C 148 100, 130 103, 116 100
-                C 98 104, 76 104, 62 100
-                C 48 97, 38 94, 36 86 Z"/>
+              <path fill="url(#bullg)" d="M 48 98
+                C 40 76, 48 58, 70 54
+                C 86 50, 102 52, 118 50
+                C 130 46, 140 40, 154 36
+                C 170 30, 188 34, 198 46
+                C 208 56, 218 62, 230 68
+                C 244 76, 248 90, 238 100
+                C 232 106, 220 104, 214 96
+                C 204 104, 192 104, 184 96
+                C 174 106, 154 110, 138 106
+                C 118 112, 94 112, 76 106
+                C 60 102, 50 102, 48 98 Z"/>
+              <!-- sheen along the hump -->
+              <path fill="rgba(255,226,170,0.45)" d="M 120 48 C 134 42, 148 35, 160 33 C 176 29, 190 33, 198 44 C 188 36, 172 34, 158 38 C 144 42, 132 46, 120 48 Z"/>
               <!-- horns -->
-              <path fill="#eaf6f0" d="M 186 56 C 178 44, 184 30, 200 24 C 190 36, 191 46, 196 56 Z"/>
-              <path fill="#eaf6f0" d="M 208 62 C 214 48, 228 40, 242 42 C 230 48, 222 56, 219 68 Z"/>
+              <path fill="#ecd3a3" d="M 220 62 C 216 46, 226 30, 244 26 C 232 40, 232 50, 234 62 Z"/>
+              <path fill="#ecd3a3" d="M 238 68 C 246 54, 260 48, 274 52 C 262 58, 254 66, 250 78 Z"/>
               <!-- eye + nostril -->
-              <circle cx="199" cy="77" r="3.2" fill="#08090e"/>
-              <ellipse cx="212" cy="90" rx="2.6" ry="1.8" fill="#08090e"/>
+              <circle cx="227" cy="79" r="3.2" fill="#140b04"/>
+              <ellipse cx="240" cy="93" rx="2.6" ry="1.8" fill="#140b04"/>
             </g>
+            <!-- near legs (in front of body) -->
+            <g transform="translate(70,106)"><g class="leg l1"><rect x="-6" y="-6" width="12" height="48" rx="5.5" fill="url(#bullleg)"/><rect x="-6" y="38" width="12" height="8" rx="3" fill="#2c1a09"/></g></g>
+            <g transform="translate(212,106)"><g class="leg l4"><rect x="-6" y="-6" width="12" height="48" rx="5.5" fill="url(#bullleg)"/><rect x="-6" y="38" width="12" height="8" rx="3" fill="#2c1a09"/></g></g>
           </g>
         </svg>
-      </div>
-      <div class="bulltext">
-        <div class="bt1">The bull is on the floor.</div>
-        <div class="bt2" id="bulldate"></div>
       </div>
     </div>
     <div class="indices" id="indices"></div>
@@ -1799,7 +1834,7 @@ async function askPicksAI() {
 
 /* ================= the bull ================= */
 function runBull() {
-  const w = document.getElementById('bullwrap');
+  const w = document.getElementById('bullhero');
   if (!w) return;
   w.classList.remove('run');
   void w.offsetWidth;          // restart the CSS animations
