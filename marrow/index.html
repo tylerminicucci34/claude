@@ -721,7 +721,7 @@ async function research() {
       fj(`/company-news?symbol=${t}&from=${dstr(from)}&to=${dstr(to)}`).catch(() => []),
     ]);
     if (!quote || !quote.c) throw new Error('no quote for "' + t + '" — check the ticker (US-listed only on free Finnhub)');
-    lastR = { t, quote, profile: profile || {}, m: (metrics && metrics.metric) || {}, rec: rec || [], eps: eps || [] };
+    lastR = { t, quote, profile: profile || {}, m: (metrics && metrics.metric) || {}, rec: rec || [], eps: eps || [], news: news || [] };
     renderResearch(news || []);
     st.textContent = ''; st.className = 'status';
   } catch (e) {
@@ -830,7 +830,8 @@ function renderResearch(news) {
     ? 'Claude streams in-app — knows the data above'
     : 'built-in analyst, no key needed — instant answers from the data above';
   document.getElementById('chips').innerHTML = [
-    'Bull case vs bear case?', 'Is the valuation justified?', 'Biggest risks and sell triggers?',
+    'Why is it moving?', '12-month price scenarios?', 'Bull case vs bear case?',
+    'Is the valuation justified?', 'Biggest risks and sell triggers?',
     'How did the last earnings look?', 'Would you hold this for 5 years?',
   ].map(q => `<span class="chip" onclick="askChip(this)">${q}</span>`).join('');
 }
@@ -861,6 +862,67 @@ function localAnalyst(q) {
   const has = (...ws) => ws.some(w => ql.includes(w));
   const secs = [];
 
+  if (has('moving', 'why is it', 'momentum', 'narrative', 'catalyst', 'happening')) {
+    const lo = num(m['52WeekLow']), hi = num(m['52WeekHigh']);
+    const posPct = (lo != null && hi != null && hi > lo) ? Math.round((d.quote.c - lo) / (hi - lo) * 100) : null;
+    let s = `## Why ${d.t} is moving\n`;
+    s += `- **Tape:** ${d.quote.dp >= 0 ? '+' : ''}${d.quote.dp?.toFixed(2)}% today` +
+      (posPct != null ? `, sitting at the ${posPct}th percentile of its 52-week range ($${lo.toFixed(0)}–$${hi.toFixed(0)})` : '') + '.\n';
+    if (d.news && d.news.length) {
+      s += `- **The catalyst trail (last 14 days):**\n` + d.news.slice(0, 3).map(n =>
+        `  - ${new Date(n.datetime * 1000).toLocaleDateString()} — ${n.headline} (${n.source || ''})`).join('\n') + '\n';
+    } else s += `- **News:** nothing notable in the last 14 days on the free feed — the move is likely macro/sector, not company-specific.\n`;
+    s += bullPct != null
+      ? `- **The institutional view:** ${bullPct}% of ${total} covering analysts are bullish (${r.period}). Watch for the *change* — upgrades/downgrades move stocks, levels don't.\n`
+      : `- **The institutional view:** no analyst coverage data on the free feed.\n`;
+    const lastE = d.eps && d.eps[0];
+    if (lastE && num(lastE.surprisePercent) != null)
+      s += `- **Last earnings:** ${lastE.surprisePercent >= 0 ? 'beat' : 'missed'} by ${Math.abs(lastE.surprisePercent).toFixed(1)}% (${lastE.period}).\n`;
+    s += `\nOne honest gap: I can't see X/Reddit/TikTok chatter from here — if this is a retail-narrative move, the social side is your homework.`;
+    secs.push(s);
+  }
+  if (has('scenario', 'target', 'ceiling', 'asymmetry', 'upside', 'downside', 'price in 12', 'where can it go')) {
+    const px = d.quote.c;
+    const lo52 = num(m['52WeekLow']);
+    let s = `## 4-scenario framework (multiple × earnings math shown)\n`;
+    if (pe != null && pe > 0) {
+      const epsNow = px / pe;
+      const gEps = Math.max(-20, Math.min(40, eg ?? g ?? 8));
+      const grow = (e, yrs) => e * Math.pow(1 + gEps / 100, yrs);
+      const sc = [
+        ['Bear (3–6 mo)', pe * 0.75, epsNow, 'the catalyst disappoints and the multiple de-rates 25%'],
+        ['Base (6–12 mo)', pe, grow(epsNow, 1), `execution holds: EPS compounds at ${gEps.toFixed(0)}%, multiple unchanged`],
+        ['Bull (12–18 mo)', pe * 1.25, grow(epsNow, 1.5), 'everything works: growth lands AND the market pays up 25%'],
+        ['Stretched bull (24 mo)', pe * 1.5, grow(epsNow, 2), 'the absolute ceiling: two years of growth at a re-rated multiple — do not anchor here'],
+      ];
+      s += `| Scenario | Math | Target | vs now |\n|---|---|---|---|\n` + sc.map(([name, mult, e, why]) => {
+        const tgt = mult * e;
+        return `| **${name}** | ${mult.toFixed(0)}× × $${e.toFixed(2)} EPS | **$${tgt.toFixed(0)}** | ${((tgt / px - 1) * 100).toFixed(0)}% |`;
+      }).join('\n');
+      const bear = sc[0][1] * sc[0][2], bull = sc[2][1] * sc[2][2];
+      s += `\n\nScenario logic — ` + sc.map(x => `**${x[0].split(' (')[0]}**: ${x[3]}`).join('; ') + `.`;
+      s += `\n\n- **Entry zone:** $${bear.toFixed(0)}–$${(px * 0.95).toFixed(0)} — between the bear case and a normal pullback.\n` +
+        `- **Trim levels:** into strength above the bull case ($${bull.toFixed(0)}).\n` +
+        `- **Hard stop (thesis broken):** a close below $${Math.max(bear * 0.92, lo52 ?? 0).toFixed(0)} — under the bear case${lo52 ? ' / near the 52-week low' : ''}, the framework itself is wrong.\n`;
+    } else if (ps != null && ps > 0) {
+      const spsNow = px / ps;
+      const gRev = Math.max(-15, Math.min(40, g ?? 10));
+      const sc = [
+        ['Bear', ps * 0.6, spsNow], ['Base', ps, spsNow * (1 + gRev / 100)],
+        ['Bull', ps * 1.3, spsNow * Math.pow(1 + gRev / 100, 1.5)], ['Stretched', ps * 1.6, spsNow * Math.pow(1 + gRev / 100, 2)],
+      ];
+      s += `No positive earnings, so the math runs on sales (${ps.toFixed(1)}× P/S today, revenue ${gRev >= 0 ? '+' : ''}${gRev.toFixed(0)}%):\n\n` +
+        `| Scenario | Math | Target | vs now |\n|---|---|---|---|\n` + sc.map(([name, mult, sales]) => {
+          const tgt = mult * sales;
+          return `| **${name}** | ${mult.toFixed(1)}× × $${sales.toFixed(2)}/sh sales | **$${tgt.toFixed(0)}** | ${((tgt / px - 1) * 100).toFixed(0)}% |`;
+        }).join('\n') +
+        `\n\nPre-profit scenario math is twice as fragile — the multiple AND the path to profitability both have to hold.`;
+    } else {
+      s += `Not enough valuation data (no P/E or P/S) to build the scenario table for ${d.t}.`;
+    }
+    s += `\n\nThis is mechanical framework math (±25–50% multiple swings around today's numbers), not a forecast — its job is to show the asymmetry, not predict the future.`;
+    secs.push(s);
+  }
   if (has('bull', 'bear', 'case', 'thesis')) {
     const bull = [], bear = [];
     if (g != null) (g >= 10 ? bull : bear).push(g >= 10 ? `revenue growing ${f0(g)}% YoY` : `revenue growth is only ${f0(g)}%`);
