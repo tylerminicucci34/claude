@@ -103,33 +103,34 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 #bullwrap { position: relative; display: inline-block; perspective: 900px; }
 .tilt { transform-style: preserve-3d; transition: transform 0.25s ease;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
-#bullimg { width: min(600px, 94vw); display: block; margin: -6px auto 0;
+#bullimg { width: min(500px, 92vw); display: block; margin: -6px auto 0;
   -webkit-mask-image: radial-gradient(ellipse 70% 64% at 50% 50%, #000 55%, transparent 86%);
   mask-image: radial-gradient(ellipse 70% 64% at 50% 50%, #000 55%, transparent 86%); }
-.dustp { position: absolute; bottom: 18%; left: 5%; width: 28px; height: 28px; border-radius: 50%; z-index: 3;
+.dustp { position: absolute; bottom: 7%; left: 18%; width: 30px; height: 30px; border-radius: 50%; z-index: 3;
   background: radial-gradient(circle, rgba(190,160,120,0.55), transparent 70%); opacity: 0; filter: blur(2px); }
-.dustp.d2 { width: 18px; height: 18px; left: 1%; bottom: 26%; }
-.dustp.d3 { width: 13px; height: 13px; left: 10%; bottom: 12%; }
+.dustp.d2 { width: 22px; height: 22px; left: auto; right: 18%; bottom: 8%; }
+.dustp.d3 { width: 15px; height: 15px; left: 32%; bottom: 4%; }
 
 .run #bullimg { transform-origin: 50% 100%;
-  animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both, bull-idle 5.2s ease-in-out 1.5s infinite; }
-.run .dustp { animation: dust-puff 1.2s ease-out both; }
-.run .dustp.d2 { animation-delay: 0.08s; }
-.run .dustp.d3 { animation-delay: 0.16s; }
+  animation: bull-charge 1.05s cubic-bezier(.25,.9,.35,1) both, bull-idle 5.2s ease-in-out 1.5s infinite; }
+.run .dustp { animation: dust-puff 0.95s ease-out 0.72s both; }
+.run .dustp.d2 { animation-delay: 0.82s; }
+.run .dustp.d3 { animation-delay: 0.9s; }
 
 @keyframes bull-charge {
-  0%   { transform: translateX(-620px); }
-  70%  { transform: translateX(14px); }
-  100% { transform: translateX(0); }
+  0%   { transform: translateY(-12%) scale(0.18); opacity: 0; }
+  12%  { opacity: 1; }
+  74%  { transform: translateY(1.5%) scale(1.045); }
+  100% { transform: translateY(0) scale(1); }
 }
 @keyframes bull-idle {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-5px) scale(1.004); }
 }
 @keyframes dust-puff {
-  0% { opacity: 0; transform: translateX(120px) scale(0.4); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-60px) scale(1.8); }
+  0% { opacity: 0; transform: scale(0.3); }
+  35% { opacity: 0.9; }
+  100% { opacity: 0; transform: scale(2.1); }
 }
 
 /* ---------- dashboard ---------- */
