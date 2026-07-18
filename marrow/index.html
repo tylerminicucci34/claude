@@ -8,16 +8,23 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #07090c; --panel: #0d1117; --panel2: #12181f; --line: #1e2833;
-  --text: #e8edf2; --dim: #8b98a5; --faint: #566270;
-  --mint: #2de0a5; --mint-dim: rgba(45,224,165,0.14);
+  --bg: #08090e; --panel: rgba(255,255,255,0.032); --panel2: rgba(255,255,255,0.045);
+  --line: rgba(255,255,255,0.075);
+  --text: #eef2f6; --dim: #93a0ad; --faint: #5d6975;
+  --mint: #2de0a5; --mint-dim: rgba(45,224,165,0.13);
   --red: #ff5c6c; --red-dim: rgba(255,92,108,0.13);
-  --amber: #ffb454; --blue: #58a6ff;
+  --amber: #ffb454; --blue: #6cb2ff;
   --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg); color: var(--text); min-height: 100dvh;
+  background:
+    radial-gradient(1100px 700px at 50% -250px, rgba(96,64,180,0.28) 0%, rgba(20,16,40,0.18) 45%, transparent 70%),
+    radial-gradient(900px 600px at 105% 15%, rgba(45,224,165,0.05) 0%, transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text); min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
 }
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -28,16 +35,16 @@ a:hover { text-decoration: underline; }
 .logo { font-size: 21px; font-weight: 900; letter-spacing: 2.5px; }
 .logo .m { color: var(--mint); }
 .logo small { display: block; font-size: 10px; font-weight: 600; letter-spacing: 1.2px; color: var(--faint); margin-top: 1px; }
-.tabs { display: flex; gap: 4px; margin-left: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.tabs { display: flex; gap: 4px; margin-left: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px; backdrop-filter: blur(8px); }
 .tabs button {
   border: 0; background: transparent; color: var(--dim); font: inherit; font-size: 13px; font-weight: 700;
-  padding: 8px 14px; border-radius: 9px; cursor: pointer; white-space: nowrap;
+  padding: 8px 15px; border-radius: 999px; cursor: pointer; white-space: nowrap; transition: color .15s;
 }
 .tabs button.active { background: var(--mint-dim); color: var(--mint); }
 #livebtn {
   border: 1px solid var(--line); background: var(--panel); color: var(--dim); font: inherit; font-size: 11px;
-  font-weight: 800; letter-spacing: 0.6px; padding: 9px 13px; border-radius: 10px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 7px;
+  font-weight: 800; letter-spacing: 0.6px; padding: 10px 15px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; backdrop-filter: blur(8px);
 }
 #livebtn.live { color: var(--mint); border-color: rgba(45,224,165,0.35); }
 #livebtn.off { color: var(--red); border-color: rgba(255,92,108,0.35); }
@@ -45,23 +52,32 @@ a:hover { text-decoration: underline; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* ---------- cards ---------- */
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
-.card h3 { font-size: 12px; font-weight: 800; letter-spacing: 1.4px; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 22px; padding: 20px 22px; margin-bottom: 14px; backdrop-filter: blur(8px); }
+.card h3 { font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; color: var(--dim); text-transform: uppercase; margin-bottom: 13px; }
 .card h3 .sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--faint); float: right; }
 .collapsed .body { display: none; }
 .keyhead { cursor: pointer; user-select: none; }
 
 /* ---------- forms ---------- */
 input[type=text], input[type=password], input[type=number] {
-  background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 10px;
-  padding: 10px 12px; font: inherit; font-size: 14px; width: 100%;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--text); border-radius: 14px;
+  padding: 11px 15px; font: inherit; font-size: 14px; width: 100%;
 }
-input:focus { outline: none; border-color: var(--mint); }
+input:focus { outline: none; border-color: rgba(45,224,165,0.55); }
 .btn {
   border: 0; background: var(--mint); color: #04120c; font: inherit; font-size: 13px; font-weight: 800;
-  padding: 10px 18px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+  padding: 11px 20px; border-radius: 999px; cursor: pointer; white-space: nowrap;
 }
 .btn.ghost { background: var(--panel2); color: var(--dim); border: 1px solid var(--line); }
+
+/* ---------- change pills ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-weight: 700;
+  font-size: 13px; padding: 6px 13px; border-radius: 999px; white-space: nowrap;
+}
+.pill.up { background: var(--mint-dim); color: var(--mint); }
+.pill.down { background: var(--red-dim); color: var(--red); }
+.pill.sm { font-size: 11.5px; padding: 3px 9px; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .row { display: flex; gap: 8px; }
 .status { font-size: 12px; color: var(--dim); margin-top: 8px; min-height: 15px; }
@@ -82,10 +98,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 /* ---------- dashboard ---------- */
 .indices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 640px) { .indices { grid-template-columns: repeat(2, 1fr); } }
-.idx { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
-.idx .lbl { font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: 0.8px; }
-.idx .px { font-family: var(--mono); font-size: 18px; font-weight: 700; margin-top: 3px; }
-.idx .chg { font-family: var(--mono); font-size: 12px; margin-top: 1px; }
+.idx { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 15px 17px; backdrop-filter: blur(8px); }
+.idx .lbl { font-size: 10.5px; color: var(--faint); font-weight: 800; letter-spacing: 1px; }
+.idx .px { font-family: var(--mono); font-size: 22px; font-weight: 750; letter-spacing: -0.5px; margin: 5px 0 7px; }
+.idx .chg { font-size: 12px; }
 
 .newsitem { padding: 10px 0; border-bottom: 1px solid rgba(30,40,51,0.55); }
 .newsitem:last-child { border-bottom: 0; }
@@ -95,10 +111,10 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 
 /* ---------- research ---------- */
 .rhead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
-.rhead .sym { font-size: 26px; font-weight: 900; letter-spacing: 0.5px; }
+.rhead .sym { font-size: 30px; font-weight: 900; letter-spacing: -0.5px; }
 .rhead .nm { color: var(--dim); font-size: 14px; }
-.rhead .px { font-family: var(--mono); font-size: 26px; font-weight: 700; margin-left: auto; }
-.rhead .chg { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+.rhead .px { font-family: var(--mono); font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-left: auto; }
+.rhead .chg { font-size: 15px; }
 .rangebar { position: relative; height: 5px; background: var(--panel2); border-radius: 3px; margin: 14px 0 4px; }
 .rangebar .fill { position: absolute; top: -3px; width: 11px; height: 11px; border-radius: 50%; background: var(--mint); transform: translateX(-50%); }
 .rangelbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--faint); font-family: var(--mono); }
@@ -147,8 +163,11 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 .updated { font-size: 11.5px; color: var(--faint); margin-bottom: 12px; }
 
 /* ---------- portfolio ---------- */
-.ptotals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-@media (max-width: 640px) { .ptotals { grid-template-columns: repeat(2, 1fr); } }
+.phero .plabel { font-size: 11px; color: var(--faint); font-weight: 800; letter-spacing: 1.6px; }
+.phero .pvalue { font-family: var(--mono); font-size: 46px; font-weight: 800; letter-spacing: -2px; margin-top: 6px; }
+.phero .pvalue .cents { font-size: 24px; color: var(--dim); letter-spacing: 0; }
+.phero .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.phero .histnote { font-size: 11px; color: var(--faint); margin-top: 6px; }
 .alloc { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .alloc i { display: block; height: 100%; background: var(--mint); border-radius: 3px; }
 
@@ -314,7 +333,7 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 
   <!-- ================= PORTFOLIO ================= -->
   <div class="view" id="v-port">
-    <div class="ptotals" id="ptotals"></div>
+    <div id="ptotals"></div>
     <div class="card">
       <h3>Positions <span class="sub">stored only in this browser</span></h3>
       <div class="row" style="margin-bottom:12px;flex-wrap:wrap;">
@@ -423,10 +442,10 @@ const bigUsd = v => v == null ? '—' :
   Math.abs(v) >= 1e9  ? '$' + (v / 1e9).toFixed(1)  + 'B' :
   Math.abs(v) >= 1e6  ? '$' + (v / 1e6).toFixed(1)  + 'M' : '$' + Math.round(v).toLocaleString();
 const capUsd = v => v == null ? '—' : bigUsd(v * 1e6);   // finnhub marketCap is in $M
-const chgHtml = (d, dp) => {
+const chgHtml = (d, dp, sm) => {
   if (d == null || dp == null) return '<span class="n">—</span>';
   const cls = d >= 0 ? 'up' : 'down', sign = d >= 0 ? '+' : '';
-  return `<span class="${cls}">${sign}${d.toFixed(2)} (${sign}${dp.toFixed(2)}%)</span>`;
+  return `<span class="pill ${sm ? 'sm ' : ''}${cls}">${d >= 0 ? '↑' : '↓'} ${sign}${d.toFixed(2)} (${sign}${dp.toFixed(2)}%)</span>`;
 };
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -489,7 +508,7 @@ async function refreshIndices() {
     <div class="idx">
       <div class="lbl">${lbl}</div>
       <div class="px">${q && q.c ? '$' + q.c.toFixed(2) : '—'}</div>
-      <div class="chg">${q ? chgHtml(num(q.d), num(q.dp)) : ''}</div>
+      <div class="chg">${q ? chgHtml(num(q.d), num(q.dp), true) : ''}</div>
     </div>`).join('');
 }
 
@@ -503,7 +522,7 @@ async function refreshWatchlist() {
     rows.map(({ s, q }) => `<tr>
       <td class="tick" onclick="goResearch('${s}')">${s}</td>
       <td class="n">${q && q.c ? money(q.c) : '—'}</td>
-      <td class="n">${q ? chgHtml(num(q.d), num(q.dp)) : '—'}</td>
+      <td class="n">${q ? chgHtml(num(q.d), num(q.dp), true) : '—'}</td>
       <td class="n" style="color:var(--faint)">${q && q.l ? q.l.toFixed(2) + ' – ' + q.h.toFixed(2) : '—'}</td>
       <td class="n"><span class="x" onclick="rmWatch('${s}')">✕</span></td>
     </tr>`).join('') + '</table>';
@@ -1352,6 +1371,21 @@ async function loadSmartMoney() {
 }
 
 /* ================= portfolio ================= */
+function sparkSvg(vals, w = 640, h = 96) {
+  if (!vals || vals.length < 2) return '';
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+  const pts = vals.map((v, i) => [(i / (vals.length - 1)) * w, h - 6 - ((v - min) / span) * (h - 14)]);
+  const line = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const c = vals[vals.length - 1] >= vals[0] ? '#2de0a5' : '#ff5c6c';
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;margin-top:16px;display:block;" preserveAspectRatio="none">
+    <defs><linearGradient id="sparkg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${c}" stop-opacity="0.28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="0,${h} ${line} ${w},${h}" fill="url(#sparkg)"/>
+    <polyline points="${line}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </svg>`;
+}
+
 let positions = JSON.parse(localStorage.getItem('marrowPortfolio') || '[]');
 const savePort = () => localStorage.setItem('marrowPortfolio', JSON.stringify(positions));
 
@@ -1389,12 +1423,35 @@ async function renderPortfolio() {
     else mv += r.sh * r.cost;
   }
   const gain = mv - costTot;
-  const cell = (lbl, val, cls) => `<div class="idx"><div class="lbl">${lbl}</div><div class="px ${cls || ''}">${val}</div></div>`;
-  tot.innerHTML =
-    cell('MARKET VALUE', money(mv)) +
-    cell('DAY P&L', (dayChg >= 0 ? '+' : '') + money(dayChg).replace('$-', '-$'), dayChg >= 0 ? 'up' : 'down') +
-    cell('TOTAL P&L', (gain >= 0 ? '+' : '') + money(gain).replace('$-', '-$'), gain >= 0 ? 'up' : 'down') +
-    cell('RETURN', costTot ? ((gain >= 0 ? '+' : '') + (gain / costTot * 100).toFixed(1) + '%') : '—', gain >= 0 ? 'up' : 'down');
+
+  // record a local value-history snapshot (hourly) for the sparkline
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('marrowEquityHistory') || '[]'); } catch (e) {}
+  if (rows.some(r => r.q && r.q.c)) {
+    const now = Date.now();
+    if (!hist.length || now - hist[hist.length - 1].t > 3600e3) hist.push({ t: now, v: mv });
+    else hist[hist.length - 1].v = mv;
+    hist = hist.slice(-180);
+    localStorage.setItem('marrowEquityHistory', JSON.stringify(hist));
+  }
+
+  const [dollars, cents] = money(mv).split('.');
+  const pill = (label, v, isPct) => {
+    const cls = v >= 0 ? 'up' : 'down', sign = v >= 0 ? '+' : '';
+    const txt = isPct ? sign + v.toFixed(1) + '%' : sign + money(v).replace('$-', '-$');
+    return `<span class="pill ${cls}">${v >= 0 ? '↑' : '↓'} ${txt} <span style="opacity:.65;font-weight:600">${label}</span></span>`;
+  };
+  tot.innerHTML = `<div class="card phero">
+    <div class="plabel">PORTFOLIO VALUE</div>
+    <div class="pvalue">${dollars}<span class="cents">.${cents}</span></div>
+    <div class="pills">
+      ${pill('today', dayChg)}
+      ${pill('all time', gain)}
+      ${costTot ? pill('return', gain / costTot * 100, true) : ''}
+    </div>
+    ${sparkSvg(hist.map(h => h.v))}
+    ${hist.length > 1 ? `<div class="histnote">${hist.length} snapshots — value history records locally each time you open the app</div>` : ''}
+  </div>`;
 
   el.innerHTML = '<table><tr><th>Ticker</th><th class="n">Shares</th><th class="n">Avg cost</th><th class="n">Price</th><th class="n">Value</th><th class="n">P&L</th><th class="n">Alloc</th><th></th></tr>' +
     rows.map(r => {
