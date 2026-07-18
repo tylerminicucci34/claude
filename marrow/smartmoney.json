@@ -281,6 +281,27 @@
   ],
   "congress": [
     {
+      "name": "Dan Newhouse",
+      "office": "WA04",
+      "date": "2026-07-17",
+      "doc_id": "20034998",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034998.pdf"
+    },
+    {
+      "name": "Daniel Crenshaw",
+      "office": "TX02",
+      "date": "2026-07-16",
+      "doc_id": "20035024",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035024.pdf"
+    },
+    {
+      "name": "Cleo Fields",
+      "office": "LA06",
+      "date": "2026-07-16",
+      "doc_id": "20034894",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034894.pdf"
+    },
+    {
       "name": "Kevin Hern",
       "office": "OK01",
       "date": "2026-07-16",
@@ -328,6 +349,20 @@
       "date": "2026-07-14",
       "doc_id": "20034892",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034892.pdf"
+    },
+    {
+      "name": "Nicole Malliotakis",
+      "office": "NY11",
+      "date": "2026-07-14",
+      "doc_id": "9116217",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116217.pdf"
+    },
+    {
+      "name": "Harold Dallas Rogers",
+      "office": "KY05",
+      "date": "2026-07-14",
+      "doc_id": "9116218",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116218.pdf"
     },
     {
       "name": "Debbie Wasserman Schultz",
@@ -524,43 +559,8 @@
       "date": "2026-07-01",
       "doc_id": "20034897",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034897.pdf"
-    },
-    {
-      "name": "Keith Alan Self",
-      "office": "TX03",
-      "date": "2026-06-30",
-      "doc_id": "9116197",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116197.pdf"
-    },
-    {
-      "name": "Cleo Fields",
-      "office": "LA06",
-      "date": "2026-06-26",
-      "doc_id": "20034800",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034800.pdf"
-    },
-    {
-      "name": "Greg Stanton",
-      "office": "AZ04",
-      "date": "2026-06-26",
-      "doc_id": "20034717",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034717.pdf"
-    },
-    {
-      "name": "Dwight Evans",
-      "office": "PA03",
-      "date": "2026-06-24",
-      "doc_id": "20034851",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034851.pdf"
-    },
-    {
-      "name": "Neal Patrick MD, Facs Dunn",
-      "office": "FL02",
-      "date": "2026-06-23",
-      "doc_id": "20034815",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034815.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-17T09:51:45.477665+00:00"
+  "updated_utc": "2026-07-18T09:18:36.804250+00:00"
 }
