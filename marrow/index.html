@@ -95,6 +95,62 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 .x { color: var(--faint); cursor: pointer; padding: 0 6px; font-weight: 700; }
 .x:hover { color: var(--red); }
 
+/* ---------- the bull ---------- */
+.bullbar { display: flex; align-items: center; gap: 22px; padding: 8px 26px 4px; overflow: hidden; }
+#bullwrap { flex: 0 0 auto; width: 210px; }
+#bullsvg { width: 210px; height: 120px; display: block; filter: drop-shadow(0 6px 18px rgba(45,224,165,0.18)); }
+.bulltext .bt1 { font-size: 17px; font-weight: 800; letter-spacing: -0.2px; }
+.bulltext .bt2 { font-size: 12.5px; color: var(--faint); margin-top: 3px; }
+@media (max-width: 560px) { .bullbar { gap: 12px; } #bullwrap, #bullsvg { width: 150px; } #bullsvg { height: 88px; } }
+
+.bull, .torso, .leg, .tail { transform-box: fill-box; }
+.bull { transform-origin: 50% 100%; }
+.torso { transform-origin: 55% 45%; }
+.leg { transform-origin: 50% 2%; }
+.tail { transform-origin: 96% 4%; }
+.dust { opacity: 0; }
+.run .bull { animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both, bull-idle 4.5s ease-in-out 1.4s infinite; }
+.run .bshadow { animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both; }
+.run .leg { animation: gallop 0.26s linear 4; }
+.run .l2, .run .l3 { animation: gallop-b 0.26s linear 4; }
+.run .torso { animation: head-toss 7s ease-in-out 2.2s infinite; }
+.run .tail { animation: tail-wag 3.2s ease-in-out 1.5s infinite; }
+.run .dust { animation: dust-puff 1.15s ease-out both; }
+
+@keyframes bull-charge {
+  0%   { transform: translateX(-300px); }
+  70%  { transform: translateX(12px); }
+  100% { transform: translateX(0); }
+}
+@keyframes gallop {
+  0% { transform: rotate(0deg); } 25% { transform: rotate(-24deg); }
+  50% { transform: rotate(0deg); } 75% { transform: rotate(22deg); } 100% { transform: rotate(0deg); }
+}
+@keyframes gallop-b {
+  0% { transform: rotate(0deg); } 25% { transform: rotate(22deg); }
+  50% { transform: rotate(0deg); } 75% { transform: rotate(-24deg); } 100% { transform: rotate(0deg); }
+}
+@keyframes bull-idle {
+  0%, 100% { transform: translateX(0) translateY(0) scaleY(1); }
+  50% { transform: translateX(0) translateY(-2.5px) scaleY(1.015); }
+}
+@keyframes head-toss {
+  0%, 86%, 100% { transform: rotate(0deg); }
+  90% { transform: rotate(-3.5deg); }
+  95% { transform: rotate(1.5deg); }
+}
+@keyframes tail-wag {
+  0%, 100% { transform: rotate(0deg); }
+  12% { transform: rotate(16deg); }
+  24% { transform: rotate(-6deg); }
+  32% { transform: rotate(0deg); }
+}
+@keyframes dust-puff {
+  0% { opacity: 0; transform: translateX(60px) scale(0.4); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-30px) scale(1.6); }
+}
+
 /* ---------- dashboard ---------- */
 .indices { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
 @media (max-width: 640px) { .indices { grid-template-columns: repeat(2, 1fr); } }
@@ -226,6 +282,60 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 
   <!-- ================= DASHBOARD ================= -->
   <div class="view active" id="v-dash">
+    <div class="card bullbar">
+      <div id="bullwrap" class="run">
+        <svg id="bullsvg" viewBox="0 0 260 150" aria-label="charging bull">
+          <defs>
+            <linearGradient id="bullg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#3ef0b6"/><stop offset="1" stop-color="#149a7d"/>
+            </linearGradient>
+          </defs>
+          <ellipse class="bshadow" cx="128" cy="136" rx="92" ry="8" fill="rgba(0,0,0,0.45)"/>
+          <g class="dust">
+            <circle cx="28" cy="122" r="7" fill="rgba(147,160,173,0.5)"/>
+            <circle cx="12" cy="112" r="5" fill="rgba(147,160,173,0.35)"/>
+            <circle cx="20" cy="132" r="4" fill="rgba(147,160,173,0.4)"/>
+          </g>
+          <g class="bull">
+            <!-- hind legs -->
+            <g transform="translate(58,92)"><g class="leg l1"><rect x="-6" y="-4" width="11" height="42" rx="5" fill="url(#bullg)"/><rect x="-6" y="34" width="11" height="7" rx="2.5" fill="#0c2b22"/></g></g>
+            <g transform="translate(78,94)"><g class="leg l3"><rect x="-5" y="-4" width="10" height="40" rx="5" fill="#17b48f"/><rect x="-5" y="32" width="10" height="7" rx="2.5" fill="#0c2b22"/></g></g>
+            <!-- front legs -->
+            <g transform="translate(152,94)"><g class="leg l2"><rect x="-5" y="-4" width="10" height="40" rx="5" fill="#17b48f"/><rect x="-5" y="32" width="10" height="7" rx="2.5" fill="#0c2b22"/></g></g>
+            <g transform="translate(170,92)"><g class="leg l4"><rect x="-6" y="-4" width="11" height="42" rx="5" fill="url(#bullg)"/><rect x="-6" y="34" width="11" height="7" rx="2.5" fill="#0c2b22"/></g></g>
+            <!-- tail -->
+            <g transform="translate(38,66)"><g class="tail">
+              <path d="M2 0 C -14 4, -20 22, -12 40" fill="none" stroke="url(#bullg)" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="-12" cy="42" r="7" fill="#149a7d"/>
+            </g></g>
+            <!-- body + lowered head -->
+            <g class="torso">
+              <path fill="url(#bullg)" d="M 36 86
+                C 28 66, 42 52, 64 50
+                C 90 46, 112 44, 130 38
+                C 148 32, 168 34, 180 46
+                C 190 56, 200 62, 210 68
+                C 222 76, 224 90, 214 97
+                C 206 102, 194 100, 188 92
+                C 178 98, 166 98, 158 92
+                C 148 100, 130 103, 116 100
+                C 98 104, 76 104, 62 100
+                C 48 97, 38 94, 36 86 Z"/>
+              <!-- horns -->
+              <path fill="#eaf6f0" d="M 186 56 C 178 44, 184 30, 200 24 C 190 36, 191 46, 196 56 Z"/>
+              <path fill="#eaf6f0" d="M 208 62 C 214 48, 228 40, 242 42 C 230 48, 222 56, 219 68 Z"/>
+              <!-- eye + nostril -->
+              <circle cx="199" cy="77" r="3.2" fill="#08090e"/>
+              <ellipse cx="212" cy="90" rx="2.6" ry="1.8" fill="#08090e"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <div class="bulltext">
+        <div class="bt1">The bull is on the floor.</div>
+        <div class="bt2" id="bulldate"></div>
+      </div>
+    </div>
     <div class="indices" id="indices"></div>
 
     <div class="card">
@@ -486,6 +596,7 @@ function setTab(t) {
     document.getElementById('v-' + v).classList.toggle('active', v === t);
     document.getElementById('t-' + v).classList.toggle('active', v === t);
   }
+  if (t === 'dash') runBull();
   if (t === 'smart' && !smLoaded) loadSmartMoney();
   if (t === 'port') renderPortfolio();
   if (t === 'picks') refreshPicks(false);
@@ -1686,7 +1797,20 @@ async function askPicksAI() {
   }
 }
 
+/* ================= the bull ================= */
+function runBull() {
+  const w = document.getElementById('bullwrap');
+  if (!w) return;
+  w.classList.remove('run');
+  void w.offsetWidth;          // restart the CSS animations
+  w.classList.add('run');
+}
+document.getElementById('bulldate').textContent =
+  new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) +
+  ' — let’s find something worth owning.';
+
 /* ================= boot ================= */
+runBull();
 checkLive().then(ok => { if (ok) refreshAll(); });
 </script>
 </body>
