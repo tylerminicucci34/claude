@@ -96,87 +96,40 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
 .x:hover { color: var(--red); }
 
 /* ---------- the bull ---------- */
-.bullhero { position: relative; text-align: center; padding: 26px 18px 30px; overflow: hidden; }
+.bullhero { position: relative; text-align: center; padding: 26px 18px 0; overflow: hidden;
+  background: radial-gradient(140% 130% at 50% 0%, #191510 0%, #0b0a08 48%, #050505 100%); }
 .bullhero .bt1 { font-size: 22px; font-weight: 850; letter-spacing: -0.3px; position: relative; z-index: 2; }
 .bullhero .bt2 { font-size: 12.5px; color: var(--faint); margin-top: 4px; position: relative; z-index: 2; }
-.spot {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 620px; height: 100%; pointer-events: none; opacity: 0;
-  background: linear-gradient(to bottom, rgba(255,228,180,0.20), rgba(255,228,180,0.05) 55%, transparent 82%);
-  clip-path: polygon(50% -14%, 6% 106%, 94% 106%);
-  filter: blur(5px);
-}
-#bullwrap { position: relative; display: inline-block; margin-top: 16px; }
-#bullsvg { width: min(400px, 88vw); height: auto; display: block; position: relative; z-index: 2;
-  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.55)) drop-shadow(0 2px 26px rgba(255,190,110,0.13)); }
-.glowbase {
-  position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%);
-  width: 80%; height: 30px; opacity: 0; pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(255,196,120,0.4), transparent 70%);
-  filter: blur(7px);
-}
-.ripple {
-  position: absolute; left: 50%; bottom: 4px; width: 260px; height: 36px;
-  border: 1.5px solid rgba(255,205,140,0.35); border-radius: 50%;
-  transform: translateX(-50%) scale(0.45); opacity: 0; pointer-events: none;
-}
+#bullwrap { position: relative; display: inline-block; perspective: 900px; }
+.tilt { transform-style: preserve-3d; transition: transform 0.25s ease;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+#bullimg { width: min(600px, 94vw); display: block; margin: -6px auto 0;
+  -webkit-mask-image: radial-gradient(ellipse 70% 64% at 50% 50%, #000 55%, transparent 86%);
+  mask-image: radial-gradient(ellipse 70% 64% at 50% 50%, #000 55%, transparent 86%); }
+.dustp { position: absolute; bottom: 18%; left: 5%; width: 28px; height: 28px; border-radius: 50%; z-index: 3;
+  background: radial-gradient(circle, rgba(190,160,120,0.55), transparent 70%); opacity: 0; filter: blur(2px); }
+.dustp.d2 { width: 18px; height: 18px; left: 1%; bottom: 26%; }
+.dustp.d3 { width: 13px; height: 13px; left: 10%; bottom: 12%; }
 
-.bull, .torso, .leg, .tail { transform-box: fill-box; }
-.bull { transform-origin: 50% 100%; }
-.torso { transform-origin: 55% 45%; }
-.leg { transform-origin: 50% 2%; }
-.tail { transform-origin: 96% 4%; }
-.dust { opacity: 0; }
-.run .bull { animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both, bull-idle 4.5s ease-in-out 1.4s infinite; }
-.run .bshadow { animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both; }
-.run .leg { animation: gallop 0.26s linear 4; }
-.run .l2, .run .l3 { animation: gallop-b 0.26s linear 4; }
-.run .torso { animation: head-toss 7s ease-in-out 2.2s infinite; }
-.run .tail { animation: tail-wag 3.2s ease-in-out 1.5s infinite; }
-.run .dust { animation: dust-puff 1.15s ease-out both; }
-.run .spot { animation: fade-in 1.1s ease 0.5s both; }
-.run .glowbase { animation: fade-in 1.1s ease 0.75s both; }
-.run .ripple { animation: ripple 3.6s ease-out 1.5s infinite; }
-.run .ripple.r2 { animation-delay: 3.3s; }
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes ripple {
-  0% { transform: translateX(-50%) scale(0.45); opacity: 0.55; }
-  70% { opacity: 0; }
-  100% { transform: translateX(-50%) scale(1.55); opacity: 0; }
-}
+.run #bullimg { transform-origin: 50% 100%;
+  animation: bull-charge 1.15s cubic-bezier(.22,.9,.3,1) both, bull-idle 5.2s ease-in-out 1.5s infinite; }
+.run .dustp { animation: dust-puff 1.2s ease-out both; }
+.run .dustp.d2 { animation-delay: 0.08s; }
+.run .dustp.d3 { animation-delay: 0.16s; }
 
 @keyframes bull-charge {
-  0%   { transform: translateX(-300px); }
-  70%  { transform: translateX(12px); }
+  0%   { transform: translateX(-620px); }
+  70%  { transform: translateX(14px); }
   100% { transform: translateX(0); }
 }
-@keyframes gallop {
-  0% { transform: rotate(0deg); } 25% { transform: rotate(-24deg); }
-  50% { transform: rotate(0deg); } 75% { transform: rotate(22deg); } 100% { transform: rotate(0deg); }
-}
-@keyframes gallop-b {
-  0% { transform: rotate(0deg); } 25% { transform: rotate(22deg); }
-  50% { transform: rotate(0deg); } 75% { transform: rotate(-24deg); } 100% { transform: rotate(0deg); }
-}
 @keyframes bull-idle {
-  0%, 100% { transform: translateX(0) translateY(0) scaleY(1); }
-  50% { transform: translateX(0) translateY(-2.5px) scaleY(1.015); }
-}
-@keyframes head-toss {
-  0%, 86%, 100% { transform: rotate(0deg); }
-  90% { transform: rotate(-3.5deg); }
-  95% { transform: rotate(1.5deg); }
-}
-@keyframes tail-wag {
-  0%, 100% { transform: rotate(0deg); }
-  12% { transform: rotate(16deg); }
-  24% { transform: rotate(-6deg); }
-  32% { transform: rotate(0deg); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.004); }
 }
 @keyframes dust-puff {
-  0% { opacity: 0; transform: translateX(60px) scale(0.4); }
-  35% { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-30px) scale(1.6); }
+  0% { opacity: 0; transform: translateX(120px) scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-60px) scale(1.8); }
 }
 
 /* ---------- dashboard ---------- */
@@ -313,64 +266,12 @@ td.n, th.n { text-align: right; font-family: var(--mono); font-size: 13px; }
     <div class="card bullhero" id="bullhero">
       <div class="bt1">The bull is on the floor.</div>
       <div class="bt2" id="bulldate"></div>
-      <div class="spot"></div>
       <div id="bullwrap">
-        <div class="glowbase"></div>
-        <div class="ripple r1"></div><div class="ripple r2"></div>
-        <svg id="bullsvg" viewBox="0 0 300 170" aria-label="charging bull">
-          <defs>
-            <linearGradient id="bullg" x1="0" y1="0" x2="0.65" y2="1">
-              <stop offset="0" stop-color="#e6a95e"/><stop offset="0.55" stop-color="#b87a33"/><stop offset="1" stop-color="#77491b"/>
-            </linearGradient>
-            <linearGradient id="bullleg" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#a5692a"/><stop offset="1" stop-color="#5e3a15"/>
-            </linearGradient>
-          </defs>
-          <ellipse class="bshadow" cx="152" cy="158" rx="108" ry="9" fill="rgba(0,0,0,0.5)"/>
-          <g class="dust">
-            <circle cx="30" cy="140" r="8" fill="rgba(180,150,110,0.4)"/>
-            <circle cx="12" cy="128" r="5" fill="rgba(180,150,110,0.28)"/>
-            <circle cx="22" cy="150" r="4" fill="rgba(180,150,110,0.33)"/>
-          </g>
-          <g class="bull">
-            <!-- far legs (behind body) -->
-            <g transform="translate(92,110)"><g class="leg l3"><rect x="-5" y="-6" width="10" height="44" rx="5" fill="#6e4419"/><rect x="-5" y="34" width="10" height="8" rx="3" fill="#2c1a09"/></g></g>
-            <g transform="translate(192,110)"><g class="leg l2"><rect x="-5" y="-6" width="10" height="44" rx="5" fill="#6e4419"/><rect x="-5" y="34" width="10" height="8" rx="3" fill="#2c1a09"/></g></g>
-            <!-- tail arched over the back, like the statue -->
-            <g transform="translate(66,56)"><g class="tail">
-              <path d="M 4 8 C -6 -8, -24 -12, -36 -2" fill="none" stroke="url(#bullg)" stroke-width="7" stroke-linecap="round"/>
-              <circle cx="-36" cy="-2" r="6" fill="#8a5722"/>
-            </g></g>
-            <!-- body + lowered head -->
-            <g class="torso">
-              <path fill="url(#bullg)" d="M 48 98
-                C 40 76, 48 58, 70 54
-                C 86 50, 102 52, 118 50
-                C 130 46, 140 40, 154 36
-                C 170 30, 188 34, 198 46
-                C 208 56, 218 62, 230 68
-                C 244 76, 248 90, 238 100
-                C 232 106, 220 104, 214 96
-                C 204 104, 192 104, 184 96
-                C 174 106, 154 110, 138 106
-                C 118 112, 94 112, 76 106
-                C 60 102, 50 102, 48 98 Z"/>
-              <!-- sheen along the hump -->
-              <path fill="rgba(255,226,170,0.45)" d="M 120 48 C 134 42, 148 35, 160 33 C 176 29, 190 33, 198 44 C 188 36, 172 34, 158 38 C 144 42, 132 46, 120 48 Z"/>
-              <!-- horns -->
-              <path fill="#ecd3a3" d="M 220 62 C 216 46, 226 30, 244 26 C 232 40, 232 50, 234 62 Z"/>
-              <path fill="#ecd3a3" d="M 238 68 C 246 54, 260 48, 274 52 C 262 58, 254 66, 250 78 Z"/>
-              <!-- eye + nostril -->
-              <circle cx="227" cy="79" r="3.2" fill="#140b04"/>
-              <ellipse cx="240" cy="93" rx="2.6" ry="1.8" fill="#140b04"/>
-            </g>
-            <!-- near legs (in front of body) -->
-            <g transform="translate(70,106)"><g class="leg l1"><rect x="-6" y="-6" width="12" height="48" rx="5.5" fill="url(#bullleg)"/><rect x="-6" y="38" width="12" height="8" rx="3" fill="#2c1a09"/></g></g>
-            <g transform="translate(212,106)"><g class="leg l4"><rect x="-6" y="-6" width="12" height="48" rx="5.5" fill="url(#bullleg)"/><rect x="-6" y="38" width="12" height="8" rx="3" fill="#2c1a09"/></g></g>
-          </g>
-        </svg>
+        <div class="dustp d1"></div><div class="dustp d2"></div><div class="dustp d3"></div>
+        <div class="tilt"><img id="bullimg" src="./assets/bull.png" alt="Charging bull"></div>
       </div>
     </div>
+
     <div class="indices" id="indices"></div>
 
     <div class="card">
@@ -1843,6 +1744,21 @@ function runBull() {
 document.getElementById('bulldate').textContent =
   new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) +
   ' — let’s find something worth owning.';
+
+// 3D tilt: the bull leans toward your cursor/finger
+(function () {
+  const hero = document.getElementById('bullhero');
+  const tilt = document.querySelector('#bullwrap .tilt');
+  if (!hero || !tilt) return;
+  hero.addEventListener('pointermove', e => {
+    const r = hero.getBoundingClientRect();
+    tilt.style.setProperty('--ry', (((e.clientX - r.left) / r.width) - 0.5) * 14 + 'deg');
+    tilt.style.setProperty('--rx', (0.5 - ((e.clientY - r.top) / r.height)) * 8 + 'deg');
+  });
+  hero.addEventListener('pointerleave', () => {
+    tilt.style.setProperty('--rx', '0deg'); tilt.style.setProperty('--ry', '0deg');
+  });
+})();
 
 /* ================= boot ================= */
 runBull();
