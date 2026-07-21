@@ -281,6 +281,27 @@
   ],
   "congress": [
     {
+      "name": "Laurel Lee",
+      "office": "FL15",
+      "date": "2026-07-19",
+      "doc_id": "20034694",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034694.pdf"
+    },
+    {
+      "name": "William R. Timmons",
+      "office": "SC04",
+      "date": "2026-07-19",
+      "doc_id": "20022577",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20022577.pdf"
+    },
+    {
+      "name": "William R. Timmons",
+      "office": "SC04",
+      "date": "2026-07-19",
+      "doc_id": "20035042",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035042.pdf"
+    },
+    {
       "name": "Dan Newhouse",
       "office": "WA04",
       "date": "2026-07-17",
@@ -538,29 +559,8 @@
       "date": "2026-07-02",
       "doc_id": "20034915",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034915.pdf"
-    },
-    {
-      "name": "Donald Sternoff Beyer",
-      "office": "VA08",
-      "date": "2026-07-01",
-      "doc_id": "20034891",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034891.pdf"
-    },
-    {
-      "name": "Max Miller",
-      "office": "OH07",
-      "date": "2026-07-01",
-      "doc_id": "20034869",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034869.pdf"
-    },
-    {
-      "name": "David J. Taylor",
-      "office": "OH02",
-      "date": "2026-07-01",
-      "doc_id": "20034897",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034897.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-20T10:45:41.939800+00:00"
+  "updated_utc": "2026-07-21T10:20:49.842960+00:00"
 }
