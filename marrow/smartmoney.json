@@ -281,6 +281,13 @@
   ],
   "congress": [
     {
+      "name": "James A. Himes",
+      "office": "CT04",
+      "date": "2026-07-20",
+      "doc_id": "20035047",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035047.pdf"
+    },
+    {
       "name": "Laurel Lee",
       "office": "FL15",
       "date": "2026-07-19",
@@ -552,15 +559,8 @@
       "date": "2026-07-02",
       "doc_id": "20034774",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034774.pdf"
-    },
-    {
-      "name": "Ann Wagner",
-      "office": "MO02",
-      "date": "2026-07-02",
-      "doc_id": "20034915",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034915.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-21T10:20:49.842960+00:00"
+  "updated_utc": "2026-07-22T10:20:17.531239+00:00"
 }
