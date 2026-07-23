@@ -83,8 +83,12 @@ const CATEGORIES = {
   },
 };
 
-const WEBSITE_ABSENT = '[!"website"][!"contact:website"][!"url"]';
-const CONTACT_TAGS = ['"phone"', '"contact:phone"', '"email"', '"contact:email"'];
+// One key-regex filter matches any contact tag in a single pass — far faster
+// than a separate area scan per tag.
+const HAS_CONTACT = '[~"^(phone|contact:phone|contact:mobile|email|contact:email)$"~"."]';
+// A "website" that is just a social/link-in-bio page still counts as no real website.
+const SOCIAL_RE = /facebook\.com|instagram\.com|fb\.com|m\.me|linktr\.ee|wa\.me|whatsapp|tiktok\.com/i;
+const WEBSITE_KEYS = ['website', 'contact:website', 'url'];
 
 const $ = (id) => document.getElementById(id);
 let currentLeads = [];
@@ -151,33 +155,37 @@ async function geocode(query) {
 }
 
 function buildQuery(category, radius, lat, lon) {
-  const lines = [];
-  for (const sel of category.selectors) {
-    for (const contact of CONTACT_TAGS) {
-      lines.push(`  nwr${sel}${WEBSITE_ABSENT}[${contact}](around:${radius},${lat},${lon});`);
-    }
-  }
-  return `[out:json][timeout:90];\n(\n${lines.join('\n')}\n);\nout center 600;`;
+  const lines = category.selectors.map(
+    (sel) => `  nwr${sel}${HAS_CONTACT}(around:${radius},${lat},${lon});`
+  );
+  // "qt" sorts by location instead of id — noticeably faster on big result sets.
+  return `[out:json][timeout:40];\n(\n${lines.join('\n')}\n);\nout center qt 2000;`;
 }
 
 async function queryOverpass(category, radius, lat, lon) {
   const query = buildQuery(category, radius, lat, lon);
   let lastErr;
   for (const endpoint of OVERPASS_ENDPOINTS) {
+    // Give each server 45s, then move on to the next mirror instead of hanging.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 45000);
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         body: 'data=' + encodeURIComponent(query),
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: ctrl.signal,
       });
       if (!res.ok) throw new Error(`Overpass returned ${res.status}`);
       const data = await res.json();
       return data.elements || [];
     } catch (err) {
       lastErr = err;
+    } finally {
+      clearTimeout(timer);
     }
   }
-  throw new Error(`Couldn't reach the live data servers (${lastErr?.message}). They rate-limit heavy use — wait a minute and retry.`);
+  throw new Error(`Couldn't reach the live data servers (${lastErr?.message}). They rate-limit heavy use — wait a minute and retry, or try a smaller radius.`);
 }
 
 function pick(tags, ...keys) {
@@ -196,6 +204,19 @@ function buildAddress(tags) {
     .filter(Boolean).join(', ');
 }
 
+// Returns null if the business has a real website (not a lead), otherwise the
+// social URL found in its website tags ('' if none).
+function websiteStatus(tags) {
+  let social = '';
+  for (const k of WEBSITE_KEYS) {
+    const v = tags[k];
+    if (!v) continue;
+    if (SOCIAL_RE.test(v)) { social = v; continue; }
+    return null;
+  }
+  return social;
+}
+
 function buildLeads(elements, contactMode) {
   const seen = new Set();
   const leads = [];
@@ -203,6 +224,9 @@ function buildLeads(elements, contactMode) {
     const tags = el.tags || {};
     const name = tags.name || tags.brand;
     if (!name) continue;
+
+    const socialSite = websiteStatus(tags);
+    if (socialSite === null) continue;
 
     const phone = pick(tags, 'phone', 'contact:phone', 'contact:mobile');
     const email = pick(tags, 'email', 'contact:email');
@@ -216,7 +240,8 @@ function buildLeads(elements, contactMode) {
     if (seen.has(dupKey)) continue;
     seen.add(dupKey);
 
-    const social = pick(tags, 'contact:facebook', 'facebook', 'contact:instagram', 'instagram');
+    const social = socialSite
+      || pick(tags, 'contact:facebook', 'facebook', 'contact:instagram', 'instagram');
     const lat = el.lat ?? el.center?.lat;
     const lon = el.lon ?? el.center?.lon;
     leads.push({
