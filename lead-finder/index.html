@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#FAFAFA">
+  <title>Lead Finder — Businesses With No Website</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="back-link" href="../index.html">&larr; My Apps</a>
+    <h1>Lead <span class="hero-accent">Finder</span></h1>
+    <p class="tagline">Live business data from the web &mdash; find companies with <strong>no website</strong> and get their phone &amp; email.</p>
+  </header>
+
+  <main>
+    <section class="card search-card" aria-label="Search">
+      <form id="search-form">
+        <div class="form-grid">
+          <div class="field field-wide">
+            <label for="location">Location (city, town, or zip)</label>
+            <input id="location" type="text" placeholder="e.g. Buffalo, NY  or  14201" required autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="category">Business field</label>
+            <select id="category"></select>
+          </div>
+          <div class="field">
+            <label for="radius">Search radius</label>
+            <select id="radius">
+              <option value="1600">1 mile</option>
+              <option value="4800" selected>3 miles</option>
+              <option value="8000">5 miles</option>
+              <option value="16000">10 miles</option>
+              <option value="24000">15 miles</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contact-mode">Contact info required</label>
+            <select id="contact-mode">
+              <option value="any" selected>Phone or email</option>
+              <option value="phone">Must have phone</option>
+              <option value="email">Must have email</option>
+              <option value="both">Must have both</option>
+            </select>
+          </div>
+          <div class="field field-submit">
+            <button type="submit" class="btn-primary" id="search-btn">Find Leads</button>
+          </div>
+        </div>
+      </form>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section id="results-section" class="hidden" aria-label="Results">
+      <div class="stats-row">
+        <div class="stat card"><span class="stat-num" id="stat-total">0</span><span class="stat-label">leads found</span></div>
+        <div class="stat card"><span class="stat-num" id="stat-phone">0</span><span class="stat-label">with phone</span></div>
+        <div class="stat card"><span class="stat-num" id="stat-email">0</span><span class="stat-label">with email</span></div>
+        <div class="stat card"><span class="stat-num stat-hot" id="stat-both">0</span><span class="stat-label">phone + email</span></div>
+      </div>
+
+      <div class="results-toolbar">
+        <h2 id="results-heading">Leads</h2>
+        <button class="btn-secondary" id="export-btn">Export CSV</button>
+      </div>
+
+      <div class="card table-wrap">
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th>Field</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Online presence</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+        <p id="empty-msg" class="empty-msg hidden">No businesses matched. Try a bigger radius, a different field, or relax the contact filter.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Live data queried on demand from <a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a> via the Overpass API. A business is counted as a lead when its listing has contact info but no website on record &mdash; use the Verify link to double-check before reaching out.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
