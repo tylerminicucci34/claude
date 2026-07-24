@@ -281,6 +281,13 @@
   ],
   "congress": [
     {
+      "name": "Debbie Dingell",
+      "office": "MI06",
+      "date": "2026-07-22",
+      "doc_id": "20035048",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035048.pdf"
+    },
+    {
       "name": "James A. Himes",
       "office": "CT04",
       "date": "2026-07-20",
@@ -552,15 +559,8 @@
       "date": "2026-07-02",
       "doc_id": "20034906",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034906.pdf"
-    },
-    {
-      "name": "Daniel Meuser",
-      "office": "PA09",
-      "date": "2026-07-02",
-      "doc_id": "20034774",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034774.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-23T10:14:43.759225+00:00"
+  "updated_utc": "2026-07-24T10:11:39.221323+00:00"
 }
