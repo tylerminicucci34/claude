@@ -281,6 +281,41 @@
   ],
   "congress": [
     {
+      "name": "Sam T. Liccardo",
+      "office": "CA16",
+      "date": "2026-07-27",
+      "doc_id": "20034736",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034736.pdf"
+    },
+    {
+      "name": "Max Miller",
+      "office": "OH07",
+      "date": "2026-07-26",
+      "doc_id": "20035075",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035075.pdf"
+    },
+    {
+      "name": "Jared Moskowitz",
+      "office": "FL23",
+      "date": "2026-07-26",
+      "doc_id": "20034963",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034963.pdf"
+    },
+    {
+      "name": "Robert E. Latta",
+      "office": "OH05",
+      "date": "2026-07-24",
+      "doc_id": "20035065",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035065.pdf"
+    },
+    {
+      "name": "Pete Sessions",
+      "office": "TX17",
+      "date": "2026-07-24",
+      "doc_id": "20035068",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035068.pdf"
+    },
+    {
       "name": "Debbie Dingell",
       "office": "MI06",
       "date": "2026-07-22",
@@ -524,43 +559,8 @@
       "date": "2026-07-07",
       "doc_id": "20034932",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034932.pdf"
-    },
-    {
-      "name": "Josh Gottheimer",
-      "office": "NJ05",
-      "date": "2026-07-07",
-      "doc_id": "20034938",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034938.pdf"
-    },
-    {
-      "name": "Maria Elvira Salazar",
-      "office": "FL27",
-      "date": "2026-07-07",
-      "doc_id": "20034928",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034928.pdf"
-    },
-    {
-      "name": "Lloyd Doggett",
-      "office": "TX37",
-      "date": "2026-07-06",
-      "doc_id": "20034923",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034923.pdf"
-    },
-    {
-      "name": "Rohit Khanna",
-      "office": "CA17",
-      "date": "2026-07-06",
-      "doc_id": "9116206",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116206.pdf"
-    },
-    {
-      "name": "Gilbert Cisneros",
-      "office": "CA31",
-      "date": "2026-07-02",
-      "doc_id": "20034906",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034906.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-27T11:13:53.391595+00:00"
+  "updated_utc": "2026-07-28T10:28:56.559698+00:00"
 }
