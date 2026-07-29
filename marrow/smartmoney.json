@@ -281,11 +281,25 @@
   ],
   "congress": [
     {
+      "name": "Sheri Biggs",
+      "office": "SC03",
+      "date": "2026-07-27",
+      "doc_id": "20035007",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035007.pdf"
+    },
+    {
       "name": "Sam T. Liccardo",
       "office": "CA16",
       "date": "2026-07-27",
       "doc_id": "20034736",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034736.pdf"
+    },
+    {
+      "name": "Adrian Smith",
+      "office": "NE03",
+      "date": "2026-07-27",
+      "doc_id": "20035067",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035067.pdf"
     },
     {
       "name": "Max Miller",
@@ -545,22 +559,8 @@
       "date": "2026-07-08",
       "doc_id": "20034224",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034224.pdf"
-    },
-    {
-      "name": "Nicholas Begich",
-      "office": "AK00",
-      "date": "2026-07-07",
-      "doc_id": "20034920",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034920.pdf"
-    },
-    {
-      "name": "April McClain Delaney",
-      "office": "MD06",
-      "date": "2026-07-07",
-      "doc_id": "20034932",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034932.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-28T10:28:56.559698+00:00"
+  "updated_utc": "2026-07-29T10:33:16.924274+00:00"
 }
