@@ -281,6 +281,20 @@
   ],
   "congress": [
     {
+      "name": "Cleo Fields",
+      "office": "LA06",
+      "date": "2026-07-30",
+      "doc_id": "20035023",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035023.pdf"
+    },
+    {
+      "name": "Kelly Louise Morrison",
+      "office": "MN03",
+      "date": "2026-07-30",
+      "doc_id": "20034972",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034972.pdf"
+    },
+    {
       "name": "Sheri Biggs",
       "office": "SC03",
       "date": "2026-07-27",
@@ -545,22 +559,8 @@
       "date": "2026-07-08",
       "doc_id": "9116211",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116211.pdf"
-    },
-    {
-      "name": "John McGuire",
-      "office": "VA05",
-      "date": "2026-07-08",
-      "doc_id": "20034942",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034942.pdf"
-    },
-    {
-      "name": "Ritchie John Torres",
-      "office": "NY15",
-      "date": "2026-07-08",
-      "doc_id": "20034224",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034224.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-07-31T10:32:32.563217+00:00"
+  "updated_utc": "2026-08-01T09:52:37.260898+00:00"
 }
