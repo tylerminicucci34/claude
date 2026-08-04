@@ -281,6 +281,13 @@
   ],
   "congress": [
     {
+      "name": "Donald Sternoff Beyer",
+      "office": "VA08",
+      "date": "2026-08-01",
+      "doc_id": "20035106",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035106.pdf"
+    },
+    {
       "name": "Cleo Fields",
       "office": "LA06",
       "date": "2026-07-30",
@@ -552,15 +559,8 @@
       "date": "2026-07-08",
       "doc_id": "20034790",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034790.pdf"
-    },
-    {
-      "name": "Michael T. McCaul",
-      "office": "TX10",
-      "date": "2026-07-08",
-      "doc_id": "9116211",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116211.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-03T11:17:07.489175+00:00"
+  "updated_utc": "2026-08-04T10:31:08.807029+00:00"
 }
