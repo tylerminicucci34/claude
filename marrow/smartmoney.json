@@ -247,6 +247,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-08-04",
+          "accession": "0001193125-26-333151",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526333151/",
+          "summary": "DVA: sold 182,980 sh @ $199.55"
+        },
+        {
           "date": "2026-07-15",
           "accession": "0001193125-26-304843",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526304843/",
@@ -269,17 +275,18 @@
           "accession": "0001193125-26-207021",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526207021/",
           "summary": "DVA: sold 1,220,376 sh @ $149.84"
-        },
-        {
-          "date": "2026-03-19",
-          "accession": "0001193125-26-116315",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526116315/",
-          "summary": "BRK.A: see filing"
         }
       ]
     }
   ],
   "congress": [
+    {
+      "name": "April McClain Delaney",
+      "office": "MD06",
+      "date": "2026-08-03",
+      "doc_id": "20035118",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035118.pdf"
+    },
     {
       "name": "Donald Sternoff Beyer",
       "office": "VA08",
@@ -552,15 +559,8 @@
       "date": "2026-07-08",
       "doc_id": "20034947",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034947.pdf"
-    },
-    {
-      "name": "Susie Lee",
-      "office": "NV03",
-      "date": "2026-07-08",
-      "doc_id": "20034790",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034790.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-04T10:31:08.807029+00:00"
+  "updated_utc": "2026-08-05T10:28:46.686311+00:00"
 }
