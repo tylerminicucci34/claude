@@ -281,6 +281,27 @@
   ],
   "congress": [
     {
+      "name": "Lloyd Doggett",
+      "office": "TX37",
+      "date": "2026-08-05",
+      "doc_id": "20035136",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035136.pdf"
+    },
+    {
+      "name": "Julie Johnson",
+      "office": "TX32",
+      "date": "2026-08-05",
+      "doc_id": "20035035",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035035.pdf"
+    },
+    {
+      "name": "Lisa McClain",
+      "office": "MI09",
+      "date": "2026-08-05",
+      "doc_id": "20035131",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035131.pdf"
+    },
+    {
       "name": "April McClain Delaney",
       "office": "MD06",
       "date": "2026-08-03",
@@ -538,29 +559,8 @@
       "date": "2026-07-09",
       "doc_id": "20034952",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034952.pdf"
-    },
-    {
-      "name": "Kelly Louise Morrison",
-      "office": "MN03",
-      "date": "2026-07-09",
-      "doc_id": "20034806",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034806.pdf"
-    },
-    {
-      "name": "Charles J. \"Chuck\" Fleischmann",
-      "office": "TN03",
-      "date": "2026-07-08",
-      "doc_id": "9116212",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116212.pdf"
-    },
-    {
-      "name": "Mike Kelly",
-      "office": "PA16",
-      "date": "2026-07-08",
-      "doc_id": "20034947",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034947.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-06T10:33:16.644574+00:00"
+  "updated_utc": "2026-08-07T08:51:18.055225+00:00"
 }
