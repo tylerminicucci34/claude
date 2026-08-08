@@ -281,6 +281,13 @@
   ],
   "congress": [
     {
+      "name": "David J. Taylor",
+      "office": "OH02",
+      "date": "2026-08-06",
+      "doc_id": "20035146",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035146.pdf"
+    },
+    {
       "name": "Lloyd Doggett",
       "office": "TX37",
       "date": "2026-08-05",
@@ -552,15 +559,8 @@
       "date": "2026-07-09",
       "doc_id": "20034954",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034954.pdf"
-    },
-    {
-      "name": "Tim Moore",
-      "office": "NC14",
-      "date": "2026-07-09",
-      "doc_id": "20034952",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034952.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-07T08:51:18.055225+00:00"
+  "updated_utc": "2026-08-08T08:32:53.676886+00:00"
 }
