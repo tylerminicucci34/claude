@@ -281,6 +281,27 @@
   ],
   "congress": [
     {
+      "name": "Josh Gottheimer",
+      "office": "NJ05",
+      "date": "2026-08-10",
+      "doc_id": "20035186",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035186.pdf"
+    },
+    {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-08-10",
+      "doc_id": "20035134",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035134.pdf"
+    },
+    {
+      "name": "John J Mr McGuire",
+      "office": "VA05",
+      "date": "2026-08-10",
+      "doc_id": "20035180",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035180.pdf"
+    },
+    {
       "name": "Christian D. Menefee",
       "office": "TX18",
       "date": "2026-08-07",
@@ -538,29 +559,8 @@
       "date": "2026-07-15",
       "doc_id": "20035003",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035003.pdf"
-    },
-    {
-      "name": "Katherine M. Clark",
-      "office": "MA05",
-      "date": "2026-07-14",
-      "doc_id": "20034892",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034892.pdf"
-    },
-    {
-      "name": "Nicole Malliotakis",
-      "office": "NY11",
-      "date": "2026-07-14",
-      "doc_id": "9116217",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116217.pdf"
-    },
-    {
-      "name": "Harold Dallas Rogers",
-      "office": "KY05",
-      "date": "2026-07-14",
-      "doc_id": "9116218",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116218.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-11T08:47:36.332033+00:00"
+  "updated_utc": "2026-08-12T09:06:15.353252+00:00"
 }
