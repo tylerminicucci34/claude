@@ -281,6 +281,20 @@
   ],
   "congress": [
     {
+      "name": "Mike Kelly",
+      "office": "PA16",
+      "date": "2026-08-12",
+      "doc_id": "20035203",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035203.pdf"
+    },
+    {
+      "name": "Suzan K. DelBene",
+      "office": "WA01",
+      "date": "2026-08-11",
+      "doc_id": "20035175",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035175.pdf"
+    },
+    {
       "name": "Josh Gottheimer",
       "office": "NJ05",
       "date": "2026-08-10",
@@ -300,6 +314,13 @@
       "date": "2026-08-10",
       "doc_id": "20035180",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035180.pdf"
+    },
+    {
+      "name": "Rohit Khanna",
+      "office": "CA17",
+      "date": "2026-08-07",
+      "doc_id": "9116267",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116267.pdf"
     },
     {
       "name": "Christian D. Menefee",
@@ -538,29 +559,8 @@
       "date": "2026-07-15",
       "doc_id": "20034960",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034960.pdf"
-    },
-    {
-      "name": "Byron Donalds",
-      "office": "FL19",
-      "date": "2026-07-15",
-      "doc_id": "20034968",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034968.pdf"
-    },
-    {
-      "name": "Jonathan Jackson",
-      "office": "IL01",
-      "date": "2026-07-15",
-      "doc_id": "20034908",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034908.pdf"
-    },
-    {
-      "name": "Thomas H. Kean",
-      "office": "NJ07",
-      "date": "2026-07-15",
-      "doc_id": "20035003",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035003.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-12T09:06:15.353252+00:00"
+  "updated_utc": "2026-08-13T09:05:45.435362+00:00"
 }
