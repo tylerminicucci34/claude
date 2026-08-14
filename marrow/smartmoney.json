@@ -281,11 +281,32 @@
   ],
   "congress": [
     {
+      "name": "Rob Bresnahan",
+      "office": "PA08",
+      "date": "2026-08-12",
+      "doc_id": "20035216",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035216.pdf"
+    },
+    {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-08-12",
+      "doc_id": "20035196",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035196.pdf"
+    },
+    {
       "name": "Mike Kelly",
       "office": "PA16",
       "date": "2026-08-12",
       "doc_id": "20035203",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035203.pdf"
+    },
+    {
+      "name": "Mike Kelly",
+      "office": "PA16",
+      "date": "2026-08-12",
+      "doc_id": "20035209",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035209.pdf"
     },
     {
       "name": "Suzan K. DelBene",
@@ -538,29 +559,8 @@
       "date": "2026-07-16",
       "doc_id": "20034894",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034894.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-07-16",
-      "doc_id": "20035013",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035013.pdf"
-    },
-    {
-      "name": "Richard W. Allen",
-      "office": "GA12",
-      "date": "2026-07-15",
-      "doc_id": "20034945",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034945.pdf"
-    },
-    {
-      "name": "Debbie Dingell",
-      "office": "MI06",
-      "date": "2026-07-15",
-      "doc_id": "20034960",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034960.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-13T09:05:45.435362+00:00"
+  "updated_utc": "2026-08-14T09:02:24.688411+00:00"
 }
