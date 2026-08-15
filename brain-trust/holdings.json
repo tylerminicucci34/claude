@@ -1,49 +1,49 @@
 {
-  "updated_utc": "2026-08-14T09:02:22.847412+00:00",
+  "updated_utc": "2026-08-15T08:20:06.827424+00:00",
   "buffett": {
-    "filing_date": "2026-05-15",
-    "accession": "0001193125-26-226661",
+    "filing_date": "2026-08-14",
+    "accession": "0001193125-26-352200",
     "source": "SEC EDGAR 13F-HR \u2014 Berkshire Hathaway",
     "top_holdings": [
       {
         "name": "APPLE INC",
-        "value_thousands": 57843260493
+        "value_thousands": 65950296923
       },
       {
         "name": "AMERICAN EXPRESS CO",
-        "value_thousands": 45859204536
-      },
-      {
-        "name": "COCA COLA CO",
-        "value_thousands": 30420000000
-      },
-      {
-        "name": "BANK AMERICA CORP",
-        "value_thousands": 25039178044
-      },
-      {
-        "name": "CHEVRON CORPORATION",
-        "value_thousands": 17457364606
-      },
-      {
-        "name": "OCCIDENTAL PETE CORP",
-        "value_thousands": 17221193015
+        "value_thousands": 51282319275
       },
       {
         "name": "ALPHABET INC",
-        "value_thousands": 16628526688
+        "value_thousands": 37764088383
       },
       {
-        "name": "CHUBB LTD SWITZ",
-        "value_thousands": 11162836215
+        "name": "COCA COLA CO",
+        "value_thousands": 32508000000
+      },
+      {
+        "name": "BANK OF AMER CORP",
+        "value_thousands": 27543790975
+      },
+      {
+        "name": "CHEVRON CORPORATION",
+        "value_thousands": 13986141890
+      },
+      {
+        "name": "OCCIDENTAL PETE CORP",
+        "value_thousands": 12868205304
+      },
+      {
+        "name": "CHUBB LIMITED",
+        "value_thousands": 11670066615
       },
       {
         "name": "MOODYS CORP",
-        "value_thousands": 10762190653
+        "value_thousands": 11173435852
       },
       {
         "name": "KRAFT HEINZ CO",
-        "value_thousands": 7323527057
+        "value_thousands": 7691494401
       }
     ]
   },

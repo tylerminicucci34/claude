@@ -3,69 +3,67 @@
     {
       "name": "Warren Buffett \u2014 Berkshire Hathaway",
       "cik": "0001067983",
-      "filing_date": "2026-05-15",
-      "accession": "0001193125-26-226661",
+      "filing_date": "2026-08-14",
+      "accession": "0001193125-26-352200",
       "source": "SEC EDGAR 13F-HR \u2014 Warren Buffett \u2014 Berkshire Hathaway",
       "holdings": [
         {
           "name": "APPLE INC",
-          "value_usd": 57843260493,
+          "value_usd": 65950296923,
           "ticker": "AAPL"
         },
         {
           "name": "AMERICAN EXPRESS CO",
-          "value_usd": 45859204536,
+          "value_usd": 51282319275,
           "ticker": "AXP"
         },
         {
+          "name": "ALPHABET INC",
+          "value_usd": 37764088383,
+          "ticker": "GOOGL"
+        },
+        {
           "name": "COCA COLA CO",
-          "value_usd": 30420000000,
+          "value_usd": 32508000000,
           "ticker": "KO"
         },
         {
-          "name": "BANK AMERICA CORP",
-          "value_usd": 25039178044,
-          "ticker": "BAC"
+          "name": "BANK OF AMER CORP",
+          "value_usd": 27543790975
         },
         {
           "name": "CHEVRON CORPORATION",
-          "value_usd": 17457364606,
+          "value_usd": 13986141890,
           "ticker": "CVX"
         },
         {
           "name": "OCCIDENTAL PETE CORP",
-          "value_usd": 17221193015,
+          "value_usd": 12868205304,
           "ticker": "OXY"
         },
         {
-          "name": "ALPHABET INC",
-          "value_usd": 16628526688,
-          "ticker": "GOOGL"
-        },
-        {
-          "name": "CHUBB LTD SWITZ",
-          "value_usd": 11162836215,
+          "name": "CHUBB LIMITED",
+          "value_usd": 11670066615,
           "ticker": "CB"
         },
         {
           "name": "MOODYS CORP",
-          "value_usd": 10762190653,
+          "value_usd": 11173435852,
           "ticker": "MCO"
         },
         {
           "name": "KRAFT HEINZ CO",
-          "value_usd": 7323527057,
+          "value_usd": 7691494401,
           "ticker": "KHC"
         },
         {
           "name": "DAVITA INC",
-          "value_usd": 4626158909,
+          "value_usd": 6425268898,
           "ticker": "DVA"
         },
         {
-          "name": "KROGER CO",
-          "value_usd": 3618000000,
-          "ticker": "KR"
+          "name": "DELTA AIR LINES INC",
+          "value_usd": 5368591200
         }
       ]
     },
@@ -281,11 +279,53 @@
   ],
   "congress": [
     {
+      "name": "William R. Keating",
+      "office": "MA09",
+      "date": "2026-08-13",
+      "doc_id": "20034898",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034898.pdf"
+    },
+    {
+      "name": "Tracey Robert Mann",
+      "office": "KS01",
+      "date": "2026-08-13",
+      "doc_id": "9116292",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116292.pdf"
+    },
+    {
+      "name": "Carol Devine Miller",
+      "office": "WV01",
+      "date": "2026-08-13",
+      "doc_id": "20033779",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20033779.pdf"
+    },
+    {
+      "name": "Shri Thanedar",
+      "office": "MI13",
+      "date": "2026-08-13",
+      "doc_id": "20033910",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20033910.pdf"
+    },
+    {
+      "name": "Derek Tran",
+      "office": "CA45",
+      "date": "2026-08-13",
+      "doc_id": "20035183",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035183.pdf"
+    },
+    {
       "name": "Rob Bresnahan",
       "office": "PA08",
       "date": "2026-08-12",
       "doc_id": "20035216",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035216.pdf"
+    },
+    {
+      "name": "Charles J. \"Chuck\" Fleischmann",
+      "office": "TN03",
+      "date": "2026-08-12",
+      "doc_id": "9116290",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116290.pdf"
     },
     {
       "name": "Kevin Hern",
@@ -517,50 +557,8 @@
       "date": "2026-07-20",
       "doc_id": "20035047",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035047.pdf"
-    },
-    {
-      "name": "Laurel Lee",
-      "office": "FL15",
-      "date": "2026-07-19",
-      "doc_id": "20034694",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034694.pdf"
-    },
-    {
-      "name": "William R. Timmons",
-      "office": "SC04",
-      "date": "2026-07-19",
-      "doc_id": "20022577",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20022577.pdf"
-    },
-    {
-      "name": "William R. Timmons",
-      "office": "SC04",
-      "date": "2026-07-19",
-      "doc_id": "20035042",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035042.pdf"
-    },
-    {
-      "name": "Dan Newhouse",
-      "office": "WA04",
-      "date": "2026-07-17",
-      "doc_id": "20034998",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034998.pdf"
-    },
-    {
-      "name": "Daniel Crenshaw",
-      "office": "TX02",
-      "date": "2026-07-16",
-      "doc_id": "20035024",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035024.pdf"
-    },
-    {
-      "name": "Cleo Fields",
-      "office": "LA06",
-      "date": "2026-07-16",
-      "doc_id": "20034894",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034894.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-14T09:02:24.688411+00:00"
+  "updated_utc": "2026-08-15T08:20:08.202577+00:00"
 }
