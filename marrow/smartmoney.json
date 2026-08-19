@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Steve Cohen",
+      "office": "TN09",
+      "date": "2026-08-17",
+      "doc_id": "20035235",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035235.pdf"
+    },
+    {
+      "name": "Scott H. Peters",
+      "office": "CA50",
+      "date": "2026-08-17",
+      "doc_id": "20035191",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035191.pdf"
+    },
+    {
       "name": "Michael Patrick Guest",
       "office": "MS03",
       "date": "2026-08-14",
@@ -543,22 +557,8 @@
       "date": "2026-07-24",
       "doc_id": "20035068",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035068.pdf"
-    },
-    {
-      "name": "Tony Wied",
-      "office": "WI08",
-      "date": "2026-07-24",
-      "doc_id": "9116260",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116260.pdf"
-    },
-    {
-      "name": "Debbie Dingell",
-      "office": "MI06",
-      "date": "2026-07-22",
-      "doc_id": "20035048",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035048.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-18T08:28:07.370030+00:00"
+  "updated_utc": "2026-08-19T08:29:13.271788+00:00"
 }
