@@ -279,6 +279,34 @@
   ],
   "congress": [
     {
+      "name": "Richard W. Allen",
+      "office": "GA12",
+      "date": "2026-08-18",
+      "doc_id": "20035260",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035260.pdf"
+    },
+    {
+      "name": "Ed Case",
+      "office": "HI01",
+      "date": "2026-08-18",
+      "doc_id": "20035275",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035275.pdf"
+    },
+    {
+      "name": "Thomas H. Kean",
+      "office": "NJ07",
+      "date": "2026-08-18",
+      "doc_id": "20035273",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035273.pdf"
+    },
+    {
+      "name": "Tony Wied",
+      "office": "WI08",
+      "date": "2026-08-18",
+      "doc_id": "9116308",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116308.pdf"
+    },
+    {
       "name": "Steve Cohen",
       "office": "TN09",
       "date": "2026-08-17",
@@ -529,36 +557,8 @@
       "date": "2026-07-27",
       "doc_id": "20035067",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035067.pdf"
-    },
-    {
-      "name": "Max Miller",
-      "office": "OH07",
-      "date": "2026-07-26",
-      "doc_id": "20035075",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035075.pdf"
-    },
-    {
-      "name": "Jared Moskowitz",
-      "office": "FL23",
-      "date": "2026-07-26",
-      "doc_id": "20034963",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034963.pdf"
-    },
-    {
-      "name": "Robert E. Latta",
-      "office": "OH05",
-      "date": "2026-07-24",
-      "doc_id": "20035065",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035065.pdf"
-    },
-    {
-      "name": "Pete Sessions",
-      "office": "TX17",
-      "date": "2026-07-24",
-      "doc_id": "20035068",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035068.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-19T08:29:13.271788+00:00"
+  "updated_utc": "2026-08-20T08:29:56.379083+00:00"
 }
