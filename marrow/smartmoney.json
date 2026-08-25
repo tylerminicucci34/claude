@@ -279,11 +279,32 @@
   ],
   "congress": [
     {
+      "name": "Suzan K. DelBene",
+      "office": "WA01",
+      "date": "2026-08-21",
+      "doc_id": "20035274",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035274.pdf"
+    },
+    {
+      "name": "Nancy Pelosi",
+      "office": "CA11",
+      "date": "2026-08-21",
+      "doc_id": "20035143",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035143.pdf"
+    },
+    {
       "name": "Tim Moore",
       "office": "NC14",
       "date": "2026-08-20",
       "doc_id": "20035291",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035291.pdf"
+    },
+    {
+      "name": "Harold Dallas Rogers",
+      "office": "KY05",
+      "date": "2026-08-20",
+      "doc_id": "9116311",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116311.pdf"
     },
     {
       "name": "David J. Taylor",
@@ -536,29 +557,8 @@
       "date": "2026-08-01",
       "doc_id": "20035106",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035106.pdf"
-    },
-    {
-      "name": "Cleo Fields",
-      "office": "LA06",
-      "date": "2026-07-30",
-      "doc_id": "20035023",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035023.pdf"
-    },
-    {
-      "name": "Kelly Louise Morrison",
-      "office": "MN03",
-      "date": "2026-07-30",
-      "doc_id": "20034972",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20034972.pdf"
-    },
-    {
-      "name": "Sheri Biggs",
-      "office": "SC03",
-      "date": "2026-07-27",
-      "doc_id": "20035007",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035007.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-24T08:40:18.283523+00:00"
+  "updated_utc": "2026-08-25T08:34:32.097730+00:00"
 }
