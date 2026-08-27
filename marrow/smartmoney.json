@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "William R. Keating",
+      "office": "MA09",
+      "date": "2026-08-25",
+      "doc_id": "20035293",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035293.pdf"
+    },
+    {
+      "name": "Kelly Louise Morrison",
+      "office": "MN03",
+      "date": "2026-08-25",
+      "doc_id": "20035244",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035244.pdf"
+    },
+    {
+      "name": "Michael Rulli",
+      "office": "OH06",
+      "date": "2026-08-25",
+      "doc_id": "20035309",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035309.pdf"
+    },
+    {
       "name": "Suzan K. DelBene",
       "office": "WA01",
       "date": "2026-08-21",
@@ -536,29 +557,8 @@
       "date": "2026-08-03",
       "doc_id": "9116256",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116256.pdf"
-    },
-    {
-      "name": "Diana Harshbarger",
-      "office": "TN01",
-      "date": "2026-08-03",
-      "doc_id": "9116257",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116257.pdf"
-    },
-    {
-      "name": "Diana Harshbarger",
-      "office": "TN01",
-      "date": "2026-08-03",
-      "doc_id": "9116258",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116258.pdf"
-    },
-    {
-      "name": "Donald Sternoff Beyer",
-      "office": "VA08",
-      "date": "2026-08-01",
-      "doc_id": "20035106",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035106.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-26T08:35:53.162687+00:00"
+  "updated_utc": "2026-08-27T18:43:31.771717+00:00"
 }
