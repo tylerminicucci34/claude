@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Jared Moskowitz",
+      "office": "FL23",
+      "date": "2026-08-27",
+      "doc_id": "20035243",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035243.pdf"
+    },
+    {
       "name": "William R. Keating",
       "office": "MA09",
       "date": "2026-08-25",
@@ -550,15 +557,8 @@
       "date": "2026-08-03",
       "doc_id": "20035118",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035118.pdf"
-    },
-    {
-      "name": "Diana Harshbarger",
-      "office": "TN01",
-      "date": "2026-08-03",
-      "doc_id": "9116256",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116256.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-08-27T18:43:31.771717+00:00"
+  "updated_utc": "2026-08-28T19:49:37.359117+00:00"
 }
