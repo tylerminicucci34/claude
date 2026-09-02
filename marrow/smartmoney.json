@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Donald Sternoff Beyer",
+      "office": "VA08",
+      "date": "2026-09-01",
+      "doc_id": "20035349",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035349.pdf"
+    },
+    {
       "name": "Jared Moskowitz",
       "office": "FL23",
       "date": "2026-08-27",
@@ -550,15 +557,8 @@
       "date": "2026-08-05",
       "doc_id": "20035131",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035131.pdf"
-    },
-    {
-      "name": "April McClain Delaney",
-      "office": "MD06",
-      "date": "2026-08-03",
-      "doc_id": "20035118",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035118.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-01T12:57:22.837411+00:00"
+  "updated_utc": "2026-09-02T12:27:12.775734+00:00"
 }
