@@ -286,6 +286,20 @@
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035349.pdf"
     },
     {
+      "name": "Steve Cohen",
+      "office": "TN09",
+      "date": "2026-09-01",
+      "doc_id": "20035350",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035350.pdf"
+    },
+    {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-09-01",
+      "doc_id": "20035326",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035326.pdf"
+    },
+    {
       "name": "Jared Moskowitz",
       "office": "FL23",
       "date": "2026-08-27",
@@ -543,22 +557,8 @@
       "date": "2026-08-05",
       "doc_id": "20035136",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035136.pdf"
-    },
-    {
-      "name": "Julie Johnson",
-      "office": "TX32",
-      "date": "2026-08-05",
-      "doc_id": "20035035",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035035.pdf"
-    },
-    {
-      "name": "Lisa McClain",
-      "office": "MI09",
-      "date": "2026-08-05",
-      "doc_id": "20035131",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035131.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-02T12:27:12.775734+00:00"
+  "updated_utc": "2026-09-03T12:28:23.071906+00:00"
 }
