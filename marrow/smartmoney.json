@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "Cleo Fields",
+      "office": "LA06",
+      "date": "2026-09-02",
+      "doc_id": "20035345",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035345.pdf"
+    },
+    {
+      "name": "John J Mr McGuire",
+      "office": "VA05",
+      "date": "2026-09-02",
+      "doc_id": "20035367",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035367.pdf"
+    },
+    {
+      "name": "Michael Rulli",
+      "office": "OH06",
+      "date": "2026-09-02",
+      "doc_id": "20035365",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035365.pdf"
+    },
+    {
       "name": "Donald Sternoff Beyer",
       "office": "VA08",
       "date": "2026-09-01",
@@ -536,29 +557,8 @@
       "date": "2026-08-07",
       "doc_id": "20035147",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035147.pdf"
-    },
-    {
-      "name": "Maria Elvira Salazar",
-      "office": "FL27",
-      "date": "2026-08-07",
-      "doc_id": "20035138",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035138.pdf"
-    },
-    {
-      "name": "David J. Taylor",
-      "office": "OH02",
-      "date": "2026-08-06",
-      "doc_id": "20035146",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035146.pdf"
-    },
-    {
-      "name": "Lloyd Doggett",
-      "office": "TX37",
-      "date": "2026-08-05",
-      "doc_id": "20035136",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035136.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-03T12:28:23.071906+00:00"
+  "updated_utc": "2026-09-04T12:25:36.882586+00:00"
 }
