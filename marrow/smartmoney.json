@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Jonathan Jackson",
+      "office": "IL01",
+      "date": "2026-09-03",
+      "doc_id": "20035370",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035370.pdf"
+    },
+    {
       "name": "Cleo Fields",
       "office": "LA06",
       "date": "2026-09-02",
@@ -550,15 +557,8 @@
       "date": "2026-08-07",
       "doc_id": "20035157",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035157.pdf"
-    },
-    {
-      "name": "Michael Rulli",
-      "office": "OH06",
-      "date": "2026-08-07",
-      "doc_id": "20035147",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035147.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-04T12:25:36.882586+00:00"
+  "updated_utc": "2026-09-05T11:31:57.459889+00:00"
 }
