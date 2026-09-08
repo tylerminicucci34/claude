@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "David J. Taylor",
+      "office": "OH02",
+      "date": "2026-09-05",
+      "doc_id": "20035392",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035392.pdf"
+    },
+    {
+      "name": "Gilbert Cisneros",
+      "office": "CA31",
+      "date": "2026-09-04",
+      "doc_id": "20035190",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035190.pdf"
+    },
+    {
+      "name": "Rohit Khanna",
+      "office": "CA17",
+      "date": "2026-09-04",
+      "doc_id": "9116328",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116328.pdf"
+    },
+    {
       "name": "Jonathan Jackson",
       "office": "IL01",
       "date": "2026-09-03",
@@ -305,6 +326,13 @@
       "date": "2026-09-02",
       "doc_id": "20035365",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035365.pdf"
+    },
+    {
+      "name": "Tony Wied",
+      "office": "WI08",
+      "date": "2026-09-02",
+      "doc_id": "9116326",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116326.pdf"
     },
     {
       "name": "Donald Sternoff Beyer",
@@ -529,36 +557,8 @@
       "date": "2026-08-10",
       "doc_id": "20035186",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035186.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-08-10",
-      "doc_id": "20035134",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035134.pdf"
-    },
-    {
-      "name": "John J Mr McGuire",
-      "office": "VA05",
-      "date": "2026-08-10",
-      "doc_id": "20035180",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035180.pdf"
-    },
-    {
-      "name": "Rohit Khanna",
-      "office": "CA17",
-      "date": "2026-08-07",
-      "doc_id": "9116267",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116267.pdf"
-    },
-    {
-      "name": "Christian D. Menefee",
-      "office": "TX18",
-      "date": "2026-08-07",
-      "doc_id": "20035157",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035157.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-07T13:52:16.305784+00:00"
+  "updated_utc": "2026-09-08T12:30:55.583669+00:00"
 }
