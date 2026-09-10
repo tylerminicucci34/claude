@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Lloyd Doggett",
+      "office": "TX37",
+      "date": "2026-09-08",
+      "doc_id": "20035401",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035401.pdf"
+    },
+    {
+      "name": "Mike Kelly",
+      "office": "PA16",
+      "date": "2026-09-08",
+      "doc_id": "20035403",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035403.pdf"
+    },
+    {
       "name": "David J. Taylor",
       "office": "OH02",
       "date": "2026-09-05",
@@ -543,22 +557,8 @@
       "date": "2026-08-12",
       "doc_id": "20035209",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035209.pdf"
-    },
-    {
-      "name": "Suzan K. DelBene",
-      "office": "WA01",
-      "date": "2026-08-11",
-      "doc_id": "20035175",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035175.pdf"
-    },
-    {
-      "name": "Josh Gottheimer",
-      "office": "NJ05",
-      "date": "2026-08-10",
-      "doc_id": "20035186",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035186.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-09T12:37:26.387529+00:00"
+  "updated_utc": "2026-09-10T12:36:42.842169+00:00"
 }
