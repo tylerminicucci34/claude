@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "April McClain Delaney",
+      "office": "MD06",
+      "date": "2026-09-09",
+      "doc_id": "20035408",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035408.pdf"
+    },
+    {
+      "name": "Brandon Gill",
+      "office": "TX26",
+      "date": "2026-09-09",
+      "doc_id": "20035410",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035410.pdf"
+    },
+    {
+      "name": "Maria Elvira Salazar",
+      "office": "FL27",
+      "date": "2026-09-09",
+      "doc_id": "20035411",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035411.pdf"
+    },
+    {
       "name": "Lloyd Doggett",
       "office": "TX37",
       "date": "2026-09-08",
@@ -536,29 +557,8 @@
       "date": "2026-08-12",
       "doc_id": "9116290",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116290.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-08-12",
-      "doc_id": "20035196",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035196.pdf"
-    },
-    {
-      "name": "Mike Kelly",
-      "office": "PA16",
-      "date": "2026-08-12",
-      "doc_id": "20035203",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035203.pdf"
-    },
-    {
-      "name": "Mike Kelly",
-      "office": "PA16",
-      "date": "2026-08-12",
-      "doc_id": "20035209",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035209.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-10T12:36:42.842169+00:00"
+  "updated_utc": "2026-09-11T12:30:10.917250+00:00"
 }
