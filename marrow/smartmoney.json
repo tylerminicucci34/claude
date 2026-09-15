@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "Thomas H. Kean",
+      "office": "NJ07",
+      "date": "2026-09-12",
+      "doc_id": "20035431",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035431.pdf"
+    },
+    {
+      "name": "John W. Rose",
+      "office": "TN06",
+      "date": "2026-09-12",
+      "doc_id": "20035444",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035444.pdf"
+    },
+    {
+      "name": "John W. Rose",
+      "office": "TN06",
+      "date": "2026-09-12",
+      "doc_id": "20035445",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035445.pdf"
+    },
+    {
       "name": "Gilbert Cisneros",
       "office": "CA31",
       "date": "2026-09-10",
@@ -536,29 +557,8 @@
       "date": "2026-08-13",
       "doc_id": "20033779",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20033779.pdf"
-    },
-    {
-      "name": "Shri Thanedar",
-      "office": "MI13",
-      "date": "2026-08-13",
-      "doc_id": "20033910",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20033910.pdf"
-    },
-    {
-      "name": "Derek Tran",
-      "office": "CA45",
-      "date": "2026-08-13",
-      "doc_id": "20035183",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035183.pdf"
-    },
-    {
-      "name": "Rob Bresnahan",
-      "office": "PA08",
-      "date": "2026-08-12",
-      "doc_id": "20035216",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035216.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-14T14:38:31.676396+00:00"
+  "updated_utc": "2026-09-15T13:03:52.606065+00:00"
 }
