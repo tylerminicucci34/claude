@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-09-21",
+          "accession": "0001193125-26-397059",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526397059/",
+          "summary": "LEN, LEN.B: bought 267,585 sh @ $78.41; bought 410,164 sh @ $79.41; bought 1,218,429 sh @ $76.39"
+        },
+        {
           "date": "2026-08-04",
           "accession": "0001193125-26-333151",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526333151/",
@@ -267,17 +273,18 @@
           "accession": "0001193125-26-232543",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526232543/",
           "summary": "BRK.A: acquired 37,500 sh @ $0.00; gifted 18,646 sh @ $0.00; gifted 18,646 sh @ $0.00"
-        },
-        {
-          "date": "2026-05-05",
-          "accession": "0001193125-26-207021",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526207021/",
-          "summary": "DVA: sold 1,220,376 sh @ $149.84"
         }
       ]
     }
   ],
   "congress": [
+    {
+      "name": "Pete Sessions",
+      "office": "TX17",
+      "date": "2026-09-18",
+      "doc_id": "20035480",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035480.pdf"
+    },
     {
       "name": "Scott Scott Franklin",
       "office": "FL18",
@@ -550,15 +557,8 @@
       "date": "2026-08-18",
       "doc_id": "20035273",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035273.pdf"
-    },
-    {
-      "name": "Tony Wied",
-      "office": "WI08",
-      "date": "2026-08-18",
-      "doc_id": "9116308",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116308.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-21T14:45:39.524959+00:00"
+  "updated_utc": "2026-09-22T13:00:11.074005+00:00"
 }
