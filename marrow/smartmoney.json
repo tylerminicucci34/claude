@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "Richard W. Allen",
+      "office": "GA12",
+      "date": "2026-09-22",
+      "doc_id": "20035492",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035492.pdf"
+    },
+    {
+      "name": "Sheri Biggs",
+      "office": "SC03",
+      "date": "2026-09-22",
+      "doc_id": "20035489",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035489.pdf"
+    },
+    {
+      "name": "Pete Sessions",
+      "office": "TX17",
+      "date": "2026-09-22",
+      "doc_id": "20035499",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035499.pdf"
+    },
+    {
       "name": "Scott H. Peters",
       "office": "CA50",
       "date": "2026-09-21",
@@ -536,29 +557,8 @@
       "date": "2026-08-20",
       "doc_id": "9116311",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116311.pdf"
-    },
-    {
-      "name": "David J. Taylor",
-      "office": "OH02",
-      "date": "2026-08-20",
-      "doc_id": "20035289",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035289.pdf"
-    },
-    {
-      "name": "Richard W. Allen",
-      "office": "GA12",
-      "date": "2026-08-18",
-      "doc_id": "20035260",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035260.pdf"
-    },
-    {
-      "name": "Ed Case",
-      "office": "HI01",
-      "date": "2026-08-18",
-      "doc_id": "20035275",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035275.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-23T13:14:01.459247+00:00"
+  "updated_utc": "2026-09-24T13:05:10.816605+00:00"
 }
