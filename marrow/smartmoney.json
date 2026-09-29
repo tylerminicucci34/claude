@@ -279,6 +279,27 @@
   ],
   "congress": [
     {
+      "name": "Max Miller",
+      "office": "OH07",
+      "date": "2026-09-27",
+      "doc_id": "20035528",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035528.pdf"
+    },
+    {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-09-25",
+      "doc_id": "20035491",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035491.pdf"
+    },
+    {
+      "name": "Harold Dallas Rogers",
+      "office": "KY05",
+      "date": "2026-09-23",
+      "doc_id": "9116342",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116342.pdf"
+    },
+    {
       "name": "Richard W. Allen",
       "office": "GA12",
       "date": "2026-09-22",
@@ -536,29 +557,8 @@
       "date": "2026-08-21",
       "doc_id": "20035274",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035274.pdf"
-    },
-    {
-      "name": "Nancy Pelosi",
-      "office": "CA11",
-      "date": "2026-08-21",
-      "doc_id": "20035143",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035143.pdf"
-    },
-    {
-      "name": "Tim Moore",
-      "office": "NC14",
-      "date": "2026-08-20",
-      "doc_id": "20035291",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035291.pdf"
-    },
-    {
-      "name": "Harold Dallas Rogers",
-      "office": "KY05",
-      "date": "2026-08-20",
-      "doc_id": "9116311",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116311.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-28T16:21:13.158697+00:00"
+  "updated_utc": "2026-09-29T14:31:14.246998+00:00"
 }
