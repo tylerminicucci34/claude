@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-09-30",
+          "accession": "0001193125-26-409451",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526409451/",
+          "summary": "LEN: bought 5,200 sh @ $81.96; bought 12,289 sh @ $81.95; bought 638,813 sh @ $81.59"
+        },
+        {
           "date": "2026-09-25",
           "accession": "0001193125-26-403089",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526403089/",
@@ -267,12 +273,6 @@
           "accession": "0001193125-26-304843",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526304843/",
           "summary": "BRK.A: acquired 12,000,000 sh @ $0.00; gifted 9,000,000 sh @ $0.00; gifted 1,000,000 sh @ $0.00"
-        },
-        {
-          "date": "2026-05-26",
-          "accession": "0001193125-26-239886",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526239886/",
-          "summary": "BRK.A: gifted 160 sh @ $0.00"
         }
       ]
     }
@@ -560,5 +560,5 @@
     }
   ],
   "errors": [],
-  "updated_utc": "2026-09-30T14:30:07.901182+00:00"
+  "updated_utc": "2026-10-01T15:00:04.874895+00:00"
 }
