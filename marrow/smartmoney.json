@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Suzan K. DelBene",
+      "office": "WA01",
+      "date": "2026-09-30",
+      "doc_id": "20035498",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035498.pdf"
+    },
+    {
       "name": "Max Miller",
       "office": "OH07",
       "date": "2026-09-27",
@@ -550,15 +557,8 @@
       "date": "2026-08-25",
       "doc_id": "20035309",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035309.pdf"
-    },
-    {
-      "name": "Suzan K. DelBene",
-      "office": "WA01",
-      "date": "2026-08-21",
-      "doc_id": "20035274",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035274.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-01T15:00:04.874895+00:00"
+  "updated_utc": "2026-10-02T14:22:44.444173+00:00"
 }
