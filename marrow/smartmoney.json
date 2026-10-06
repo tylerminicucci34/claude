@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-10-05",
+          "accession": "0001193125-26-414744",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526414744/",
+          "summary": "LEN: bought 425,869 sh @ $79.49; bought 92,830 sh @ $80.57; bought 186,991 sh @ $81.46"
+        },
+        {
           "date": "2026-09-30",
           "accession": "0001193125-26-409451",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526409451/",
@@ -267,17 +273,39 @@
           "accession": "0001193125-26-333151",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526333151/",
           "summary": "DVA: sold 182,980 sh @ $199.55"
-        },
-        {
-          "date": "2026-07-15",
-          "accession": "0001193125-26-304843",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526304843/",
-          "summary": "BRK.A: acquired 12,000,000 sh @ $0.00; gifted 9,000,000 sh @ $0.00; gifted 1,000,000 sh @ $0.00"
         }
       ]
     }
   ],
   "congress": [
+    {
+      "name": "Lloyd Doggett",
+      "office": "TX37",
+      "date": "2026-10-05",
+      "doc_id": "20035580",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035580.pdf"
+    },
+    {
+      "name": "Vince Fong",
+      "office": "CA20",
+      "date": "2026-10-05",
+      "doc_id": "20035539",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035539.pdf"
+    },
+    {
+      "name": "Nancy Pelosi",
+      "office": "CA11",
+      "date": "2026-10-02",
+      "doc_id": "20035553",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035553.pdf"
+    },
+    {
+      "name": "Michael Rulli",
+      "office": "OH06",
+      "date": "2026-10-02",
+      "doc_id": "20035558",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035558.pdf"
+    },
     {
       "name": "Donald Sternoff Beyer",
       "office": "VA08",
@@ -529,36 +557,8 @@
       "date": "2026-09-02",
       "doc_id": "9116326",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116326.pdf"
-    },
-    {
-      "name": "Donald Sternoff Beyer",
-      "office": "VA08",
-      "date": "2026-09-01",
-      "doc_id": "20035349",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035349.pdf"
-    },
-    {
-      "name": "Steve Cohen",
-      "office": "TN09",
-      "date": "2026-09-01",
-      "doc_id": "20035350",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035350.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-09-01",
-      "doc_id": "20035326",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035326.pdf"
-    },
-    {
-      "name": "Jared Moskowitz",
-      "office": "FL23",
-      "date": "2026-08-27",
-      "doc_id": "20035243",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035243.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-05T16:41:44.611489+00:00"
+  "updated_utc": "2026-10-06T14:39:10.094120+00:00"
 }
