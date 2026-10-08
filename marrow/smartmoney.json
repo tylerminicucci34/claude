@@ -307,6 +307,13 @@
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035558.pdf"
     },
     {
+      "name": "Tony Wied",
+      "office": "WI08",
+      "date": "2026-10-02",
+      "doc_id": "9116361",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116361.pdf"
+    },
+    {
       "name": "Donald Sternoff Beyer",
       "office": "VA08",
       "date": "2026-10-01",
@@ -319,6 +326,27 @@
       "date": "2026-10-01",
       "doc_id": "20035464",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035464.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-01",
+      "doc_id": "9116355",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116355.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-01",
+      "doc_id": "9116356",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116356.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-01",
+      "doc_id": "9116357",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116357.pdf"
     },
     {
       "name": "David J. Taylor",
@@ -529,36 +557,8 @@
       "date": "2026-09-03",
       "doc_id": "20035370",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035370.pdf"
-    },
-    {
-      "name": "Cleo Fields",
-      "office": "LA06",
-      "date": "2026-09-02",
-      "doc_id": "20035345",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035345.pdf"
-    },
-    {
-      "name": "John J Mr McGuire",
-      "office": "VA05",
-      "date": "2026-09-02",
-      "doc_id": "20035367",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035367.pdf"
-    },
-    {
-      "name": "Michael Rulli",
-      "office": "OH06",
-      "date": "2026-09-02",
-      "doc_id": "20035365",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035365.pdf"
-    },
-    {
-      "name": "Tony Wied",
-      "office": "WI08",
-      "date": "2026-09-02",
-      "doc_id": "9116326",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116326.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-07T14:59:12.055479+00:00"
+  "updated_utc": "2026-10-08T15:07:27.596246+00:00"
 }
