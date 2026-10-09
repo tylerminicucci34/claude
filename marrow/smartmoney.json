@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Josh Gottheimer",
+      "office": "NJ05",
+      "date": "2026-10-07",
+      "doc_id": "20035590",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035590.pdf"
+    },
+    {
+      "name": "Maria Elvira Salazar",
+      "office": "FL27",
+      "date": "2026-10-07",
+      "doc_id": "20035562",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035562.pdf"
+    },
+    {
       "name": "Lloyd Doggett",
       "office": "TX37",
       "date": "2026-10-05",
@@ -543,22 +557,8 @@
       "date": "2026-09-04",
       "doc_id": "20035190",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035190.pdf"
-    },
-    {
-      "name": "Rohit Khanna",
-      "office": "CA17",
-      "date": "2026-09-04",
-      "doc_id": "9116328",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116328.pdf"
-    },
-    {
-      "name": "Jonathan Jackson",
-      "office": "IL01",
-      "date": "2026-09-03",
-      "doc_id": "20035370",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035370.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-08T15:07:27.596246+00:00"
+  "updated_utc": "2026-10-09T14:52:46.096546+00:00"
 }
