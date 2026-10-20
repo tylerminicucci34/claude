@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Laurel Lee",
+      "office": "FL15",
+      "date": "2026-10-16",
+      "doc_id": "20035490",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035490.pdf"
+    },
+    {
       "name": "Scott H. Peters",
       "office": "CA50",
       "date": "2026-10-15",
@@ -550,15 +557,8 @@
       "date": "2026-09-14",
       "doc_id": "20035400",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035400.pdf"
-    },
-    {
-      "name": "Josh Gottheimer",
-      "office": "NJ05",
-      "date": "2026-09-14",
-      "doc_id": "20035455",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035455.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-19T15:13:11.967448+00:00"
+  "updated_utc": "2026-10-20T13:12:01.592945+00:00"
 }
