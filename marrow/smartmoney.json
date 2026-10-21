@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Jonathan Jackson",
+      "office": "IL01",
+      "date": "2026-10-19",
+      "doc_id": "20035551",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035551.pdf"
+    },
+    {
+      "name": "Michael Rulli",
+      "office": "OH06",
+      "date": "2026-10-19",
+      "doc_id": "20035671",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035671.pdf"
+    },
+    {
       "name": "Laurel Lee",
       "office": "FL15",
       "date": "2026-10-16",
@@ -543,22 +557,8 @@
       "date": "2026-09-17",
       "doc_id": "20035471",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035471.pdf"
-    },
-    {
-      "name": "Byron Donalds",
-      "office": "FL19",
-      "date": "2026-09-15",
-      "doc_id": "20035420",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035420.pdf"
-    },
-    {
-      "name": "Suzan K. DelBene",
-      "office": "WA01",
-      "date": "2026-09-14",
-      "doc_id": "20035400",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035400.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-20T13:12:01.592945+00:00"
+  "updated_utc": "2026-10-21T13:21:21.036277+00:00"
 }
