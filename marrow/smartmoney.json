@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "James A. Himes",
+      "office": "CT04",
+      "date": "2026-10-20",
+      "doc_id": "20035687",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035687.pdf"
+    },
+    {
+      "name": "Rudy C. Yakym",
+      "office": "IN02",
+      "date": "2026-10-20",
+      "doc_id": "20035691",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035691.pdf"
+    },
+    {
       "name": "Jonathan Jackson",
       "office": "IL01",
       "date": "2026-10-19",
@@ -543,22 +557,8 @@
       "date": "2026-09-18",
       "doc_id": "20035480",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035480.pdf"
-    },
-    {
-      "name": "Scott Scott Franklin",
-      "office": "FL18",
-      "date": "2026-09-17",
-      "doc_id": "20035450",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035450.pdf"
-    },
-    {
-      "name": "David J. Taylor",
-      "office": "OH02",
-      "date": "2026-09-17",
-      "doc_id": "20035471",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035471.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-21T13:21:21.036277+00:00"
+  "updated_utc": "2026-10-22T13:21:44.665907+00:00"
 }
