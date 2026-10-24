@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Cleo Fields",
+      "office": "LA06",
+      "date": "2026-10-22",
+      "doc_id": "20035669",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035669.pdf"
+    },
+    {
+      "name": "Darrell E. Issa",
+      "office": "CA48",
+      "date": "2026-10-22",
+      "doc_id": "20035700",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035700.pdf"
+    },
+    {
       "name": "James A. Himes",
       "office": "CT04",
       "date": "2026-10-20",
@@ -543,22 +557,8 @@
       "date": "2026-09-22",
       "doc_id": "20035499",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035499.pdf"
-    },
-    {
-      "name": "Scott H. Peters",
-      "office": "CA50",
-      "date": "2026-09-21",
-      "doc_id": "20035434",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035434.pdf"
-    },
-    {
-      "name": "Pete Sessions",
-      "office": "TX17",
-      "date": "2026-09-18",
-      "doc_id": "20035480",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035480.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-23T13:00:20.173979+00:00"
+  "updated_utc": "2026-10-24T12:23:35.155494+00:00"
 }
