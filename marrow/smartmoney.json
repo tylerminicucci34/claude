@@ -279,6 +279,41 @@
   ],
   "congress": [
     {
+      "name": "Suzan K. DelBene",
+      "office": "WA01",
+      "date": "2026-10-28",
+      "doc_id": "20035689",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035689.pdf"
+    },
+    {
+      "name": "Jodey Arrington",
+      "office": "TX19",
+      "date": "2026-10-27",
+      "doc_id": "20035714",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035714.pdf"
+    },
+    {
+      "name": "Sheri Biggs",
+      "office": "SC03",
+      "date": "2026-10-27",
+      "doc_id": "20035525",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035525.pdf"
+    },
+    {
+      "name": "Max Miller",
+      "office": "OH07",
+      "date": "2026-10-27",
+      "doc_id": "20035715",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035715.pdf"
+    },
+    {
+      "name": "Pete Sessions",
+      "office": "TX17",
+      "date": "2026-10-27",
+      "doc_id": "20035563",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035563.pdf"
+    },
+    {
       "name": "Cleo Fields",
       "office": "LA06",
       "date": "2026-10-22",
@@ -522,43 +557,8 @@
       "date": "2026-09-27",
       "doc_id": "20035528",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035528.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-09-25",
-      "doc_id": "20035491",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035491.pdf"
-    },
-    {
-      "name": "Harold Dallas Rogers",
-      "office": "KY05",
-      "date": "2026-09-23",
-      "doc_id": "9116342",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116342.pdf"
-    },
-    {
-      "name": "Richard W. Allen",
-      "office": "GA12",
-      "date": "2026-09-22",
-      "doc_id": "20035492",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035492.pdf"
-    },
-    {
-      "name": "Sheri Biggs",
-      "office": "SC03",
-      "date": "2026-09-22",
-      "doc_id": "20035489",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035489.pdf"
-    },
-    {
-      "name": "Pete Sessions",
-      "office": "TX17",
-      "date": "2026-09-22",
-      "doc_id": "20035499",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035499.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-28T14:46:05.090131+00:00"
+  "updated_utc": "2026-10-29T14:52:46.083732+00:00"
 }
