@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-10-29",
+          "accession": "0001193125-26-438090",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526438090/",
+          "summary": "DVA: sold 382,563 sh @ $180.43"
+        },
+        {
           "date": "2026-10-05",
           "accession": "0001193125-26-414744",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526414744/",
@@ -267,12 +273,6 @@
           "accession": "0001193125-26-397059",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526397059/",
           "summary": "LEN, LEN.B: bought 267,585 sh @ $78.41; bought 410,164 sh @ $79.41; bought 1,218,429 sh @ $76.39"
-        },
-        {
-          "date": "2026-08-04",
-          "accession": "0001193125-26-333151",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526333151/",
-          "summary": "DVA: sold 182,980 sh @ $199.55"
         }
       ]
     }
@@ -284,6 +284,13 @@
       "date": "2026-10-28",
       "doc_id": "20035689",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035689.pdf"
+    },
+    {
+      "name": "Kevin Hern",
+      "office": "OK01",
+      "date": "2026-10-28",
+      "doc_id": "20035710",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035710.pdf"
     },
     {
       "name": "Jodey Arrington",
@@ -298,6 +305,27 @@
       "date": "2026-10-27",
       "doc_id": "20035525",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035525.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-27",
+      "doc_id": "9116389",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116389.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-27",
+      "doc_id": "9116390",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116390.pdf"
+    },
+    {
+      "name": "Diana Harshbarger",
+      "office": "TN01",
+      "date": "2026-10-27",
+      "doc_id": "9116391",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116391.pdf"
     },
     {
       "name": "Max Miller",
@@ -529,36 +557,8 @@
       "date": "2026-10-01",
       "doc_id": "9116356",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116356.pdf"
-    },
-    {
-      "name": "Diana Harshbarger",
-      "office": "TN01",
-      "date": "2026-10-01",
-      "doc_id": "9116357",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116357.pdf"
-    },
-    {
-      "name": "David J. Taylor",
-      "office": "OH02",
-      "date": "2026-10-01",
-      "doc_id": "20035549",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035549.pdf"
-    },
-    {
-      "name": "Suzan K. DelBene",
-      "office": "WA01",
-      "date": "2026-09-30",
-      "doc_id": "20035498",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035498.pdf"
-    },
-    {
-      "name": "Max Miller",
-      "office": "OH07",
-      "date": "2026-09-27",
-      "doc_id": "20035528",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035528.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-10-29T14:52:46.083732+00:00"
+  "updated_utc": "2026-10-30T14:44:46.834795+00:00"
 }
