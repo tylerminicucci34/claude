@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-11-03",
+          "accession": "0001193125-26-445930",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526445930/",
+          "summary": "SIRI: bought 743,965 sh @ $28.89; bought 66,968 sh @ $29.47; bought 113,348 sh @ $30.23"
+        },
+        {
           "date": "2026-10-29",
           "accession": "0001193125-26-438090",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526438090/",
@@ -267,17 +273,18 @@
           "accession": "0001193125-26-403089",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526403089/",
           "summary": "LEN: bought 532,993 sh @ $81.65; bought 399,238 sh @ $80.58; bought 241,692 sh @ $81.44"
-        },
-        {
-          "date": "2026-09-21",
-          "accession": "0001193125-26-397059",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526397059/",
-          "summary": "LEN, LEN.B: bought 267,585 sh @ $78.41; bought 410,164 sh @ $79.41; bought 1,218,429 sh @ $76.39"
         }
       ]
     }
   ],
   "congress": [
+    {
+      "name": "Ann Wagner",
+      "office": "MO02",
+      "date": "2026-11-02",
+      "doc_id": "20035751",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035751.pdf"
+    },
     {
       "name": "Donald Sternoff Beyer",
       "office": "VA08",
@@ -550,15 +557,8 @@
       "date": "2026-10-02",
       "doc_id": "20035553",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035553.pdf"
-    },
-    {
-      "name": "Michael Rulli",
-      "office": "OH06",
-      "date": "2026-10-02",
-      "doc_id": "20035558",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035558.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-11-03T15:42:38.724428+00:00"
+  "updated_utc": "2026-11-04T15:54:06.348469+00:00"
 }
