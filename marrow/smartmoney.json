@@ -279,6 +279,13 @@
   ],
   "congress": [
     {
+      "name": "Josh Gottheimer",
+      "office": "NJ05",
+      "date": "2026-11-05",
+      "doc_id": "20035770",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035770.pdf"
+    },
+    {
       "name": "Daniel Meuser",
       "office": "PA09",
       "date": "2026-11-05",
@@ -550,15 +557,8 @@
       "date": "2026-10-07",
       "doc_id": "20035590",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035590.pdf"
-    },
-    {
-      "name": "Rohit Khanna",
-      "office": "CA17",
-      "date": "2026-10-07",
-      "doc_id": "9116376",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116376.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-11-06T15:33:15.528013+00:00"
+  "updated_utc": "2026-11-07T14:35:47.309784+00:00"
 }
