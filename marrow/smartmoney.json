@@ -279,11 +279,46 @@
   ],
   "congress": [
     {
+      "name": "David Kustoff",
+      "office": "TN08",
+      "date": "2026-11-09",
+      "doc_id": "20024921",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20024921.pdf"
+    },
+    {
+      "name": "Thomas Suozzi",
+      "office": "NY03",
+      "date": "2026-11-09",
+      "doc_id": "20035014",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035014.pdf"
+    },
+    {
+      "name": "John J Mr McGuire",
+      "office": "VA05",
+      "date": "2026-11-06",
+      "doc_id": "20035775",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035775.pdf"
+    },
+    {
+      "name": "Nancy Pelosi",
+      "office": "CA11",
+      "date": "2026-11-06",
+      "doc_id": "20035780",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035780.pdf"
+    },
+    {
       "name": "Josh Gottheimer",
       "office": "NJ05",
       "date": "2026-11-05",
       "doc_id": "20035770",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035770.pdf"
+    },
+    {
+      "name": "Rohit Khanna",
+      "office": "CA17",
+      "date": "2026-11-05",
+      "doc_id": "9116399",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116399.pdf"
     },
     {
       "name": "Daniel Meuser",
@@ -522,43 +557,8 @@
       "date": "2026-10-14",
       "doc_id": "20035487",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035487.pdf"
-    },
-    {
-      "name": "Kevin Hern",
-      "office": "OK01",
-      "date": "2026-10-13",
-      "doc_id": "20035588",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035588.pdf"
-    },
-    {
-      "name": "Gilbert Cisneros",
-      "office": "CA31",
-      "date": "2026-10-12",
-      "doc_id": "20035622",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035622.pdf"
-    },
-    {
-      "name": "Rick Larsen",
-      "office": "WA02",
-      "date": "2026-10-12",
-      "doc_id": "20035635",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035635.pdf"
-    },
-    {
-      "name": "Lisa McClain",
-      "office": "MI09",
-      "date": "2026-10-12",
-      "doc_id": "20035585",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035585.pdf"
-    },
-    {
-      "name": "Josh Gottheimer",
-      "office": "NJ05",
-      "date": "2026-10-07",
-      "doc_id": "20035590",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035590.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-11-08T14:41:40.398064+00:00"
+  "updated_utc": "2026-11-10T15:59:33.880227+00:00"
 }
