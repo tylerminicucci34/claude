@@ -245,6 +245,12 @@
       "source": "SEC EDGAR Form 4 filings (CIK 0000315090)",
       "filings": [
         {
+          "date": "2026-11-17",
+          "accession": "0001193125-26-465872",
+          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526465872/",
+          "summary": "BRK.A: acquired 9,225,000 sh @ $0.00; gifted 3,690,000 sh @ $0.00; gifted 1,845,000 sh @ $0.00"
+        },
+        {
           "date": "2026-11-03",
           "accession": "0001193125-26-445930",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526445930/",
@@ -267,17 +273,18 @@
           "accession": "0001193125-26-409451",
           "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526409451/",
           "summary": "LEN: bought 5,200 sh @ $81.96; bought 12,289 sh @ $81.95; bought 638,813 sh @ $81.59"
-        },
-        {
-          "date": "2026-09-25",
-          "accession": "0001193125-26-403089",
-          "url": "https://www.sec.gov/Archives/edgar/data/315090/000119312526403089/",
-          "summary": "LEN: bought 532,993 sh @ $81.65; bought 399,238 sh @ $80.58; bought 241,692 sh @ $81.44"
         }
       ]
     }
   ],
   "congress": [
+    {
+      "name": "Byron Donalds",
+      "office": "FL19",
+      "date": "2026-11-16",
+      "doc_id": "20035811",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035811.pdf"
+    },
     {
       "name": "Suzan K. DelBene",
       "office": "WA01",
@@ -550,15 +557,8 @@
       "date": "2026-10-20",
       "doc_id": "20035691",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035691.pdf"
-    },
-    {
-      "name": "Jonathan Jackson",
-      "office": "IL01",
-      "date": "2026-10-19",
-      "doc_id": "20035551",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035551.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-11-17T17:17:23.754953+00:00"
+  "updated_utc": "2026-11-18T16:52:19.930782+00:00"
 }
