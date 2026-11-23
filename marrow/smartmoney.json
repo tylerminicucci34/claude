@@ -279,6 +279,20 @@
   ],
   "congress": [
     {
+      "name": "Ed Case",
+      "office": "HI01",
+      "date": "2026-11-21",
+      "doc_id": "20036891",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20036891.pdf"
+    },
+    {
+      "name": "Jennifer McClellan",
+      "office": "VA04",
+      "date": "2026-11-20",
+      "doc_id": "20036883",
+      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20036883.pdf"
+    },
+    {
       "name": "Thomas H. Kean",
       "office": "NJ07",
       "date": "2026-11-19",
@@ -543,22 +557,8 @@
       "date": "2026-10-27",
       "doc_id": "9116391",
       "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/9116391.pdf"
-    },
-    {
-      "name": "Max Miller",
-      "office": "OH07",
-      "date": "2026-10-27",
-      "doc_id": "20035715",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035715.pdf"
-    },
-    {
-      "name": "Pete Sessions",
-      "office": "TX17",
-      "date": "2026-10-27",
-      "doc_id": "20035563",
-      "url": "https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035563.pdf"
     }
   ],
   "errors": [],
-  "updated_utc": "2026-11-22T15:50:26.630670+00:00"
+  "updated_utc": "2026-11-23T19:43:45.604188+00:00"
 }
